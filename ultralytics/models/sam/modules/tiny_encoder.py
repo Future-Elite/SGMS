@@ -500,7 +500,7 @@ class TinyViTBlock(nn.Module):
         dim (int): The dimensionality of the input and output.
         input_resolution (Tuple[int, int]): Spatial resolution of the input feature map.
         num_heads (int): Number of attention heads.
-        window_size (int): Size of the attention window.
+        window_size (int): Size of the attention ui.
         mlp_ratio (float): Ratio of MLP hidden dimension to embedding dimension.
         drop_path (nn.Module): Stochastic depth layer, identity function during inference.
         attn (Attention): Self-attention module.
@@ -541,7 +541,7 @@ class TinyViTBlock(nn.Module):
             dim (int): Dimensionality of the input and output features.
             input_resolution (Tuple[int, int]): Spatial resolution of the input feature map (height, width).
             num_heads (int): Number of attention heads.
-            window_size (int): Size of the attention window. Must be greater than 0.
+            window_size (int): Size of the attention ui. Must be greater than 0.
             mlp_ratio (float): Ratio of MLP hidden dimension to embedding dimension.
             drop (float): Dropout rate.
             drop_path (float): Stochastic depth rate.
@@ -631,7 +631,7 @@ class TinyViTBlock(nn.Module):
         Returns a string representation of the TinyViTBlock's parameters.
 
         This method provides a formatted string containing key information about the TinyViTBlock, including its
-        dimension, input resolution, number of attention heads, window size, and MLP ratio.
+        dimension, input resolution, number of attention heads, ui size, and MLP ratio.
 
         Returns:
             (str): A formatted string containing the block's parameters.
@@ -701,7 +701,7 @@ class BasicLayer(nn.Module):
             input_resolution (Tuple[int, int]): Spatial resolution of the input feature map (height, width).
             depth (int): Number of TinyViT blocks in this layer.
             num_heads (int): Number of attention heads in each TinyViT block.
-            window_size (int): Size of the local window for attention computation.
+            window_size (int): Size of the local ui for attention computation.
             mlp_ratio (float): Ratio of MLP hidden dimension to embedding dimension.
             drop (float): Dropout rate.
             drop_path (float | List[float]): Stochastic depth rate. Can be a float or a list of floats for each block.

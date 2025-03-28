@@ -237,7 +237,7 @@ Spacer{
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item alignment="Qt::AlignmentFlag::AlignHCenter">
+             <item>
               <widget class="QLabel" name="title">
                <property name="styleSheet">
                 <string notr="true"/>
@@ -384,7 +384,7 @@ Spacer{
                  <number>3</number>
                 </property>
                 <item>
-                 <widget class="QFrame" name="SGMS">
+                 <widget class="QFrame" name="top_intro">
                   <property name="minimumSize">
                    <size>
                     <width>160</width>
@@ -2235,6 +2235,7 @@ font: 15pt &quot;Microsoft YaHei UI&quot;;
                   </property>
                   <property name="styleSheet">
                    <string notr="true">QPushButton{
+background-image: url(:/rightbox/images/newsize/play.png);
 background-repeat: no-repeat;
 background-position: center;
 border: none;
@@ -2246,10 +2247,6 @@ QPushButton:hover{
                   <property name="text">
                    <string/>
                   </property>
-                  <property name="icon">
-                   <iconset resource="YOLOSHOWUI.qrc">
-                    <normaloff>:/rightbox/images/newsize/play.png</normaloff>:/rightbox/images/newsize/play.png</iconset>
-                  </property>
                   <property name="iconSize">
                    <size>
                     <width>40</width>
@@ -2257,7 +2254,7 @@ QPushButton:hover{
                    </size>
                   </property>
                   <property name="checkable">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                   <property name="checked">
                    <bool>false</bool>
@@ -2727,7 +2724,7 @@ QPushButton:hover{
 }</string>
                    </property>
                    <property name="text">
-                    <string>Gesture</string>
+                    <string>Mediapipe</string>
                    </property>
                    <property name="checkable">
                     <bool>true</bool>

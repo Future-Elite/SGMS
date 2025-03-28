@@ -4,7 +4,7 @@ import os
 import cv2
 from PySide6.QtGui import QMouseEvent, QGuiApplication
 from PySide6.QtCore import Qt, QPropertyAnimation, Signal
-from gui.window.utils.customGrips import CustomGrip
+from gui.ui.utils.customGrips import CustomGrip
 from frontend.ShowWindow import SHOWWINDOW
 
 

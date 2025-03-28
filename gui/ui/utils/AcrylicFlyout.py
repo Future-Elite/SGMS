@@ -247,7 +247,7 @@ class Flyout(QWidget):
             the target widget or position to show flyout
 
         parent: QWidget
-            parent window
+            parent ui
 
         aniType: FlyoutAnimationType
             flyout animation type
@@ -297,7 +297,7 @@ class Flyout(QWidget):
             the target widget or position to show flyout
 
         parent: QWidget
-            parent window
+            parent ui
 
         aniType: FlyoutAnimationType
             flyout animation type
@@ -389,7 +389,7 @@ class AcrylicFlyout(Flyout):
             the target widget or position to show flyout
 
         parent: QWidget
-            parent window
+            parent ui
 
         aniType: FlyoutAnimationType
             flyout animation type

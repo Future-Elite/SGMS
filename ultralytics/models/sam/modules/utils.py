@@ -129,7 +129,7 @@ def window_partition(x, window_size):
 
     Args:
         x (torch.Tensor): Input tensor with shape (B, H, W, C).
-        window_size (int): Size of each window.
+        window_size (int): Size of each ui.
 
     Returns:
         (Tuple[torch.Tensor, Tuple[int, int]]): A tuple containing:
@@ -165,8 +165,8 @@ def window_unpartition(windows, window_size, pad_hw, hw):
     Args:
         windows (torch.Tensor): Input tensor of windowed sequences with shape (B * num_windows, window_size,
             window_size, C), where B is the batch size, num_windows is the number of windows, window_size is
-            the size of each window, and C is the number of channels.
-        window_size (int): Size of each window.
+            the size of each ui, and C is the number of channels.
+        window_size (int): Size of each ui.
         pad_hw (Tuple[int, int]): Padded height and width (Hp, Wp) of the input before windowing.
         hw (Tuple[int, int]): Original height and width (H, W) of the input before padding and windowing.
 

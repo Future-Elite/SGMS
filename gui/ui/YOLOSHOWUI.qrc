@@ -15,9 +15,7 @@
     <file>../images/newsize/photo-camera.png</file>
     <file>../images/newsize/security-camera.png</file>
   </qresource>
-  <qresource prefix="images/newsize/icon.png">
-    <file>icon.png</file>
-  </qresource>
+  <qresource prefix="images/newsize/icon.png"/>
   <qresource prefix="statusbarVS">
     <file>../images/newsize/classesBarVS.png</file>
     <file>../images/newsize/fpsBarVS.png</file>

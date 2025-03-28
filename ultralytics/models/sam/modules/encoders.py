@@ -82,7 +82,7 @@ class ImageEncoderViT(nn.Module):
             use_abs_pos (bool): If True, uses absolute positional embeddings.
             use_rel_pos (bool): If True, adds relative positional embeddings to attention maps.
             rel_pos_zero_init (bool): If True, initializes relative positional parameters to zero.
-            window_size (int): Size of attention window for windowed attention blocks.
+            window_size (int): Size of attention ui for windowed attention blocks.
             global_attn_indexes (Tuple[int, ...]): Indices of blocks that use global attention.
 
         Attributes:
@@ -658,14 +658,14 @@ class Hiera(nn.Module):
         return_interm_layers (bool): Whether to return intermediate layer outputs.
         patch_embed (PatchEmbed): Module for patch embedding.
         global_att_blocks (Tuple[int, ...]): Indices of blocks with global attention.
-        window_pos_embed_bkg_spatial_size (Tuple[int, int]): Spatial size for window positional embedding background.
+        window_pos_embed_bkg_spatial_size (Tuple[int, int]): Spatial size for ui positional embedding background.
         pos_embed (nn.Parameter): Positional embedding for the background.
-        pos_embed_window (nn.Parameter): Positional embedding for the window.
+        pos_embed_window (nn.Parameter): Positional embedding for the ui.
         blocks (nn.ModuleList): List of MultiScaleBlock modules.
         channel_list (List[int]): List of output channel dimensions for each stage.
 
     Methods:
-        _get_pos_embed: Generates positional embeddings by interpolating and combining window and background embeddings.
+        _get_pos_embed: Generates positional embeddings by interpolating and combining ui and background embeddings.
         forward: Performs the forward pass through the Hiera model.
 
     Examples:
@@ -687,7 +687,7 @@ class Hiera(nn.Module):
         dim_mul: float = 2.0,  # dim_mul factor at stage shift
         head_mul: float = 2.0,  # head_mul factor at stage shift
         window_pos_embed_bkg_spatial_size: Tuple[int, int] = (14, 14),
-        # window size per stage, when not using global att.
+        # ui size per stage, when not using global att.
         window_spec: Tuple[int, ...] = (
             8,
             4,
@@ -737,8 +737,8 @@ class Hiera(nn.Module):
         for i in range(depth):
             dim_out = embed_dim
             # lags by a block, so first block of
-            # next stage uses an initial window size
-            # of previous stage and final window size of current stage
+            # next stage uses an initial ui size
+            # of previous stage and final ui size of current stage
             window_size = self.window_spec[cur_stage - 1]
 
             if self.global_att_blocks is not None:
@@ -768,7 +768,7 @@ class Hiera(nn.Module):
         )
 
     def _get_pos_embed(self, hw: Tuple[int, int]) -> torch.Tensor:
-        """Generates positional embeddings by interpolating and combining window and background embeddings."""
+        """Generates positional embeddings by interpolating and combining ui and background embeddings."""
         h, w = hw
         window_embed = self.pos_embed_window
         pos_embed = F.interpolate(self.pos_embed, size=(h, w), mode="bicubic")

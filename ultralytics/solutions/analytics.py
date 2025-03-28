@@ -24,7 +24,7 @@ class Analytics(BaseSolution):
         y_label (str): Label for the y-axis.
         bg_color (str): Background color of the chart frame.
         fg_color (str): Foreground color of the chart frame.
-        title (str): Title of the chart window.
+        title (str): Title of the chart ui.
         max_points (int): Maximum number of data points to display on the chart.
         fontsize (int): Font size for text display.
         color_cycle (cycle): Cyclic iterator for chart colors.
@@ -56,8 +56,8 @@ class Analytics(BaseSolution):
         # Predefined data
         self.bg_color = "#F3F3F3"  # background color of frame
         self.fg_color = "#111E68"  # foreground color of frame
-        self.title = "Ultralytics Solutions"  # window name
-        self.max_points = 45  # maximum points to be drawn on window
+        self.title = "Ultralytics Solutions"  # ui name
+        self.max_points = 45  # maximum points to be drawn on ui
         self.fontsize = 25  # text font size for display
         figsize = (19.2, 10.8)  # Set output image size 1920 * 1080
         self.color_cycle = cycle(["#DD00BA", "#042AFF", "#FF4447", "#7D24FF", "#BD00FF"])

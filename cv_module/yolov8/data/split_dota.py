@@ -130,7 +130,7 @@ def get_windows(im_size, crop_sizes=[1024], gaps=[200], im_rate_thr=0.6, eps=0.0
 
 
 def get_window_obj(anno, windows, iof_thr=0.7):
-    """Get objects for each window."""
+    """Get objects for each ui."""
     h, w = anno["ori_size"]
     label = anno["label"]
     if len(label):
@@ -150,7 +150,7 @@ def crop_and_save(anno, windows, window_objs, im_dir, lb_dir):
     Args:
         anno (dict): Annotation dict, including `filepath`, `label`, `ori_size` as its keys.
         windows (list): A list of windows coordinates.
-        window_objs (list): A list of labels inside each window.
+        window_objs (list): A list of labels inside each ui.
         im_dir (str): The output directory path of images.
         lb_dir (str): The output directory path of labels.
 

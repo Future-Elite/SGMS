@@ -1,7 +1,7 @@
 from utils import glo
 import json
 import os
-from gui.window.window import Ui_MainWindow
+from gui.ui.YOLOSHOWUI import Ui_MainWindow
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 from frontend.CVThreadPool import YOLOThreadPool
@@ -13,8 +13,8 @@ GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 80
 WIDTH_LEFT_BOX_EXTENDED = 100
 WIDTH_LOGO = 60
-UI_FILE_PATH = "window/YOLOSHOWUI.window"
-KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera', 'src_vsmode']
+UI_FILE_PATH = "ui/YOLOSHOWUI.ui"
+KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
 
 
 class SHOWWINDOW(QMainWindow, BASEWINDOW):
@@ -54,11 +54,11 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 播放 暂停 停止 --- #
 
         # --- 自动加载/动态改变 PT 模型 --- #
-        self.pt_Path = f"{self.current_workpath}/ptfiles/"
+        self.pt_Path = f"{self.current_workpath}/cv_module/ptfiles/"
         os.makedirs(self.pt_Path, exist_ok=True)
-        self.pt_list = os.listdir(f'{self.current_workpath}/ptfiles/')
+        self.pt_list = os.listdir(f'{self.current_workpath}/cv_module/ptfiles/')
         self.pt_list = [file for file in self.pt_list if file.endswith('.pt')]
-        self.pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/ptfiles/' + x))
+        self.pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/cv_module/ptfiles/' + x))
         self.ui.model_box.clear()
         self.ui.model_box.addItems(self.pt_list)
         self.qtimer_search = QTimer(self)
@@ -77,8 +77,8 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 导入 图片/视频、调用摄像头、导入文件夹（批量处理）、调用网络摄像头 --- #
 
         # --- 导入模型、 导出结果 --- #
-        # self.window.import_button.clicked.connect(self.importModel)
-        # self.window.save_status_button.clicked.connect(self.saveStatus)
+        # self.ui.import_button.clicked.connect(self.importModel)
+        # self.ui.save_status_button.clicked.connect(self.saveStatus)
         self.ui.save_button.clicked.connect(self.saveResult)
         self.ui.save_button.setEnabled(True)
         # --- 导入模型、 导出结果 --- #
@@ -131,7 +131,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- Setting栏 初始化 --- #
 
         # --- MessageBar Init --- #
-        self.showStatus("Welcome to SPD")
+        self.showStatus("Welcome to SGMS")
         # --- MessageBar Init --- #
 
         # mediapipe
@@ -190,9 +190,9 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
 
     # 加载 pt 模型到 model_box
     def loadModels(self):
-        pt_list = os.listdir(f'{self.current_workpath}/ptfiles/')
+        pt_list = os.listdir(f'{self.current_workpath}/cv_module/ptfiles/')
         pt_list = [file for file in pt_list if file.endswith('.pt')]
-        pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/ptfiles/' + x))
+        pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/cv_module/ptfiles/' + x))
 
         if pt_list != self.pt_list:
             self.pt_list = pt_list
@@ -233,7 +233,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.stopOtherModel(model_name)
         yolo_thread = self.yolo_threads.get(model_name)
         if yolo_thread is not None:
-            yolo_thread.new_model_name = f'{self.current_workpath}/ptfiles/' + self.ui.model_box.currentText()
+            yolo_thread.new_model_name = f'{self.current_workpath}/cv_module/ptfiles/' + self.ui.model_box.currentText()
         else:
             self.yolo_threads.set(model_name, MODEL_THREAD_CLASSES[model_name]())
             self.initModel(yoloname=model_name)
@@ -252,7 +252,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
             self.showStatus('Pause Detection')
 
     def runModel(self, runbuttonStatus=None):
-        # self.window.save_status_button.setEnabled(False)
+        # self.ui.save_status_button.setEnabled(False)
         if runbuttonStatus:
             self.ui.run_button.setChecked(True)
         current_model_name = self.checkCurrentModel()

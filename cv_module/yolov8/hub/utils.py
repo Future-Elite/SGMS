@@ -56,7 +56,7 @@ def request_with_credentials(url: str) -> any:
     display.display(
         display.Javascript(
             """
-            window._hub_tmp = new Promise((resolve, reject) => {
+            ui._hub_tmp = new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => reject("Failed authenticating existing browser session"), 5000)
                 fetch("%s", {
                     method: 'POST',

@@ -162,7 +162,7 @@ while cap.isOpened():
         # Break the loop if the end of the video is reached
         break
 
-# Release the video capture object and close the display window
+# Release the video capture object and close the display ui
 cap.release()
 cv2.destroyAllWindows()
 ```
@@ -239,7 +239,7 @@ while cap.isOpened():
         # Break the loop if the end of the video is reached
         break
 
-# Release the video capture object and close the display window
+# Release the video capture object and close the display ui
 cap.release()
 cv2.destroyAllWindows()
 ```

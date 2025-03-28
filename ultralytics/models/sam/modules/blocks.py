@@ -582,16 +582,16 @@ class MultiScaleAttention(nn.Module):
 
 class MultiScaleBlock(nn.Module):
     """
-    A multi-scale attention block with window partitioning and query pooling for efficient vision transformers.
+    A multi-scale attention block with ui partitioning and query pooling for efficient vision transformers.
 
-    This class implements a multi-scale attention mechanism with optional window partitioning and downsampling,
+    This class implements a multi-scale attention mechanism with optional ui partitioning and downsampling,
     designed for use in vision transformer architectures.
 
     Attributes:
         dim (int): Input dimension of the block.
         dim_out (int): Output dimension of the block.
         norm1 (nn.Module): First normalization layer.
-        window_size (int): Size of the window for partitioning.
+        window_size (int): Size of the ui for partitioning.
         pool (nn.Module | None): Pooling layer for query downsampling.
         q_stride (Tuple[int, int] | None): Stride for query pooling.
         attn (MultiScaleAttention): Multi-scale attention module.
@@ -623,7 +623,7 @@ class MultiScaleBlock(nn.Module):
         act_layer: nn.Module = nn.GELU,
         window_size: int = 0,
     ):
-        """Initializes a multi-scale attention block with window partitioning and optional query pooling."""
+        """Initializes a multi-scale attention block with ui partitioning and optional query pooling."""
         super().__init__()
 
         if isinstance(norm_layer, str):
@@ -685,7 +685,7 @@ class MultiScaleBlock(nn.Module):
             pad_w = (window_size - W % window_size) % window_size
             pad_hw = (H + pad_h, W + pad_w)
 
-        # Reverse window partition
+        # Reverse ui partition
         if self.window_size > 0:
             x = window_unpartition(x, window_size, pad_hw, (H, W))
 
@@ -876,7 +876,7 @@ class PositionEmbeddingRandom(nn.Module):
 
 class Block(nn.Module):
     """
-    Transformer block with support for window attention and residual propagation.
+    Transformer block with support for ui attention and residual propagation.
 
     This class implements a transformer block that can use either global or windowed self-attention,
     followed by a feed-forward network. It supports relative positional embeddings and is designed
@@ -887,7 +887,7 @@ class Block(nn.Module):
         attn (REAttention): Self-attention layer with optional relative positional encoding.
         norm2 (nn.Module): Second normalization layer.
         mlp (MLPBlock): Multi-layer perceptron block.
-        window_size (int): Size of attention window. If 0, global attention is used.
+        window_size (int): Size of attention ui. If 0, global attention is used.
 
     Methods:
         forward: Processes input through the transformer block.
@@ -915,7 +915,7 @@ class Block(nn.Module):
         input_size: Optional[Tuple[int, int]] = None,
     ) -> None:
         """
-        Initializes a transformer block with optional window attention and relative positional embeddings.
+        Initializes a transformer block with optional ui attention and relative positional embeddings.
 
         This constructor sets up a transformer block that can use either global or windowed self-attention,
         followed by a feed-forward network. It supports relative positional embeddings and is designed
@@ -930,7 +930,7 @@ class Block(nn.Module):
             act_layer (Type[nn.Module]): Type of activation function to use in the MLP block.
             use_rel_pos (bool): If True, uses relative positional embeddings in attention.
             rel_pos_zero_init (bool): If True, initializes relative positional parameters to zero.
-            window_size (int): Size of attention window. If 0, uses global attention.
+            window_size (int): Size of attention ui. If 0, uses global attention.
             input_size (Optional[Tuple[int, int]]): Input resolution for calculating relative positional parameter size.
 
         Examples:
@@ -966,7 +966,7 @@ class Block(nn.Module):
             x, pad_hw = window_partition(x, self.window_size)
 
         x = self.attn(x)
-        # Reverse window partition
+        # Reverse ui partition
         if self.window_size > 0:
             x = window_unpartition(x, self.window_size, pad_hw, (H, W))
 
@@ -979,7 +979,7 @@ class REAttention(nn.Module):
     Rotary Embedding Attention module for efficient self-attention in transformer architectures.
 
     This class implements a multi-head attention mechanism with rotary positional embeddings, designed
-    for use in vision transformer models. It supports optional query pooling and window partitioning
+    for use in vision transformer models. It supports optional query pooling and ui partitioning
     for efficient processing of large inputs.
 
     Attributes:

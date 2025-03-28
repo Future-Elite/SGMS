@@ -17,7 +17,6 @@ from collections import defaultdict
 from cv_module.yolov8.utils.checks import check_imgsz, increment_path
 from cv_module.yolov8.utils.torch_utils import select_device
 from concurrent.futures import ThreadPoolExecutor
-# 加入mediapipe
 import mediapipe as mp
 
 

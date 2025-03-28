@@ -139,7 +139,7 @@ def inference(model=None):
     # Clear CUDA memory
     torch.cuda.empty_cache()
 
-    # Destroy window
+    # Destroy ui
     cv2.destroyAllWindows()
 
 

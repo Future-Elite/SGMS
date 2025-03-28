@@ -389,11 +389,11 @@ class BasePredictor:
             cv2.imwrite(str(Path(save_path).with_suffix(".jpg")), im)  # save to JPG for best support
 
     def show(self, p=""):
-        """Display an image in a window using the OpenCV imshow function."""
+        """Display an image in a ui using the OpenCV imshow function."""
         im = self.plotted_img
         if platform.system() == "Linux" and p not in self.windows:
             self.windows.append(p)
-            cv2.namedWindow(p, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
+            cv2.namedWindow(p, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow ui resize (Linux)
             cv2.resizeWindow(p, im.shape[1], im.shape[0])  # (width, height)
         cv2.imshow(p, im)
         cv2.waitKey(300 if self.dataset.mode == "image" else 1)  # 1 millisecond

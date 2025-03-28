@@ -426,7 +426,7 @@ class TinyViTBlock(nn.Module):
 
     def extra_repr(self) -> str:
         """Returns a formatted string representing the TinyViTBlock's parameters: dimension, input resolution, number of
-        attentions heads, window size, and MLP ratio.
+        attentions heads, ui size, and MLP ratio.
         """
         return (
             f"dim={self.dim}, input_resolution={self.input_resolution}, num_heads={self.num_heads}, "
@@ -461,7 +461,7 @@ class BasicLayer(nn.Module):
             input_resolution (Tuple[int, int]): Spatial resolution of the input feature map.
             depth (int): Number of TinyViT blocks.
             num_heads (int): Number of attention heads.
-            window_size (int): Local window size.
+            window_size (int): Local ui size.
             mlp_ratio (float, optional): Ratio of mlp hidden dim to embedding dim. Default is 4.
             drop (float, optional): Dropout rate. Default is 0.
             drop_path (float | tuple[float], optional): Stochastic depth rate. Default is 0.
@@ -545,7 +545,7 @@ class TinyViT(nn.Module):
         embed_dims (List[int]): List of embedding dimensions for each layer.
         depths (List[int]): List of depths for each layer.
         num_heads (List[int]): List of number of attention heads for each layer.
-        window_sizes (List[int]): List of window sizes for each layer.
+        window_sizes (List[int]): List of ui sizes for each layer.
         mlp_ratio (float): Ratio of MLP hidden dimension to embedding dimension.
         drop_rate (float): Dropout rate for drop layers.
         drop_path_rate (float): Drop path rate for stochastic depth.
@@ -556,7 +556,7 @@ class TinyViT(nn.Module):
 
     Note:
         This implementation is generalized to accept a list of depths, attention heads,
-        embedding dimensions and window sizes, which allows you to create a
+        embedding dimensions and ui sizes, which allows you to create a
         "stack" of TinyViT models of varying configurations.
     """
 
@@ -587,7 +587,7 @@ class TinyViT(nn.Module):
             embed_dims (List[int], optional): List of embedding dimensions for each layer. Defaults to [96, 192, 384, 768].
             depths (List[int], optional): List of depths for each layer. Defaults to [2, 2, 6, 2].
             num_heads (List[int], optional): List of number of attention heads for each layer. Defaults to [3, 6, 12, 24].
-            window_sizes (List[int], optional): List of window sizes for each layer. Defaults to [7, 7, 14, 7].
+            window_sizes (List[int], optional): List of ui sizes for each layer. Defaults to [7, 7, 14, 7].
             mlp_ratio (float, optional): Ratio of MLP hidden dimension to embedding dimension. Defaults to 4.
             drop_rate (float, optional): Dropout rate. Defaults to 0.
             drop_path_rate (float, optional): Drop path rate for stochastic depth. Defaults to 0.1.

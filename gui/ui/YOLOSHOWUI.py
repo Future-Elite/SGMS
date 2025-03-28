@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'YOLOSHOWUI.window'
+## Form generated from reading UI file 'YOLOSHOWUI.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QMetaObject, QRect,
-                            QSize, Qt)
-from PySide6.QtGui import (QCursor,
-                           QFont, QIcon,
-                           QPixmap)
-from PySide6.QtWidgets import (QDoubleSpinBox, QFrame, QHBoxLayout,
-                               QLabel, QLayout, QProgressBar,
-                               QPushButton, QSizePolicy, QSlider, QSpacerItem,
-                               QSpinBox, QSplitter, QVBoxLayout, QWidget)
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QFrame, QHBoxLayout,
+    QLabel, QLayout, QMainWindow, QProgressBar,
+    QPushButton, QSizePolicy, QSlider, QSpacerItem,
+    QSpinBox, QSplitter, QVBoxLayout, QWidget)
 
 from qfluentwidgets import ComboBox
-from gui.window.utils.UpdateFrame import DoubleClickQFrame
-
+from gui.ui.utils.UpdateFrame import DoubleClickQFrame
+import gui.ui.YOLOSHOWUI_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -167,7 +169,7 @@ class Ui_MainWindow(object):
         self.title.setStyleSheet(u"")
         self.title.setIndent(-1)
 
-        self.horizontalLayout.addWidget(self.title, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.horizontalLayout.addWidget(self.title)
 
 
         self.topBox.addWidget(self.right_top, 0, Qt.AlignmentFlag.AlignHCenter)
@@ -236,11 +238,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout_8.setSpacing(5)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.horizontalLayout_8.setContentsMargins(10, 10, 15, 3)
-        self.SGMS = QFrame(self.leftbox_top)
-        self.SGMS.setObjectName(u"SGMS")
-        self.SGMS.setMinimumSize(QSize(160, 0))
-        self.SGMS.setMaximumSize(QSize(160, 180))
-        self.SGMS.setStyleSheet(u"QLabel{\n"
+        self.top_intro = QFrame(self.leftbox_top)
+        self.top_intro.setObjectName(u"top_intro")
+        self.top_intro.setMinimumSize(QSize(160, 0))
+        self.top_intro.setMaximumSize(QSize(160, 180))
+        self.top_intro.setStyleSheet(u"QLabel{\n"
 "	color: black;\n"
 "	font: 600 italic 9pt \"Segoe UI\";\n"
 "	font-weight: bold;\n"
@@ -248,19 +250,19 @@ class Ui_MainWindow(object):
 "QFrame{\n"
 "	border:none;\n"
 "}")
-        self.SGMS.setFrameShape(QFrame.Shape.StyledPanel)
-        self.SGMS.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_20 = QVBoxLayout(self.SGMS)
+        self.top_intro.setFrameShape(QFrame.Shape.StyledPanel)
+        self.top_intro.setFrameShadow(QFrame.Shadow.Raised)
+        self.verticalLayout_20 = QVBoxLayout(self.top_intro)
         self.verticalLayout_20.setSpacing(0)
         self.verticalLayout_20.setObjectName(u"verticalLayout_20")
         self.verticalLayout_20.setContentsMargins(5, 0, 0, 0)
-        self.label_3 = QLabel(self.SGMS)
+        self.label_3 = QLabel(self.top_intro)
         self.label_3.setObjectName(u"label_3")
 
         self.verticalLayout_20.addWidget(self.label_3, 0, Qt.AlignmentFlag.AlignHCenter)
 
 
-        self.horizontalLayout_8.addWidget(self.SGMS)
+        self.horizontalLayout_8.addWidget(self.top_intro)
 
         self.horizontalLayout_8.setStretch(0, 6)
 
@@ -1039,6 +1041,7 @@ class Ui_MainWindow(object):
         self.run_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.run_button.setMouseTracking(True)
         self.run_button.setStyleSheet(u"QPushButton{\n"
+"background-image: url(:/rightbox/images/newsize/play.png);\n"
 "background-repeat: no-repeat;\n"
 "background-position: center;\n"
 "border: none;\n"
@@ -1046,11 +1049,8 @@ class Ui_MainWindow(object):
 "QPushButton:hover{\n"
 "\n"
 "}")
-        icon = QIcon()
-        icon.addFile(u":/rightbox/images/newsize/play.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.run_button.setIcon(icon)
         self.run_button.setIconSize(QSize(40, 40))
-        self.run_button.setCheckable(True)
+        self.run_button.setCheckable(False)
         self.run_button.setChecked(False)
 
         self.horizontalLayout_20.addWidget(self.run_button)
@@ -1898,7 +1898,7 @@ class Ui_MainWindow(object):
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.ToggleBotton_6.setText(QCoreApplication.translate("MainWindow", u"Model", None))
         self.model_box.setProperty(u"placeholderText", "")
-        self.mp_button.setText(QCoreApplication.translate("MainWindow", u"Gesture", None))
+        self.mp_button.setText(QCoreApplication.translate("MainWindow", u"Mediapipe", None))
         self.ToggleBotton_2.setText(QCoreApplication.translate("MainWindow", u"IOU", None))
         self.ToggleBotton_3.setText(QCoreApplication.translate("MainWindow", u"Confidence", None))
         self.ToggleBotton_4.setText(QCoreApplication.translate("MainWindow", u"Delay(ms)", None))

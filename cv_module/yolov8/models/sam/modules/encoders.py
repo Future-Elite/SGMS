@@ -61,7 +61,7 @@ class ImageEncoderViT(nn.Module):
             use_abs_pos (bool): If True, use absolute positional embeddings.
             use_rel_pos (bool): If True, add relative positional embeddings to the attention map.
             rel_pos_zero_init (bool): If True, zero initialize relative positional parameters.
-            window_size (int): Window size for window attention blocks.
+            window_size (int): Window size for ui attention blocks.
             global_attn_indexes (list): Indexes for blocks using global attention.
         """
         super().__init__()
@@ -330,7 +330,7 @@ class PositionEmbeddingRandom(nn.Module):
 
 
 class Block(nn.Module):
-    """Transformer blocks with support of window attention and residual propagation blocks."""
+    """Transformer blocks with support of ui attention and residual propagation blocks."""
 
     def __init__(
         self,
@@ -355,7 +355,7 @@ class Block(nn.Module):
             act_layer (nn.Module): Activation layer.
             use_rel_pos (bool): If True, add relative positional embeddings to the attention map.
             rel_pos_zero_init (bool): If True, zero initialize relative positional parameters.
-            window_size (int): Window size for window attention blocks. If it equals 0, then
+            window_size (int): Window size for ui attention blocks. If it equals 0, then
                 use global attention.
             input_size (tuple(int, int), None): Input resolution for calculating the relative
                 positional parameter size.
@@ -377,7 +377,7 @@ class Block(nn.Module):
         self.window_size = window_size
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Executes a forward pass through the transformer block with window attention and non-overlapping windows."""
+        """Executes a forward pass through the transformer block with ui attention and non-overlapping windows."""
         shortcut = x
         x = self.norm1(x)
         # Window partition
@@ -386,7 +386,7 @@ class Block(nn.Module):
             x, pad_hw = window_partition(x, self.window_size)
 
         x = self.attn(x)
-        # Reverse window partition
+        # Reverse ui partition
         if self.window_size > 0:
             x = window_unpartition(x, self.window_size, pad_hw, (H, W))
 
@@ -433,7 +433,7 @@ class Attention(nn.Module):
             self.rel_pos_w = nn.Parameter(torch.zeros(2 * input_size[1] - 1, head_dim))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Applies the forward operation including attention, normalization, MLP, and indexing within window limits."""
+        """Applies the forward operation including attention, normalization, MLP, and indexing within ui limits."""
         B, H, W, _ = x.shape
         # qkv with shape (3, B, nHead, H * W, C)
         qkv = self.qkv(x).reshape(B, H * W, 3, self.num_heads, -1).permute(2, 0, 3, 1, 4)
@@ -455,7 +455,7 @@ def window_partition(x: torch.Tensor, window_size: int) -> Tuple[torch.Tensor, T
     Partition into non-overlapping windows with padding if needed.
     Args:
         x (tensor): input tokens with [B, H, W, C].
-        window_size (int): window size.
+        window_size (int): ui size.
 
     Returns:
         windows: windows after partition with [B * num_windows, window_size, window_size, C].
@@ -482,7 +482,7 @@ def window_unpartition(
 
     Args:
         windows (tensor): input tokens with [B * num_windows, window_size, window_size, C].
-        window_size (int): window size.
+        window_size (int): ui size.
         pad_hw (Tuple): padded height and width (Hp, Wp).
         hw (Tuple): original height and width (H, W) before padding.
 

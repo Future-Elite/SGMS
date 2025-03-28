@@ -11,16 +11,16 @@ import os
 import shutil
 import cv2
 import numpy as np
-from gui.window.utils.AcrylicFlyout import AcrylicFlyoutView, AcrylicFlyout
-from gui.window.utils.TableView import TableViewQWidget
-from gui.window.utils.drawFigure import PlottingThread
+from gui.ui.utils.AcrylicFlyout import AcrylicFlyoutView, AcrylicFlyout
+from gui.ui.utils.TableView import TableViewQWidget
+from gui.ui.utils.drawFigure import PlottingThread
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QPushButton
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
 import importlib
-from gui.window.utils.rtspDialog import CustomMessageBox
+from gui.ui.utils.rtspDialog import CustomMessageBox
 from models import common, yolo, experimental
-from gui.window.utils.webCamera import Camera, WebcamThread
+from gui.ui.utils.webCamera import Camera, WebcamThread
 from cv_module.yolov8.YOLOv8Thread import YOLOv8Thread
 from cv_module.yolov8.YOLOv8SegThread import YOLOv8SegThread
 from cv_module.yolov8.YOLOv8PoseThread import YOLOv8PoseThread
@@ -73,7 +73,7 @@ class BASEWINDOW:
         # --- 侧边栏 --- #
         self.ui.leftBox.setFixedWidth(WIDTH_LEFT_BOX_STANDARD)
         # logo
-        # self.window.logo.setFixedSize(WIDTH_LOGO, WIDTH_LOGO)
+        # self.ui.logo.setFixedSize(WIDTH_LOGO, WIDTH_LOGO)
 
         # 将左侧菜单栏的按钮固定宽度
         for child_left_box_widget in self.ui.leftbox_bottom.children():
@@ -276,7 +276,7 @@ class BASEWINDOW:
             cam_num, cams = Camera().get_cam_num()
             if cam_num > 0:
                 # popMenu = RoundMenu(parent=self)
-                # popMenu.setFixedWidth(self.window.leftbox_bottom.width())
+                # popMenu.setFixedWidth(self.ui.leftbox_bottom.width())
                 # actions = []
 
                 cam = cams[0]
@@ -286,9 +286,9 @@ class BASEWINDOW:
                 # actions[-1].triggered.connect(lambda: self.actionWebcam(cam))
                 self.actionWebcam(cam)
 
-                # x = self.window.webcamBox.mapToGlobal(self.window.webcamBox.pos()).x()
-                # y = self.window.webcamBox.mapToGlobal(self.window.webcamBox.pos()).y()
-                # y = y - self.window.webcamBox.frameGeometry().height() * 2
+                # x = self.ui.webcamBox.mapToGlobal(self.ui.webcamBox.pos()).x()
+                # y = self.ui.webcamBox.mapToGlobal(self.ui.webcamBox.pos()).y()
+                # y = y - self.ui.webcamBox.frameGeometry().height() * 2
                 # pos = QPoint(x, y)
                 # popMenu.exec(pos, aniType=MenuAnimationType.DROP_DOWN)
             else:
@@ -465,25 +465,16 @@ class BASEWINDOW:
     def checkCurrentModel(self, mode=None):
         # 定义模型和对应条件的映射
         model_conditions = {
-            "yolov5": lambda name: "yolov5" in name and not self.checkSegName(name),
-            "yolov7": lambda name: "yolov7" in name,
             "yolov8": lambda name: "yolov8" in name and not any(
                 func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
-            "yolov9": lambda name: "yolov9" in name,
-            "yolov10": lambda name: "yolov10" in name,
             "yolov11": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and not any(
                 func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
-            "rtdetr": lambda name: "rtdetr" in name,
-            "yolov5-seg": lambda name: "yolov5" in name and self.checkSegName(name),
             "yolov8-seg": lambda name: "yolov8" in name and self.checkSegName(name),
             "yolov11-seg": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkSegName(name),
             "yolov8-pose": lambda name: "yolov8" in name and self.checkPoseName(name),
             "yolov11-pose": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkPoseName(name),
             "yolov8-obb": lambda name: "yolov8" in name and self.checkObbName(name),
             "yolov11-obb": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkObbName(name),
-            "fastsam": lambda name: "fastsam" in name,
-            "samv2": lambda name: any(sub in name for sub in ["sam2", "samv2"]),
-            "sam": lambda name: "sam" in name
         }
 
         if mode:
@@ -509,16 +500,10 @@ class BASEWINDOW:
         return False
 
     def checkTaskName(self, modelname, taskname):
-        if "yolov5" in modelname:
-            return bool(re.match(f'yolo.?5.?-{taskname}.*\.pt$', modelname))
-        elif "yolov7" in modelname:
-            return bool(re.match(f'yolo.?7.?-{taskname}.*\.pt$', modelname))
-        elif "yolov8" in modelname:
+
+        if "yolov8" in modelname:
             return bool(re.match(f'yolo.?8.?-{taskname}.*\.pt$', modelname))
-        elif "yolov9" in modelname:
-            return bool(re.match(f'yolo.?9.?-{taskname}.*\.pt$', modelname))
-        elif "yolov10" in modelname:
-            return bool(re.match(f'yolo.?10.?-{taskname}.*\.pt$', modelname))
+
         elif "yolo11" in modelname:
             return bool(re.match(f'yolo.?11.?-{taskname}.*\.pt$', modelname))
 
@@ -551,11 +536,11 @@ class BASEWINDOW:
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
             self.ui.progress_bar.setValue(0)
-            # self.window.save_status_button.setEnabled(True)
+            # self.ui.save_status_button.setEnabled(True)
         elif msg == 'Stop Detection':
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
-            # self.window.save_status_button.setEnabled(True)
+            # self.ui.save_status_button.setEnabled(True)
             self.ui.progress_bar.setValue(0)
             self.ui.main_leftbox.clear()  # clear image display
             self.ui.main_rightbox.clear()
@@ -790,7 +775,7 @@ class BASEWINDOW:
     def showResultStatics(self):
         self.resutl_statistic = dict()
         # 读取 JSON 文件
-        with open(self.current_workpath + r'\gwindow\config\result.json', 'r', encoding='utf-8') as file:
+        with open(self.current_workpath + r'\gui\config\result.json', 'r', encoding='utf-8') as file:
             self.result_statistic = json.load(file)
         if self.result_statistic:
             # 创建新字典，使用中文键

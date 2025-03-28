@@ -47,10 +47,10 @@ def imwrite(filename: str, img: np.ndarray, params=None):
 
 def imshow(winname: str, mat: np.ndarray):
     """
-    Displays an image in the specified window.
+    Displays an image in the specified ui.
 
     Args:
-        winname (str): Name of the window.
+        winname (str): Name of the ui.
         mat (np.ndarray): Image to be shown.
     """
     _imshow(winname.encode("unicode_escape").decode(), mat)

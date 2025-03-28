@@ -20,7 +20,7 @@ class ParkingPtsSelection:
         tk (module): The Tkinter module for GUI operations.
         filedialog (module): Tkinter's filedialog module for file selection operations.
         messagebox (module): Tkinter's messagebox module for displaying message boxes.
-        master (tk.Tk): The main Tkinter window.
+        master (tk.Tk): The main Tkinter ui.
         canvas (tk.Canvas): The canvas widget for displaying the image and drawing bounding boxes.
         image (PIL.Image.Image): The uploaded image.
         canvas_image (ImageTk.PhotoImage): The image displayed on the canvas.
