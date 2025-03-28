@@ -778,7 +778,7 @@ class BASEWINDOW:
     # 接受统计结果，然后写入json中
     def setResultStatistic(self, value):
         # 写入 JSON 文件
-        with open('config/result.json', 'w', encoding='utf-8') as file:
+        with open('gui/config/result.json', 'w', encoding='utf-8') as file:
             json.dump(value, file, ensure_ascii=False, indent=4)
         # --- 获取统计结果 + 绘制柱状图 --- #
         self.result_statistic = value
