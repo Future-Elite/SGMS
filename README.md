@@ -36,5 +36,5 @@ python>=3.9
 ### Setup
 ```bash
 git clone [https://github.com/Future-Elite/SGMS]
-cd SGMS
-pip install -r requirements
+cd [project-name]
+pip install -r requirements.txt
