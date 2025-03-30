@@ -1252,7 +1252,7 @@ QFrame#main_rightbox{
                       <string/>
                      </property>
                      <property name="pixmap">
-                      <pixmap resource="YOLOSHOWUI.qrc">:/statusbar/images/newsize/classesBar.png</pixmap>
+                      <pixmap resource="UI.qrc">:/statusbar/images/newsize/classesBar.png</pixmap>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1492,7 +1492,7 @@ font: 17pt &quot;Microsoft YaHei UI&quot;;</string>
                       <string/>
                      </property>
                      <property name="pixmap">
-                      <pixmap resource="YOLOSHOWUI.qrc">:/statusbar/images/newsize/targetBar.png</pixmap>
+                      <pixmap resource="UI.qrc">:/statusbar/images/newsize/targetBar.png</pixmap>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1732,7 +1732,7 @@ font: 17pt &quot;Microsoft YaHei UI&quot;;</string>
                       <string/>
                      </property>
                      <property name="pixmap">
-                      <pixmap resource="YOLOSHOWUI.qrc">:/statusbar/images/newsize/fpsBar.png</pixmap>
+                      <pixmap resource="UI.qrc">:/statusbar/images/newsize/fpsBar.png</pixmap>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -1978,7 +1978,7 @@ font: 17pt &quot;Microsoft YaHei UI&quot;;</string>
                       <string/>
                      </property>
                      <property name="pixmap">
-                      <pixmap resource="YOLOSHOWUI.qrc">:/statusbar/images/newsize/modelBar.png</pixmap>
+                      <pixmap resource="UI.qrc">:/statusbar/images/newsize/modelBar.png</pixmap>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -3759,7 +3759,7 @@ QPushButton:hover{
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="YOLOSHOWUI.qrc"/>
+  <include location="UI.qrc"/>
  </resources>
  <connections/>
 </ui>

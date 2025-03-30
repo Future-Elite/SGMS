@@ -11,8 +11,8 @@ from cv_module.yolov8.data.augment import classify_transforms, LetterBox
 from cv_module.yolov8.data.utils import IMG_FORMATS, VID_FORMATS
 from cv_module.yolov8.engine.predictor import STREAM_WARNING
 from cv_module.yolov8.engine.results import Results
-from models.common import AutoBackend
-from cv_module.yolov8.utils import callbacks, ops, LOGGER, colorstr, MACOS, WINDOWS
+from cv_module.models.common import AutoBackend
+from cv_module.yolov8.utils import callbacks, ops, LOGGER, MACOS, WINDOWS
 from collections import defaultdict
 from cv_module.yolov8.utils.checks import check_imgsz, increment_path
 from cv_module.yolov8.utils.torch_utils import select_device

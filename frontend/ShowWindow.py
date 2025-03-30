@@ -1,7 +1,7 @@
 from utils import glo
 import json
 import os
-from gui.ui.YOLOSHOWUI import Ui_MainWindow
+from gui.ui.UI import Ui_MainWindow
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 from frontend.CVThreadPool import YOLOThreadPool
@@ -13,7 +13,7 @@ GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 80
 WIDTH_LEFT_BOX_EXTENDED = 100
 WIDTH_LOGO = 60
-UI_FILE_PATH = "ui/YOLOSHOWUI.ui"
+UI_FILE_PATH = "ui/UI.ui"
 KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
 
 

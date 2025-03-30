@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'YOLOSHOWUI.ui'
+## Form generated from reading UI file 'UI.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QFrame, QHBoxLayout
 
 from qfluentwidgets import ComboBox
 from gui.ui.utils.UpdateFrame import DoubleClickQFrame
-import gui.ui.YOLOSHOWUI_rc
+import gui.ui.UI_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):

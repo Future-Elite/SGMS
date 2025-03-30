@@ -19,7 +19,7 @@ from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QP
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
 import importlib
 from gui.ui.utils.rtspDialog import CustomMessageBox
-from models import common, yolo, experimental
+from cv_module.models import common, experimental, yolo
 from gui.ui.utils.webCamera import Camera, WebcamThread
 from cv_module.yolov8.YOLOv8Thread import YOLOv8Thread
 from cv_module.yolov8.YOLOv8SegThread import YOLOv8SegThread
@@ -673,7 +673,7 @@ class BASEWINDOW:
             if "yolov5" in ptbaseName and not self.checkSegName(ptbaseName):
                 glo.set_value('yoloname', "yolov5")
                 self.reloadModel()
-                from models.yolo import Detect_YOLOV5
+                from cv_module.models.yolo import Detect_YOLOV5
                 net = torch.load(ptname)
                 for _module_index in range(len(net['model'].model)):
                     _module = net['model'].model[_module_index]
@@ -695,7 +695,7 @@ class BASEWINDOW:
             elif "yolov5" in ptbaseName and self.checkSegName(ptbaseName):
                 glo.set_value('yoloname', "yolov5-seg")
                 self.reloadModel()
-                from models.yolo import Segment_YOLOV5
+                from cv_module.models.yolo import Segment_YOLOV5
                 net = torch.load(ptname)
                 for _module_index in range(len(net['model'].model)):
                     _module = net['model'].model[_module_index]
@@ -718,7 +718,7 @@ class BASEWINDOW:
             elif "yolov7" in ptbaseName:
                 glo.set_value('yoloname', "yolov7")
                 self.reloadModel()
-                from models.yolo import Detect_YOLOV7
+                from cv_module.models.yolo import Detect_YOLOV7
                 net = torch.load(ptname)
                 for _module_index in range(len(net['model'].model)):
                     _module = net['model'].model[_module_index]
@@ -740,7 +740,7 @@ class BASEWINDOW:
             elif "yolov9" in ptbaseName:
                 glo.set_value('yoloname', "yolov9")
                 self.reloadModel()
-                from models.yolo import Detect_YOLOV9
+                from cv_module.models.yolo import Detect_YOLOV9
                 net = torch.load(ptname)
                 for _module_index in range(len(net['model'].model)):
                     _module = net['model'].model[_module_index]

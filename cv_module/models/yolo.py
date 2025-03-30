@@ -9,7 +9,7 @@ try:
 except ImportError:
     thop = None
 
-sys.path.append('./')  # to run '$ python *.py' files in subdirectories
+sys.path.append('/')  # to run '$ python *.py' files in subdirectories
 logger = logging.getLogger(__name__)
 
 
