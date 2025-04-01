@@ -1,15 +1,15 @@
 import torch
-from cv_module.yolov8.YOLOv8Thread import YOLOv8Thread
+from cv_module.yolov8.YOLOThread import YOLOThread
 from cv_module.yolov8.engine.results import Results
 from cv_module.yolov8.utils import ops
 
 
-class YOLOv8ObbThread(YOLOv8Thread):
+class YOLOObbThread(YOLOThread):
 
 
 
     def __init__(self):
-        super(YOLOv8ObbThread, self).__init__()
+        super(YOLOObbThread, self).__init__()
         self.task = 'obb'
         self.project = 'runs/obb'
 

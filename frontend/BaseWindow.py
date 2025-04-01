@@ -21,9 +21,9 @@ import importlib
 from gui.ui.utils.rtspDialog import CustomMessageBox
 from cv_module.models import common, experimental, yolo
 from gui.ui.utils.webCamera import Camera, WebcamThread
-from cv_module.yolov8.YOLOv8Thread import YOLOv8Thread
-from cv_module.yolov8.YOLOv8SegThread import YOLOv8SegThread
-from cv_module.yolov8.YOLOv8PoseThread import YOLOv8PoseThread
+from cv_module.yolov8.YOLOThread import YOLOThread
+from cv_module.yolov8.YOLOv8SegThread import YOLOSegThread
+from cv_module.yolov8.YOLOv8PoseThread import YOLOPoseThread
 from cv_module.yolov11.YOLOv11Thread import YOLOv11Thread
 from cv_module.yolov11.YOLOv11SegThread import YOLOv11SegThread
 from cv_module.yolov11.YOLOv11PoseThread import YOLOv11PoseThread
@@ -42,11 +42,11 @@ WINDOW_SPLIT_BODY = 20
 KEYS_LEFT_BOX_MENU = ['src_menu', 'src_setting', 'src_webcam', 'src_folder', 'src_camera', 'src_vsmode', 'src_setting']
 # 模型名称和线程类映射
 MODEL_THREAD_CLASSES = {
-    "yolov8": YOLOv8Thread,
+    "yolov8": YOLOThread,
     "yolov11": YOLOv11Thread,
-    "yolov8-seg": YOLOv8SegThread,
+    "yolov8-seg": YOLOSegThread,
     "yolov11-seg": YOLOv11SegThread,
-    "yolov8-pose": YOLOv8PoseThread,
+    "yolov8-pose": YOLOPoseThread,
     "yolov11-pose": YOLOv11PoseThread,
 }
 # 扩展MODEL_THREAD_CLASSES字典
@@ -828,3 +828,4 @@ class BASEWINDOW:
     def showTableResult(self):
         self.table_result = TableViewQWidget(infoList=self.detect_result)
         self.table_result.show()
+

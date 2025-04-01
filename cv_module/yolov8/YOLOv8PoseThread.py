@@ -1,12 +1,12 @@
-from cv_module.yolov8.YOLOv8Thread import YOLOv8Thread
+from cv_module.yolov8.YOLOThread import YOLOThread
 from cv_module.yolov8.engine.results import Results
 from cv_module.yolov8.utils import ops
 
 
-class YOLOv8PoseThread(YOLOv8Thread):
+class YOLOPoseThread(YOLOThread):
 
     def __init__(self):
-        super(YOLOv8PoseThread, self).__init__()
+        super(YOLOPoseThread, self).__init__()
         self.task = 'pose'
         self.project = 'runs/pose'
 

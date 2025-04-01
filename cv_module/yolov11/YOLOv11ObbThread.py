@@ -1,7 +1,7 @@
-from cv_module.yolov8.YOLOv8ObbThread import YOLOv8ObbThread
+from cv_module.yolov8.YOLOv8ObbThread import YOLOObbThread
 
 
-class YOLOv11ObbThread(YOLOv8ObbThread):
+class YOLOv11ObbThread(YOLOObbThread):
 
     def __init__(self):
         super(YOLOv11ObbThread, self).__init__()

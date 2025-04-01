@@ -1,13 +1,16 @@
-from utils import glo
 import json
 import os
-from gui.ui.UI import Ui_MainWindow
+
+from PySide6 import QtCore, QtGui
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QFileDialog, QMainWindow
-from frontend.CVThreadPool import YOLOThreadPool
-from PySide6.QtCore import QTimer, Qt
-from PySide6 import QtCore, QtGui
+
+from backend.BackendThread import BackendThread
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
+from frontend.ThreadPool import YOLOThreadPool
+from gui.ui.UI import Ui_MainWindow
+from utils import glo
 
 GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 80
@@ -20,6 +23,7 @@ KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
 class SHOWWINDOW(QMainWindow, BASEWINDOW):
     def __init__(self):
         super().__init__()
+        self.backend_thread = None
         self.current_model = None
         self.current_workpath = os.getcwd()
         self.inputPath = None
@@ -268,6 +272,8 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         if self.inputPath is not None:
             self.changeModel()
             self.runModel()
+            self.backend_thread = BackendThread()
+            self.backend_thread.start()
         else:
             self.showStatus("Please select the Image/Video before starting detection...")
             self.ui.run_button.setChecked(False)

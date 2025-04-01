@@ -20,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 import mediapipe as mp
 
 
-class YOLOv8Thread(QThread):
+class YOLOThread(QThread):
     # 输入 输出 消息
     send_input = Signal(np.ndarray)
     send_output = Signal(np.ndarray)
@@ -34,8 +34,10 @@ class YOLOv8Thread(QThread):
     send_result_picture = Signal(dict)  # Send the result picture
     send_result_table = Signal(list)  # Send the result table
 
+    detections = Signal(dict)  # Send the detection results
+
     def __init__(self):
-        super(YOLOv8Thread, self).__init__()
+        super(YOLOThread, self).__init__()
         # SHOWWINDOW 界面参数设置
         self.ori_img = None
         self.results = None
@@ -281,6 +283,7 @@ class YOLOv8Thread(QThread):
                                 self.all_labels_dict[key] = value
 
                     self.send_output.emit(self.plotted_img)  # after detection
+                    self.detections.emit(self.labels_dict)
                     self.send_class_num.emit(class_nums)
                     self.send_target_num.emit(target_nums)
 

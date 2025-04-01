@@ -1,10 +1,26 @@
 from PySide6.QtCore import QMutex, QThread
+from PySide6.QtCore import QObject
+
+from cv_module.yolov8.YOLOThread import YOLOThread
+from frontend.GlobalState import GlobalState
+
+# 初始化全局状态
+global_state = GlobalState()
+
+
+class SignalAdapter(QObject):
+    """将YOLOThread的信号转换为函数调用"""
+    def __init__(self, yolo_thread):
+        super().__init__()
+        # 连接信号到全局状态更新
+        yolo_thread.detections.connect(global_state.update_detection)
 
 
 class YOLOThreadPool:
     MAX_THREADS = 3
 
     def __init__(self):
+        self.adapters = {}  # 存储适配器实例
         self.threads_pool = {}  # 存放对象的字典
         self.thread_order = []  # 记录线程添加顺序的列表
         self._mutex = QMutex()  # 线程锁
@@ -18,6 +34,10 @@ class YOLOThreadPool:
         """设置或更新线程对象"""
         if not isinstance(thread_obj, QThread):
             raise ValueError("The object must be an instance of QThread.")
+
+        if isinstance(thread_obj, YOLOThread):
+            # 为每个YOLOThread创建适配器
+            self.adapters[name] = SignalAdapter(thread_obj)
 
         self._mutex.lock()  # 加锁，确保线程安全
         # 如果已经存在，则停止并删除
