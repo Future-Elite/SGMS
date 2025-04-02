@@ -1,4 +1,4 @@
-from cv_module.yolov8.YOLOv8SegThread import YOLOSegThread
+from cv_module.yolov8.YOLOSegThread import YOLOSegThread
 
 
 class YOLOv11SegThread(YOLOSegThread):

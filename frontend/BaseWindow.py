@@ -1,32 +1,33 @@
-import random
-
-from utils import glo
-from utils.logger import LoggerUtils
-import re
-import socket
-from urllib.parse import urlparse
-import torch
+import importlib
 import json
 import os
+import random
+import re
 import shutil
+import socket
+from urllib.parse import urlparse
+
 import cv2
 import numpy as np
+import torch
+from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
+from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QPushButton
+from frontend.ThreadPool import backend_controller
+from cv_module.models import common, experimental, yolo
+from cv_module.yolov11.YOLOv11PoseThread import YOLOv11PoseThread
+from cv_module.yolov11.YOLOv11SegThread import YOLOv11SegThread
+from cv_module.yolov11.YOLOv11Thread import YOLOv11Thread
+from cv_module.yolov8.YOLOThread import YOLOThread
+from cv_module.yolov8.YOLOPoseThread import YOLOPoseThread
+from cv_module.yolov8.YOLOSegThread import YOLOSegThread
 from gui.ui.utils.AcrylicFlyout import AcrylicFlyoutView, AcrylicFlyout
 from gui.ui.utils.TableView import TableViewQWidget
 from gui.ui.utils.drawFigure import PlottingThread
-from PySide6.QtGui import QPixmap, QImage
-from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QPushButton
-from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
-import importlib
 from gui.ui.utils.rtspDialog import CustomMessageBox
-from cv_module.models import common, experimental, yolo
 from gui.ui.utils.webCamera import Camera, WebcamThread
-from cv_module.yolov8.YOLOThread import YOLOThread
-from cv_module.yolov8.YOLOv8SegThread import YOLOSegThread
-from cv_module.yolov8.YOLOv8PoseThread import YOLOPoseThread
-from cv_module.yolov11.YOLOv11Thread import YOLOv11Thread
-from cv_module.yolov11.YOLOv11SegThread import YOLOv11SegThread
-from cv_module.yolov11.YOLOv11PoseThread import YOLOv11PoseThread
+from utils import glo
+from utils.logger import LoggerUtils
 
 glo._init()
 glo.set_value('yoloname', "yolov8 yolov11"
@@ -62,6 +63,8 @@ loggertool = LoggerUtils()
 class BASEWINDOW:
     def __init__(self):
         super().__init__()
+
+        self.backend_thread = None
         self.inputPath = None
         self.yolo_threads = None
         self.result_statistic = None
@@ -275,22 +278,8 @@ class BASEWINDOW:
             # get the number of local cameras
             cam_num, cams = Camera().get_cam_num()
             if cam_num > 0:
-                # popMenu = RoundMenu(parent=self)
-                # popMenu.setFixedWidth(self.ui.leftbox_bottom.width())
-                # actions = []
-
                 cam = cams[0]
-                # cam_name = f'Camera_{cam}'
-                # actions.append(Action(cam_name))
-                # popMenu.addAction(actions[-1])
-                # actions[-1].triggered.connect(lambda: self.actionWebcam(cam))
                 self.actionWebcam(cam)
-
-                # x = self.ui.webcamBox.mapToGlobal(self.ui.webcamBox.pos()).x()
-                # y = self.ui.webcamBox.mapToGlobal(self.ui.webcamBox.pos()).y()
-                # y = y - self.ui.webcamBox.frameGeometry().height() * 2
-                # pos = QPoint(x, y)
-                # popMenu.exec(pos, aniType=MenuAnimationType.DROP_DOWN)
             else:
                 self.showStatus('No camera found !!!')
         except Exception as e:
@@ -328,76 +317,6 @@ class BASEWINDOW:
             with open(config_file, 'w', encoding='utf-8') as f:
                 f.write(config_json)
 
-    # 选择网络摄像头 Rtsp
-    def selectRtsp(self):
-        # rtsp://rtsp-test-server.viomic.com:554/stream
-        rtspDialog = CustomMessageBox(self, mode="single")
-        self.rtspUrl = None
-        if rtspDialog.exec():
-            self.rtspUrl = rtspDialog.urlLineEdit.text()
-        if self.rtspUrl:
-            parsed_url = urlparse(self.rtspUrl)
-            if parsed_url.scheme == 'rtsp':
-                if not self.checkRtspUrl(self.rtspUrl):
-                    self.showStatus('Rtsp stream is not available')
-                    return False
-                self.showStatus(f'Loading Rtsp：{self.rtspUrl}')
-                self.rtspThread = WebcamThread(self.rtspUrl)
-                self.rtspThread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
-                self.rtspThread.start()
-                self.inputPath = self.rtspUrl
-            elif parsed_url.scheme in ['http', 'https']:
-                if not self.checkHttpUrl(self.rtspUrl):
-                    self.showStatus('Http stream is not available')
-                    return False
-                self.showStatus(f'Loading Http：{self.rtspUrl}')
-                self.rtspThread = WebcamThread(self.rtspUrl)
-                self.rtspThread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
-                self.rtspThread.start()
-                self.inputPath = self.rtspUrl
-            else:
-                self.showStatus('URL is not an rtsp stream')
-                return False
-
-    # 检测网络摄像头 Rtsp 是否连通
-    def checkRtspUrl(self, url, timeout=5):
-        try:
-            # 解析URL获取主机名和端口
-            from urllib.parse import urlparse
-            parsed_url = urlparse(url)
-            hostname = parsed_url.hostname
-            port = parsed_url.port or 554  # RTSP默认端口是554
-
-            # 创建socket对象
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
-            # 尝试连接
-            sock.connect((hostname, port))
-            # 关闭socket
-            sock.close()
-            return True
-        except Exception:
-            return False
-
-    # 检测Http网络摄像头 是否连通
-    def checkHttpUrl(self, url, timeout=5):
-        try:
-            # 解析URL获取主机名和端口
-            from urllib.parse import urlparse
-            parsed_url = urlparse(url)
-            hostname = parsed_url.hostname
-            port = parsed_url.port or 80  # HTTP默认端口是80
-
-            # 创建socket对象
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
-            # 尝试连接
-            sock.connect((hostname, port))
-            # 关闭socket
-            sock.close()
-            return True
-        except Exception as e:
-            return False
 
     # 显示Label图片
     def showImg(self, img, label, flag):
@@ -635,6 +554,14 @@ class BASEWINDOW:
         for yolo_thread in self.yolo_threads.threads_pool.values():
             yolo_thread.use_mp = use_mp
 
+    def use_backend(self):
+        if not self.backend_thread:
+            self.backend_thread = backend_controller
+            self.backend_thread.start_processing()
+        else:
+            self.backend_thread.stop_processing()
+            self.backend_thread = None
+
     # 调整超参数
     def changeValue(self, x, flag):
         if flag == 'iou_spinbox':
@@ -828,4 +755,3 @@ class BASEWINDOW:
     def showTableResult(self):
         self.table_result = TableViewQWidget(infoList=self.detect_result)
         self.table_result.show()
-

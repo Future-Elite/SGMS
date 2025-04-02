@@ -536,7 +536,7 @@ QFrame#tableBox:hover{
                <property name="frameShadow">
                 <enum>QFrame::Shadow::Raised</enum>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,4,1,4,1,4,1,4,1,4,1,4">
+               <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,4,1,4,1,4,1,4,1,4">
                 <property name="spacing">
                  <number>0</number>
                 </property>
@@ -810,92 +810,6 @@ QFrame#tableBox:hover{
                      </property>
                      <property name="shortcut">
                       <string>Ctrl+S</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QFrame" name="cameraBox">
-                  <property name="minimumSize">
-                   <size>
-                    <width>180</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>180</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="layoutDirection">
-                   <enum>Qt::LayoutDirection::LeftToRight</enum>
-                  </property>
-                  <property name="frameShape">
-                   <enum>QFrame::Shape::StyledPanel</enum>
-                  </property>
-                  <property name="frameShadow">
-                   <enum>QFrame::Shadow::Raised</enum>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_5">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>0</number>
-                   </property>
-                   <item alignment="Qt::AlignmentFlag::AlignLeft">
-                    <widget class="QPushButton" name="src_camera">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>180</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>180</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>IPcam  </string>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>30</width>
-                       <height>30</height>
-                      </size>
                      </property>
                     </widget>
                    </item>
@@ -2254,7 +2168,7 @@ QPushButton:hover{
                    </size>
                   </property>
                   <property name="checkable">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="checked">
                    <bool>false</bool>
@@ -2488,6 +2402,13 @@ font: 700 italic 16pt &quot;Segoe UI&quot;;</string>
                  </widget>
                 </item>
                 <item>
+                 <widget class="QPushButton" name="backend_button">
+                  <property name="text">
+                   <string>Backend</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QWidget" name="Model_QF_2" native="true">
                   <property name="minimumSize">
                    <size>
@@ -2712,6 +2633,7 @@ border-radius:15px;
                     <string notr="true">QPushButton{
 	background-repeat: no-repeat;
 	background-position: left center;
+	background-image: url(:/setting /images/newsize/check_yes.png);
 	border: none;	
 	text-align: left;
 	padding-left: 40px;
@@ -2721,7 +2643,8 @@ border-radius:15px;
 }
 QPushButton:hover{
 	background-color: rgba(114, 129, 214, 59);
-}</string>
+}
+</string>
                    </property>
                    <property name="text">
                     <string>Mediapipe</string>

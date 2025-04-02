@@ -432,34 +432,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3.addWidget(self.folderBox)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayout_3.addItem(self.verticalSpacer)
-
-        self.cameraBox = QFrame(self.leftbox_bottom)
-        self.cameraBox.setObjectName(u"cameraBox")
-        self.cameraBox.setMinimumSize(QSize(180, 0))
-        self.cameraBox.setMaximumSize(QSize(180, 16777215))
-        self.cameraBox.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
-        self.cameraBox.setFrameShape(QFrame.Shape.StyledPanel)
-        self.cameraBox.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_5 = QHBoxLayout(self.cameraBox)
-        self.horizontalLayout_5.setSpacing(0)
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.src_camera = QPushButton(self.cameraBox)
-        self.src_camera.setObjectName(u"src_camera")
-        sizePolicy2.setHeightForWidth(self.src_camera.sizePolicy().hasHeightForWidth())
-        self.src_camera.setSizePolicy(sizePolicy2)
-        self.src_camera.setMinimumSize(QSize(180, 0))
-        self.src_camera.setMaximumSize(QSize(180, 16777215))
-        self.src_camera.setIconSize(QSize(30, 30))
-
-        self.horizontalLayout_5.addWidget(self.src_camera, 0, Qt.AlignmentFlag.AlignLeft)
-
-
-        self.verticalLayout_3.addWidget(self.cameraBox)
-
         self.zSpacer3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_3.addItem(self.zSpacer3)
@@ -520,8 +492,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setStretch(7, 4)
         self.verticalLayout_3.setStretch(8, 1)
         self.verticalLayout_3.setStretch(9, 4)
-        self.verticalLayout_3.setStretch(10, 1)
-        self.verticalLayout_3.setStretch(11, 4)
 
         self.verticalLayout_2.addWidget(self.leftbox_bottom)
 
@@ -1050,7 +1020,7 @@ class Ui_MainWindow(object):
 "\n"
 "}")
         self.run_button.setIconSize(QSize(40, 40))
-        self.run_button.setCheckable(False)
+        self.run_button.setCheckable(True)
         self.run_button.setChecked(False)
 
         self.horizontalLayout_20.addWidget(self.run_button)
@@ -1162,6 +1132,11 @@ class Ui_MainWindow(object):
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout_22.addWidget(self.label_2)
+
+        self.backend_button = QPushButton(self.setting_page)
+        self.backend_button.setObjectName(u"backend_button")
+
+        self.verticalLayout_22.addWidget(self.backend_button)
 
         self.Model_QF_2 = QWidget(self.setting_page)
         self.Model_QF_2.setObjectName(u"Model_QF_2")
@@ -1276,6 +1251,7 @@ class Ui_MainWindow(object):
         self.mp_button.setStyleSheet(u"QPushButton{\n"
 "	background-repeat: no-repeat;\n"
 "	background-position: left center;\n"
+"	background-image: url(:/setting /images/newsize/check_yes.png);\n"
 "	border: none;	\n"
 "	text-align: left;\n"
 "	padding-left: 40px;\n"
@@ -1285,7 +1261,8 @@ class Ui_MainWindow(object):
 "}\n"
 "QPushButton:hover{\n"
 "	background-color: rgba(114, 129, 214, 59);\n"
-"}")
+"}\n"
+"")
         self.mp_button.setCheckable(True)
 
         self.verticalLayout_22.addWidget(self.widget_10)
@@ -1875,7 +1852,6 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(shortcut)
         self.src_folder.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+S", None))
 #endif // QT_CONFIG(shortcut)
-        self.src_camera.setText(QCoreApplication.translate("MainWindow", u"IPcam  ", None))
         self.src_result.setText(QCoreApplication.translate("MainWindow", u"    Result Pic  ", None))
         self.src_table.setText(QCoreApplication.translate("MainWindow", u"    Result Tab  ", None))
         self.main_leftbox.setText("")
@@ -1896,6 +1872,7 @@ class Ui_MainWindow(object):
         self.stop_button.setText("")
         self.message_bar.setText(QCoreApplication.translate("MainWindow", u"Message Bar ... ", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
+        self.backend_button.setText(QCoreApplication.translate("MainWindow", u"Backend", None))
         self.ToggleBotton_6.setText(QCoreApplication.translate("MainWindow", u"Model", None))
         self.model_box.setProperty(u"placeholderText", "")
         self.mp_button.setText(QCoreApplication.translate("MainWindow", u"Mediapipe", None))

@@ -6,9 +6,8 @@ from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 
-from backend.BackendThread import BackendThread
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
-from frontend.ThreadPool import YOLOThreadPool
+from frontend.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
 from utils import glo
 
@@ -75,7 +74,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.src_img.clicked.connect(self.selectFile)
         self.ui.src_webcam.clicked.connect(self.selectWebcam)
         self.ui.src_folder.clicked.connect(self.selectFolder)
-        self.ui.src_camera.clicked.connect(self.selectRtsp)
         self.ui.src_result.clicked.connect(self.showResultStatics)
         self.ui.src_table.clicked.connect(self.showTableResult)
         # --- 导入 图片/视频、调用摄像头、导入文件夹（批量处理）、调用网络摄像头 --- #
@@ -150,8 +148,14 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.mp_button.setIcon(self.mpIcon)
         self.ui.mp_button.clicked.connect(self.use_mp)
 
+        # Backend
+        self.ui.backend_button.setChecked(True)
+        # 点击按钮，启动后端线程，再次点击，关闭后端线程
+        self.ui.backend_button.clicked.connect(self.use_backend)
+
+
     def initThreads(self):
-        self.yolo_threads = YOLOThreadPool()
+        self.yolo_threads = ThreadPool()
         # 获取当前Model
         model_name = self.checkCurrentModel()
         if model_name:
@@ -272,8 +276,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         if self.inputPath is not None:
             self.changeModel()
             self.runModel()
-            self.backend_thread = BackendThread()
-            self.backend_thread.start()
         else:
             self.showStatus("Please select the Image/Video before starting detection...")
             self.ui.run_button.setChecked(False)
@@ -288,3 +290,5 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.Class_num.setText('--')
         self.ui.Target_num.setText('--')
         self.ui.fps_label.setText('--')
+
+

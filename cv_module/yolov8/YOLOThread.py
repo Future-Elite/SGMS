@@ -4,7 +4,7 @@ import time
 import cv2
 import numpy as np
 import torch
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QThread, Signal, Qt
 from pathlib import Path
 from cv_module.yolov8.data import load_inference_source
 from cv_module.yolov8.data.augment import classify_transforms, LetterBox
@@ -18,6 +18,17 @@ from cv_module.yolov8.utils.checks import check_imgsz, increment_path
 from cv_module.yolov8.utils.torch_utils import select_device
 from concurrent.futures import ThreadPoolExecutor
 import mediapipe as mp
+from frontend.ThreadPool import backend_controller
+
+
+class YOLOAdapter(QThread):
+    data = Signal(dict)  # 定义信号用于传递数据
+
+    def run(self):
+        while True:
+            # new_data信号连接到全局状态更新
+            self.data.connect(backend_controller.update)
+            time.sleep(0.5)
 
 
 class YOLOThread(QThread):
@@ -34,11 +45,11 @@ class YOLOThread(QThread):
     send_result_picture = Signal(dict)  # Send the result picture
     send_result_table = Signal(list)  # Send the result table
 
-    detections = Signal(dict)  # Send the detection results
-
     def __init__(self):
         super(YOLOThread, self).__init__()
         # SHOWWINDOW 界面参数设置
+        self.manager = YOLOAdapter()
+
         self.ori_img = None
         self.results = None
         self.current_model_name = None  # The detection model name to use
@@ -56,6 +67,7 @@ class YOLOThread(QThread):
         self.res_status = False  # result status
         self.parent_workpath = None  # parent work path
         self.executor = ThreadPoolExecutor(max_workers=1)  # 只允许一个线程运行
+        self.use_backend = False  # 是否使用后端
 
         # mediapipe 参数设置
         self.use_mp = False  # 是否使用mediapipe显示骨骼和手部
@@ -92,7 +104,7 @@ class YOLOThread(QThread):
         callbacks.add_integration_callbacks(self)
 
     def run(self):
-
+        self.manager.start()
         if not self.model:
             self.send_msg.emit("Loading model: {}".format(os.path.basename(self.new_model_name)))
             self.setup_model(self.new_model_name)
@@ -106,6 +118,7 @@ class YOLOThread(QThread):
             self.is_file = Path(source).suffix[1:] in (IMG_FORMATS | VID_FORMATS)
         self.is_url = source.lower().startswith(("rtsp://", "rtmp://", "http://", "https://"))
         self.webcam = source.isnumeric() or source.endswith(".streams") or (self.is_url and not self.is_file)
+
         self.screenshot = source.lower().startswith("screen")
         # 判断输入源是否是文件夹，如果是列表，则是文件夹
         self.is_folder = isinstance(self.source, list)
@@ -283,7 +296,8 @@ class YOLOThread(QThread):
                                 self.all_labels_dict[key] = value
 
                     self.send_output.emit(self.plotted_img)  # after detection
-                    self.detections.emit(self.labels_dict)
+
+                    self.manager.data.emit(self.labels_dict)
                     self.send_class_num.emit(class_nums)
                     self.send_target_num.emit(target_nums)
 
@@ -363,6 +377,7 @@ class YOLOThread(QThread):
             vid_stride=self.vid_stride,
             buffer=self.stream_buffer,
         )
+
         self.source_type = self.dataset.source_type
         if not getattr(self, "stream", True) and (
                 self.source_type.stream
