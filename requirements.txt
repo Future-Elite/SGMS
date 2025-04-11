@@ -62,3 +62,6 @@ tzdata==2024.2
 urllib3==2.2.3
 zipp==3.21.0
 zstandard==0.23.0
+
+pyjwt~=2.10.1
+flask~=3.1.0

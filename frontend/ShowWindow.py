@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
 from frontend.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
-from utils import glo
+from frontend.utils import glo
 
 GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 80

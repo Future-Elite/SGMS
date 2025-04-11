@@ -1,4 +1,4 @@
-from utils import glo
+from frontend.utils import glo
 import json
 import os
 import cv2

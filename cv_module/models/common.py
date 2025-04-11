@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from PIL import Image
-from utils import glo
+from frontend.utils import glo
 
 yoloname = glo.get_value('yoloname')
 yoloname1 = glo.get_value('yoloname1')

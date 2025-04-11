@@ -1,6 +1,4 @@
-import logging
-import sys
-from utils import glo
+from frontend.utils import glo
 import logging
 import sys
 

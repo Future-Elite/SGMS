@@ -4,8 +4,6 @@ import os
 import random
 import re
 import shutil
-import socket
-from urllib.parse import urlparse
 
 import cv2
 import numpy as np
@@ -24,12 +22,11 @@ from cv_module.yolov8.YOLOSegThread import YOLOSegThread
 from gui.ui.utils.AcrylicFlyout import AcrylicFlyoutView, AcrylicFlyout
 from gui.ui.utils.TableView import TableViewQWidget
 from gui.ui.utils.drawFigure import PlottingThread
-from gui.ui.utils.rtspDialog import CustomMessageBox
 from gui.ui.utils.webCamera import Camera, WebcamThread
-from utils import glo
-from utils.logger import LoggerUtils
+from frontend.utils import glo
+from frontend.utils.logger import LoggerUtils
 
-glo._init()
+glo.init()
 glo.set_value('yoloname', "yolov8 yolov11"
                           "yolov8-seg yolov11-seg yolov8-pose yolov8-obb yolov11-obb yolov11-pose"
                           "")
