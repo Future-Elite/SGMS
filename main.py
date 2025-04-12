@@ -37,6 +37,7 @@ if __name__ == '__main__':
     app.setStyleSheet("QFrame { border: none; }")
 
     login_window = LoginWindow()
+
     if login_window.exec() == QDialog.Accepted:
         main_window = MainWindow()
         glo.init()

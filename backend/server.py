@@ -3,7 +3,7 @@ import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 flask_app = Flask(__name__)
-SECRET_KEY = 'your_secret_key_here'
+SECRET_KEY = 'SGMS_Secret_Key'
 
 
 @flask_app.route('/api/auth', methods=['POST'])
@@ -27,3 +27,7 @@ def auth():
 @flask_app.route('/')
 def index():
     return "JWT验证服务已启动"
+
+
+if __name__ == '__main__':
+    flask_app.run(port=5000)
