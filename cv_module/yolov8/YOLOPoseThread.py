@@ -1,6 +1,6 @@
 from cv_module.yolov8.YOLOThread import YOLOThread
-from cv_module.yolov8.engine.results import Results
-from cv_module.yolov8.utils import ops
+from ultralytics.engine.results import Results
+from ultralytics.utils import ops
 
 
 class YOLOPoseThread(YOLOThread):

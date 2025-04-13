@@ -9,16 +9,16 @@ import torch
 from PySide6.QtCore import QThread, Signal
 from pathlib import Path
 
-from cv_module.yolov8.data import load_inference_source
-from cv_module.yolov8.data.augment import classify_transforms, LetterBox
-from cv_module.yolov8.data.utils import IMG_FORMATS, VID_FORMATS
-from cv_module.yolov8.engine.predictor import STREAM_WARNING
-from cv_module.yolov8.engine.results import Results
+from ultralytics.data import load_inference_source
+from ultralytics.data.augment import classify_transforms, LetterBox
+from ultralytics.data.utils import IMG_FORMATS, VID_FORMATS
+from ultralytics.engine.predictor import STREAM_WARNING
+from ultralytics.engine.results import Results
 from cv_module.models.common import AutoBackend
-from cv_module.yolov8.utils import callbacks, ops, LOGGER, MACOS, WINDOWS
+from ultralytics.utils import callbacks, ops, LOGGER, MACOS, WINDOWS
 from collections import defaultdict
-from cv_module.yolov8.utils.checks import check_imgsz, increment_path
-from cv_module.yolov8.utils.torch_utils import select_device
+from ultralytics.utils.checks import check_imgsz, increment_path
+from ultralytics.utils.torch_utils import select_device
 from concurrent.futures import ThreadPoolExecutor
 import mediapipe as mp
 
@@ -100,7 +100,7 @@ class YOLOThread(QThread):
 
         # YOLOv8 参数设置
         self.model = None
-        self.data = 'cv_module/yolov8/cfg/datasets/coco.yaml'  # data_dict
+        self.data = 'ultralytics/cfg/datasets/coco.yaml'  # data_dict
         self.imgsz = 640
         self.device = ''
         self.dataset = None

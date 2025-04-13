@@ -1,13 +1,13 @@
 from cv_module.yolov8.YOLOThread import YOLOThread
-from cv_module.yolov8.engine.results import Results
-from cv_module.yolov8.utils import ops
+from ultralytics.engine.results import Results
+from ultralytics.utils import ops
 
 
 class YOLOSegThread(YOLOThread):
 
     def __init__(self):
         super(YOLOSegThread, self).__init__()
-        self.data = 'cv_module/yolov8/cfg/datasets/coco128-seg.yaml'  # data_dict
+        self.data = 'ultralytics/cfg/datasets/coco128-seg.yaml'  # data_dict
         self.task = 'segment'
         self.project = 'runs/segment'
 
