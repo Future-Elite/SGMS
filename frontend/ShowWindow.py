@@ -150,8 +150,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
 
         # Backend
         self.ui.backend_button.setChecked(True)
-        # 点击按钮，启动后端线程，再次点击，关闭后端线程
-        self.ui.backend_button.clicked.connect(self.use_backend)
 
 
     def initThreads(self):

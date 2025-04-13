@@ -101,10 +101,9 @@ class LoginWindow(QDialog):
             if user and user.password == password:
                 token = generate_jwt(username)
                 status, resp = send_jwt_to_server(token)
-
-                # 更新状态显示区：显示登录成功信息
-                current_time = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-                self.status_label.setText(f"登录时间：{current_time}\n登录成功！服务器响应: {resp}")
+                if not status:
+                    self.status_label.setText(f"登录失败: {resp}")
+                    return
                 self.accept()
             else:
                 self.status_label.setText("用户名或密码错误")

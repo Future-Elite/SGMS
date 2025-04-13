@@ -1,11 +1,14 @@
 import os.path
+import threading
 import time
 
 import cv2
 import numpy as np
+import requests
 import torch
-from PySide6.QtCore import QThread, Signal, Qt
+from PySide6.QtCore import QThread, Signal
 from pathlib import Path
+
 from cv_module.yolov8.data import load_inference_source
 from cv_module.yolov8.data.augment import classify_transforms, LetterBox
 from cv_module.yolov8.data.utils import IMG_FORMATS, VID_FORMATS
@@ -18,17 +21,39 @@ from cv_module.yolov8.utils.checks import check_imgsz, increment_path
 from cv_module.yolov8.utils.torch_utils import select_device
 from concurrent.futures import ThreadPoolExecutor
 import mediapipe as mp
-from frontend.ThreadPool import backend_controller
 
 
-class YOLOAdapter(QThread):
-    data = Signal(dict)  # 定义信号用于传递数据
+class LatestResultUploader:
+    def __init__(self, url):
+        self.url = url
+        self.latest_result = None
+        self.lock = threading.Lock()
+        self.uploading = False
 
-    def run(self):
+        # 启动上传线程
+        threading.Thread(target=self._upload_loop, daemon=True).start()
+
+    def submit(self, result):
+        with self.lock:
+            self.latest_result = result  # 覆盖旧的
+
+    def _upload_loop(self):
         while True:
-            # new_data信号连接到全局状态更新
-            self.data.connect(backend_controller.update)
-            time.sleep(0.5)
+            if self.latest_result:
+                with self.lock:
+                    result_to_send = self.latest_result
+                    self.latest_result = None  # 清空，防止重复发
+
+                try:
+                    response = requests.post(self.url, json=result_to_send, timeout=1)  # 设置超时为1秒
+                    # print("上传成功:", response.status_code)
+                except Exception as e:
+                    print("上传失败:", e)
+
+            time.sleep(0.05)  # 控制发送频率（20次/秒）
+
+
+uploader = LatestResultUploader('http://localhost:5000/result')
 
 
 class YOLOThread(QThread):
@@ -48,8 +73,7 @@ class YOLOThread(QThread):
     def __init__(self):
         super(YOLOThread, self).__init__()
         # SHOWWINDOW 界面参数设置
-        self.manager = YOLOAdapter()
-
+        self.hands = None
         self.ori_img = None
         self.results = None
         self.current_model_name = None  # The detection model name to use
@@ -104,19 +128,21 @@ class YOLOThread(QThread):
         callbacks.add_integration_callbacks(self)
 
     def run(self):
-        self.manager.start()
+        # self.manager.start()
         if not self.model:
             self.send_msg.emit("Loading model: {}".format(os.path.basename(self.new_model_name)))
             self.setup_model(self.new_model_name)
             self.used_model_name = self.new_model_name
 
-        source = str(self.source)
+        source = 'http://127.0.0.1:5000/stream'  # 视频流
+
         # 判断输入源类型
         if isinstance(IMG_FORMATS, str) or isinstance(IMG_FORMATS, tuple):
             self.is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
         else:
             self.is_file = Path(source).suffix[1:] in (IMG_FORMATS | VID_FORMATS)
-        self.is_url = source.lower().startswith(("rtsp://", "rtmp://", "http://", "https://"))
+
+        self.is_url = source.startswith(("rtsp://", "http://", "https://")) or source.endswith(".streams")
         self.webcam = source.isnumeric() or source.endswith(".streams") or (self.is_url and not self.is_file)
 
         self.screenshot = source.lower().startswith("screen")
@@ -206,17 +232,19 @@ class YOLOThread(QThread):
                 for i, image in enumerate(im0s):
                     black_img = np.zeros(im0s[i].shape, dtype=np.uint8)
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # 转换颜色,opencv默认BGR,mediapipe默认RGB
-                    results = self.mp_pose.process(image)
-                    if results.pose_landmarks:
-                        if self.use_mp:
-                            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                    results = self.hands.process(image)
+                    if results.multi_hand_landmarks:
+
+                        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                        for oneHand in results.multi_hand_landmarks:
+                            mp.solutions.drawing_utils.draw_landmarks(image, oneHand,
+                                                                      mp.solutions.hands.HAND_CONNECTIONS)
+
                             mp.solutions.drawing_utils.draw_landmarks(
-                                image, results.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS,
-                                )
-                            self.ori_img[i] = image
-                        mp.solutions.drawing_utils.draw_landmarks(
-                            black_img, results.pose_landmarks, mp.solutions.pose.POSE_CONNECTIONS,
+                                black_img, oneHand, mp.solutions.hands.HAND_CONNECTIONS,
                             )
+
+                        self.ori_img[i] = image
                         im0s[i] = black_img
 
                 # 原始图片送入 input框
@@ -297,7 +325,8 @@ class YOLOThread(QThread):
 
                     self.send_output.emit(self.plotted_img)  # after detection
 
-                    self.manager.data.emit(self.labels_dict)
+                    uploader.submit(self.labels_dict)  # 提交最新结果
+
                     self.send_class_num.emit(class_nums)
                     self.send_target_num.emit(target_nums)
 
@@ -353,11 +382,14 @@ class YOLOThread(QThread):
         self.half = self.model.fp16  # update half
         self.model.eval()
 
-        # 加入mediapipe v1.1
-        self.mp_pose = mp.solutions.pose.Pose(
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
-        )
+        # 加入mediapipe
+        self.mp_pose = mp.solutions.hands
+        mode = False
+        maxHands = 1
+        complexity = 1
+        detectionCon = 0.5
+        trackCon = 0.5
+        self.hands = self.mp_pose.Hands(mode, maxHands, complexity, detectionCon, trackCon)
 
     def setup_source(self, source):
         """Sets up source and inference mode."""

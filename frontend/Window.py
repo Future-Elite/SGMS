@@ -99,7 +99,7 @@ class MainWindow(SHOWWINDOW):
 
     def closeEvent(self, event):
         if not self.animation_window:
-            config_file = 'gui/config/setting.json'
+            config_file = 'data/config/setting.json'
             config = dict()
             config['iou'] = self.ui.iou_spinbox.value()
             config['conf'] = self.ui.conf_spinbox.value()

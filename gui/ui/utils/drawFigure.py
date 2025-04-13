@@ -37,5 +37,5 @@ class PlottingThread(QThread):
         plt.ylabel('Percentage (%)')
 
         # 保存图形到文件
-        plt.savefig(self.workpath + r'\config\result.png')
-        plt.close()  # 重要：关闭图形，释放内存
+        plt.savefig(self.workpath + r'\data\config\result.png')
+        plt.close()

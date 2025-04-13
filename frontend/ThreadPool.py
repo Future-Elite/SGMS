@@ -1,5 +1,4 @@
 from PySide6.QtCore import QMutex, QThread
-from backend.BackendController import BackendController
 
 
 class ThreadPool:
@@ -68,5 +67,3 @@ class ThreadPool:
         """检查对象是否存在"""
         return name in self.threads_pool
 
-
-backend_controller = BackendController()

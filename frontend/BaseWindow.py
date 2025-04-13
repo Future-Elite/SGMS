@@ -11,7 +11,6 @@ import torch
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QPushButton
-from frontend.ThreadPool import backend_controller
 from cv_module.models import common, experimental, yolo
 from cv_module.yolov11.YOLOv11PoseThread import YOLOv11PoseThread
 from cv_module.yolov11.YOLOv11SegThread import YOLOv11SegThread
@@ -37,7 +36,7 @@ WIDTH_LEFT_BOX_EXTENDED = 200
 WIDTH_SETTING_BAR = 290
 WIDTH_LOGO = 60
 WINDOW_SPLIT_BODY = 20
-KEYS_LEFT_BOX_MENU = ['src_menu', 'src_setting', 'src_webcam', 'src_folder', 'src_camera', 'src_vsmode', 'src_setting']
+KEYS_LEFT_BOX_MENU = ['src_menu', 'src_setting', 'src_webcam', 'src_folder', 'src_camera']
 # 模型名称和线程类映射
 MODEL_THREAD_CLASSES = {
     "yolov8": YOLOThread,
@@ -238,7 +237,7 @@ class BASEWINDOW:
     # 选择照片/视频 并展示
     def selectFile(self):
         # 获取上次选择文件的路径
-        config_file = f'{self.current_workpath}/gui/config/file.json'
+        config_file = f'{self.current_workpath}/data/config/file.json'
         config = json.load(open(config_file, 'r', encoding='utf-8'))
         file_path = config['file_path']
         if not os.path.exists(file_path):
@@ -292,7 +291,7 @@ class BASEWINDOW:
 
     # 选择文件夹
     def selectFolder(self):
-        config_file = f'{self.current_workpath}/gui/config/folder.json'
+        config_file = f'{self.current_workpath}/data/config/folder.json'
         config = json.load(open(config_file, 'r', encoding='utf-8'))
         folder_path = config['folder_path']
         if not os.path.exists(folder_path):
@@ -354,7 +353,7 @@ class BASEWINDOW:
     # 导入模块
     def importModel(self):
         # 获取上次选择文件的路径
-        config_file = f'{self.current_workpath}/gui/config/model.json'
+        config_file = f'{self.current_workpath}/data/config/model.json'
         config = json.load(open(config_file, 'r', encoding='utf-8'))
         self.model_path = config['model_path']
         if not os.path.exists(self.model_path):
@@ -516,7 +515,7 @@ class BASEWINDOW:
         self.updateParams(params)
         # 2、绑定配置项超参数
         params = {"iou": 0.45, "conf": 0.25, "delay": 10, "line_thickness": 3}
-        params = self.loadAndSetParams('gui/config/setting.json', params)
+        params = self.loadAndSetParams('data/config/setting.json', params)
         self.updateParams(params)
 
     # 更新Config超参数
@@ -551,13 +550,6 @@ class BASEWINDOW:
         for yolo_thread in self.yolo_threads.threads_pool.values():
             yolo_thread.use_mp = use_mp
 
-    def use_backend(self):
-        if not self.backend_thread:
-            self.backend_thread = backend_controller
-            self.backend_thread.start_processing()
-        else:
-            self.backend_thread.stop_processing()
-            self.backend_thread = None
 
     # 调整超参数
     def changeValue(self, x, flag):
@@ -687,7 +679,7 @@ class BASEWINDOW:
     # 接受统计结果，然后写入json中
     def setResultStatistic(self, value):
         # 写入 JSON 文件
-        with open('gui/config/result.json', 'w', encoding='utf-8') as file:
+        with open('data/config/result.json', 'w', encoding='utf-8') as file:
             json.dump(value, file, ensure_ascii=False, indent=4)
         # --- 获取统计结果 + 绘制柱状图 --- #
         self.result_statistic = value
