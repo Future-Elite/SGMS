@@ -1,4 +1,4 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
@@ -232,7 +232,7 @@ def _build_sam2(
         encoder_num_heads (int): Number of attention heads in the encoder.
         encoder_global_att_blocks (List[int]): Indices of global attention blocks in the encoder.
         encoder_backbone_channel_list (List[int]): Channel dimensions for each level of the encoder backbone.
-        encoder_window_spatial_size (List[int]): Spatial size of the window for position embeddings.
+        encoder_window_spatial_size (List[int]): Spatial size of the ui for position embeddings.
         encoder_window_spec (List[int]): Window specifications for each stage of the encoder.
         checkpoint (str | None): Path to the checkpoint file for loading pre-trained weights.
 

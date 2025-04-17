@@ -1,4 +1,4 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 
 from typing import List
 from urllib.parse import urlsplit
@@ -10,9 +10,6 @@ class TritonRemoteModel:
     """
     Client for interacting with a remote Triton Inference Server model.
 
-    This class provides a convenient interface for sending inference requests to a Triton Inference Server
-    and processing the responses.
-
     Attributes:
         endpoint (str): The name of the model on the Triton server.
         url (str): The URL of the Triton server.
@@ -23,33 +20,19 @@ class TritonRemoteModel:
         np_input_formats (List[type]): The numpy data types of the model inputs.
         input_names (List[str]): The names of the model inputs.
         output_names (List[str]): The names of the model outputs.
-        metadata: The metadata associated with the model.
-
-    Methods:
-        __call__: Call the model with the given inputs and return the outputs.
-
-    Examples:
-        Initialize a Triton client with HTTP
-        >>> model = TritonRemoteModel(url="localhost:8000", endpoint="yolov8", scheme="http")
-        Make inference with numpy arrays
-        >>> outputs = model(np.random.rand(1, 3, 640, 640).astype(np.float32))
     """
 
     def __init__(self, url: str, endpoint: str = "", scheme: str = ""):
         """
-        Initialize the TritonRemoteModel for interacting with a remote Triton Inference Server.
+        Initialize the TritonRemoteModel.
 
         Arguments may be provided individually or parsed from a collective 'url' argument of the form
-        <scheme>://<netloc>/<endpoint>/<task_name>
+            <scheme>://<netloc>/<endpoint>/<task_name>
 
         Args:
             url (str): The URL of the Triton server.
             endpoint (str): The name of the model on the Triton server.
             scheme (str): The communication scheme ('http' or 'grpc').
-
-        Examples:
-            >>> model = TritonRemoteModel(url="localhost:8000", endpoint="yolov8", scheme="http")
-            >>> model = TritonRemoteModel(url="http://localhost:8000/yolov8")
         """
         if not endpoint and not scheme:  # Parse all args from URL string
             splits = urlsplit(url)
@@ -90,16 +73,10 @@ class TritonRemoteModel:
         Call the model with the given inputs.
 
         Args:
-            *inputs (np.ndarray): Input data to the model. Each array should match the expected shape and type
-                for the corresponding model input.
+            *inputs (List[np.ndarray]): Input data to the model.
 
         Returns:
-            (List[np.ndarray]): Model outputs with the same dtype as the input. Each element in the list
-                corresponds to one of the model's output tensors.
-
-        Examples:
-            >>> model = TritonRemoteModel(url="localhost:8000", endpoint="yolov8", scheme="http")
-            >>> outputs = model(np.random.rand(1, 3, 640, 640).astype(np.float32))
+            (List[np.ndarray]): Model outputs.
         """
         infer_inputs = []
         input_format = inputs[0].dtype

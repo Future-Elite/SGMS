@@ -17,7 +17,7 @@ from ultralytics.engine.results import Results
 from cv_module.models.common import AutoBackend
 from ultralytics.utils import callbacks, ops, LOGGER, MACOS, WINDOWS
 from collections import defaultdict
-from ultralytics.utils.checks import check_imgsz, increment_path
+from ultralytics.utils.checks import check_imgsz
 from ultralytics.utils.torch_utils import select_device
 from concurrent.futures import ThreadPoolExecutor
 import mediapipe as mp
@@ -148,9 +148,9 @@ class YOLOThread(QThread):
         self.screenshot = source.lower().startswith("screen")
         # 判断输入源是否是文件夹，如果是列表，则是文件夹
         self.is_folder = isinstance(self.source, list)
-        if self.save_res:
-            self.save_path = increment_path(Path(self.project) / self.name, exist_ok=self.exist_ok)  # increment run
-            self.save_path.mkdir(parents=True, exist_ok=True)  # make dir
+        # if self.save_res:
+        #     self.save_path = increment_path(Path(self.project) / self.name, exist_ok=self.exist_ok)  # increment run
+        #     self.save_path.mkdir(parents=True, exist_ok=True)  # make dir
 
         if self.is_folder:
             for index, source in enumerate(self.source):

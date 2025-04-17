@@ -1,4 +1,4 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 
 from typing import List, Optional, Tuple, Type
 
@@ -65,7 +65,7 @@ class ImageEncoderViT(nn.Module):
         global_attn_indexes: Tuple[int, ...] = (),
     ) -> None:
         """
-        Initialize an ImageEncoderViT instance for encoding images using Vision Transformer architecture.
+        Initializes an ImageEncoderViT instance for encoding images using Vision Transformer architecture.
 
         Args:
             img_size (int): Input image size, assumed to be square.
@@ -82,8 +82,15 @@ class ImageEncoderViT(nn.Module):
             use_abs_pos (bool): If True, uses absolute positional embeddings.
             use_rel_pos (bool): If True, adds relative positional embeddings to attention maps.
             rel_pos_zero_init (bool): If True, initializes relative positional parameters to zero.
-            window_size (int): Size of attention window for windowed attention blocks.
+            window_size (int): Size of attention ui for windowed attention blocks.
             global_attn_indexes (Tuple[int, ...]): Indices of blocks that use global attention.
+
+        Attributes:
+            img_size (int): Dimension of input images.
+            patch_embed (PatchEmbed): Module for patch embedding.
+            pos_embed (nn.Parameter | None): Absolute positional embedding for patches.
+            blocks (nn.ModuleList): List of transformer blocks.
+            neck (nn.Sequential): Neck module for final processing.
 
         Examples:
             >>> encoder = ImageEncoderViT(img_size=224, patch_size=16, embed_dim=768, depth=12, num_heads=12)
@@ -141,7 +148,7 @@ class ImageEncoderViT(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Process input through patch embedding, positional embedding, transformer blocks, and neck module."""
+        """Processes input through patch embedding, positional embedding, transformer blocks, and neck module."""
         x = self.patch_embed(x)
         if self.pos_embed is not None:
             pos_embed = (
@@ -194,7 +201,10 @@ class PromptEncoder(nn.Module):
         activation: Type[nn.Module] = nn.GELU,
     ) -> None:
         """
-        Initialize the PromptEncoder module for encoding various types of prompts.
+        Initializes the PromptEncoder module for encoding various types of prompts.
+
+        This module encodes different types of prompts (points, boxes, masks) for input to SAM's mask decoder,
+        producing both sparse and dense embeddings.
 
         Args:
             embed_dim (int): The dimension of the embeddings.
@@ -202,6 +212,17 @@ class PromptEncoder(nn.Module):
             input_image_size (Tuple[int, int]): The padded size of the input image as (H, W).
             mask_in_chans (int): The number of hidden channels used for encoding input masks.
             activation (Type[nn.Module]): The activation function to use when encoding input masks.
+
+        Attributes:
+            embed_dim (int): Dimension of the embeddings.
+            input_image_size (Tuple[int, int]): Size of the input image as (H, W).
+            image_embedding_size (Tuple[int, int]): Spatial size of the image embedding as (H, W).
+            pe_layer (PositionEmbeddingRandom): Module for random position embedding.
+            num_point_embeddings (int): Number of point embeddings for different types of points.
+            point_embeddings (nn.ModuleList): List of point embeddings.
+            not_a_point_embed (nn.Embedding): Embedding for points that are not part of any label.
+            mask_input_size (Tuple[int, int]): Size of the input mask.
+            mask_downscaling (nn.Sequential): Neural network for downscaling the mask.
 
         Examples:
             >>> prompt_encoder = PromptEncoder(256, (64, 64), (1024, 1024), 16)
@@ -237,9 +258,9 @@ class PromptEncoder(nn.Module):
 
     def get_dense_pe(self) -> torch.Tensor:
         """
-        Return the dense positional encoding used for encoding point prompts.
+        Returns the dense positional encoding used for encoding point prompts.
 
-        Generate a positional encoding for a dense set of points matching the shape of the image
+        This method generates a positional encoding for a dense set of points matching the shape of the image
         encoding. The encoding is used to provide spatial information to the model when processing point prompts.
 
         Returns:
@@ -255,7 +276,7 @@ class PromptEncoder(nn.Module):
         return self.pe_layer(self.image_embedding_size).unsqueeze(0)
 
     def _embed_points(self, points: torch.Tensor, labels: torch.Tensor, pad: bool) -> torch.Tensor:
-        """Embed point prompts by applying positional encoding and label-specific embeddings."""
+        """Embeds point prompts by applying positional encoding and label-specific embeddings."""
         points = points + 0.5  # Shift to center of pixel
         if pad:
             padding_point = torch.zeros((points.shape[0], 1, 2), device=points.device)
@@ -272,7 +293,7 @@ class PromptEncoder(nn.Module):
         return point_embedding
 
     def _embed_boxes(self, boxes: torch.Tensor) -> torch.Tensor:
-        """Embed box prompts by applying positional encoding and adding corner embeddings."""
+        """Embeds box prompts by applying positional encoding and adding corner embeddings."""
         boxes = boxes + 0.5  # Shift to center of pixel
         coords = boxes.reshape(-1, 2, 2)
         corner_embedding = self.pe_layer.forward_with_coords(coords, self.input_image_size)
@@ -281,7 +302,7 @@ class PromptEncoder(nn.Module):
         return corner_embedding
 
     def _embed_masks(self, masks: torch.Tensor) -> torch.Tensor:
-        """Embed mask inputs by downscaling and processing through convolutional layers."""
+        """Embeds mask inputs by downscaling and processing through convolutional layers."""
         return self.mask_downscaling(masks)
 
     @staticmethod
@@ -290,7 +311,7 @@ class PromptEncoder(nn.Module):
         boxes: Optional[torch.Tensor],
         masks: Optional[torch.Tensor],
     ) -> int:
-        """Get the batch size of the output given the batch size of the input prompts."""
+        """Gets the batch size of the output given the batch size of the input prompts."""
         if points is not None:
             return points[0].shape[0]
         elif boxes is not None:
@@ -301,7 +322,7 @@ class PromptEncoder(nn.Module):
             return 1
 
     def _get_device(self) -> torch.device:
-        """Return the device of the first point embedding's weight tensor."""
+        """Returns the device of the first point embedding's weight tensor."""
         return self.point_embeddings[0].weight.device
 
     def forward(
@@ -311,7 +332,7 @@ class PromptEncoder(nn.Module):
         masks: Optional[torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Embed different types of prompts, returning both sparse and dense embeddings.
+        Embeds different types of prompts, returning both sparse and dense embeddings.
 
         Args:
             points (Tuple[torch.Tensor, torch.Tensor] | None): Point coordinates and labels to embed. The first
@@ -356,7 +377,7 @@ class PromptEncoder(nn.Module):
 
 class MemoryEncoder(nn.Module):
     """
-    Encode pixel features and masks into a memory representation for efficient image segmentation.
+    Encodes pixel features and masks into a memory representation for efficient image segmentation.
 
     This class processes pixel-level features and masks, fusing them to generate encoded memory representations
     suitable for downstream tasks in image segmentation models like SAM (Segment Anything Model).
@@ -369,7 +390,7 @@ class MemoryEncoder(nn.Module):
         out_proj (nn.Module): Output projection layer, either nn.Identity or nn.Conv2d.
 
     Methods:
-        forward: Process input pixel features and masks to generate encoded memory representations.
+        forward: Processes input pixel features and masks to generate encoded memory representations.
 
     Examples:
         >>> import torch
@@ -386,24 +407,7 @@ class MemoryEncoder(nn.Module):
         out_dim,
         in_dim=256,  # in_dim of pix_feats
     ):
-        """
-        Initialize the MemoryEncoder for encoding pixel features and masks into memory representations.
-
-        This encoder processes pixel-level features and masks, fusing them to generate encoded memory representations
-        suitable for downstream tasks in image segmentation models like SAM (Segment Anything Model).
-
-        Args:
-            out_dim (int): Output dimension of the encoded features.
-            in_dim (int): Input dimension of the pixel features. Default is 256.
-
-        Examples:
-            >>> encoder = MemoryEncoder(out_dim=256, in_dim=256)
-            >>> pix_feat = torch.randn(1, 256, 64, 64)
-            >>> masks = torch.randn(1, 1, 64, 64)
-            >>> encoded_feat, pos = encoder(pix_feat, masks)
-            >>> print(encoded_feat.shape, pos.shape)
-            torch.Size([1, 256, 64, 64]) torch.Size([1, 128, 64, 64])
-        """
+        """Initializes the MemoryEncoder for encoding pixel features and masks into memory representations."""
         super().__init__()
 
         self.mask_downsampler = MaskDownSampler(kernel_size=3, stride=2, padding=1)
@@ -421,7 +425,7 @@ class MemoryEncoder(nn.Module):
         masks: torch.Tensor,
         skip_mask_sigmoid: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Process pixel features and masks to generate encoded memory representations for segmentation."""
+        """Processes pixel features and masks to generate encoded memory representations for segmentation."""
         if not skip_mask_sigmoid:
             masks = F.sigmoid(masks)
         masks = self.mask_downsampler(masks)
@@ -441,7 +445,7 @@ class MemoryEncoder(nn.Module):
 
 class ImageEncoder(nn.Module):
     """
-    Encode images using a trunk-neck architecture, producing multiscale features and positional encodings.
+    Encodes images using a trunk-neck architecture, producing multiscale features and positional encodings.
 
     This class combines a trunk network for feature extraction with a neck network for feature refinement
     and positional encoding generation. It can optionally discard the lowest resolution features.
@@ -452,7 +456,7 @@ class ImageEncoder(nn.Module):
         scalp (int): Number of lowest resolution feature levels to discard.
 
     Methods:
-        forward: Process the input image through the trunk and neck networks.
+        forward: Processes the input image through the trunk and neck networks.
 
     Examples:
         >>> trunk = SomeTrunkNetwork()
@@ -470,36 +474,17 @@ class ImageEncoder(nn.Module):
         neck: nn.Module,
         scalp: int = 0,
     ):
-        """
-        Initialize the ImageEncoder with trunk and neck networks for feature extraction and refinement.
-
-        This encoder combines a trunk network for feature extraction with a neck network for feature refinement
-        and positional encoding generation. It can optionally discard the lowest resolution features.
-
-        Args:
-            trunk (nn.Module): The trunk network for initial feature extraction.
-            neck (nn.Module): The neck network for feature refinement and positional encoding generation.
-            scalp (int): Number of lowest resolution feature levels to discard.
-
-        Examples:
-            >>> trunk = SomeTrunkNetwork()
-            >>> neck = SomeNeckNetwork()
-            >>> encoder = ImageEncoder(trunk, neck, scalp=1)
-            >>> image = torch.randn(1, 3, 224, 224)
-            >>> output = encoder(image)
-            >>> print(output.keys())
-            dict_keys(['vision_features', 'vision_pos_enc', 'backbone_fpn'])
-        """
+        """Initializes the ImageEncoder with trunk and neck networks for feature extraction and refinement."""
         super().__init__()
         self.trunk = trunk
         self.neck = neck
         self.scalp = scalp
-        assert self.trunk.channel_list == self.neck.backbone_channel_list, (
-            f"Channel dims of trunk {self.trunk.channel_list} and neck {self.neck.backbone_channel_list} do not match."
-        )
+        assert (
+            self.trunk.channel_list == self.neck.backbone_channel_list
+        ), f"Channel dims of trunk {self.trunk.channel_list} and neck {self.neck.backbone_channel_list} do not match."
 
     def forward(self, sample: torch.Tensor):
-        """Encode input through patch embedding, positional embedding, transformer blocks, and neck module."""
+        """Encodes input through patch embedding, positional embedding, transformer blocks, and neck module."""
         features, pos = self.neck(self.trunk(sample))
         if self.scalp > 0:
             # Discard the lowest resolution features
@@ -529,7 +514,7 @@ class FpnNeck(nn.Module):
         fpn_top_down_levels (List[int]): Levels to have top-down features in outputs.
 
     Methods:
-        forward: Perform forward pass through the FPN neck.
+        forward: Performs forward pass through the FPN neck.
 
     Examples:
         >>> backbone_channels = [64, 128, 256, 512]
@@ -673,15 +658,15 @@ class Hiera(nn.Module):
         return_interm_layers (bool): Whether to return intermediate layer outputs.
         patch_embed (PatchEmbed): Module for patch embedding.
         global_att_blocks (Tuple[int, ...]): Indices of blocks with global attention.
-        window_pos_embed_bkg_spatial_size (Tuple[int, int]): Spatial size for window positional embedding background.
+        window_pos_embed_bkg_spatial_size (Tuple[int, int]): Spatial size for ui positional embedding background.
         pos_embed (nn.Parameter): Positional embedding for the background.
-        pos_embed_window (nn.Parameter): Positional embedding for the window.
+        pos_embed_window (nn.Parameter): Positional embedding for the ui.
         blocks (nn.ModuleList): List of MultiScaleBlock modules.
         channel_list (List[int]): List of output channel dimensions for each stage.
 
     Methods:
-        _get_pos_embed: Generate positional embeddings by interpolating and combining window and background embeddings.
-        forward: Perform the forward pass through the Hiera model.
+        _get_pos_embed: Generates positional embeddings by interpolating and combining ui and background embeddings.
+        forward: Performs the forward pass through the Hiera model.
 
     Examples:
         >>> model = Hiera(embed_dim=96, num_heads=1, stages=(2, 3, 16, 3))
@@ -702,7 +687,7 @@ class Hiera(nn.Module):
         dim_mul: float = 2.0,  # dim_mul factor at stage shift
         head_mul: float = 2.0,  # head_mul factor at stage shift
         window_pos_embed_bkg_spatial_size: Tuple[int, int] = (14, 14),
-        # window size per stage, when not using global att.
+        # ui size per stage, when not using global att.
         window_spec: Tuple[int, ...] = (
             8,
             4,
@@ -717,34 +702,7 @@ class Hiera(nn.Module):
         ),
         return_interm_layers=True,  # return feats from every stage
     ):
-        """
-        Initialize a Hiera model, a hierarchical vision transformer for efficient multiscale feature extraction.
-
-        Hiera is a hierarchical vision transformer architecture designed for efficient multiscale feature extraction
-        in image processing tasks. It uses a series of transformer blocks organized into stages, with optional
-        pooling and global attention mechanisms.
-
-        Args:
-            embed_dim (int): Initial embedding dimension for the model.
-            num_heads (int): Initial number of attention heads.
-            drop_path_rate (float): Stochastic depth rate.
-            q_pool (int): Number of query pooling stages.
-            q_stride (Tuple[int, int]): Downsampling stride between stages.
-            stages (Tuple[int, ...]): Number of blocks per stage.
-            dim_mul (float): Dimension multiplier factor at stage transitions.
-            head_mul (float): Head multiplier factor at stage transitions.
-            window_pos_embed_bkg_spatial_size (Tuple[int, int]): Spatial size for window positional embedding background.
-            window_spec (Tuple[int, ...]): Window sizes for each stage when not using global attention.
-            global_att_blocks (Tuple[int, ...]): Indices of blocks that use global attention.
-            return_interm_layers (bool): Whether to return intermediate layer outputs.
-
-        Examples:
-            >>> model = Hiera(embed_dim=96, num_heads=1, stages=(2, 3, 16, 3))
-            >>> input_tensor = torch.randn(1, 3, 224, 224)
-            >>> output_features = model(input_tensor)
-            >>> for feat in output_features:
-            ...     print(feat.shape)
-        """
+        """Initializes the Hiera model, configuring its hierarchical vision transformer architecture."""
         super().__init__()
 
         assert len(stages) == len(window_spec)
@@ -779,8 +737,8 @@ class Hiera(nn.Module):
         for i in range(depth):
             dim_out = embed_dim
             # lags by a block, so first block of
-            # next stage uses an initial window size
-            # of previous stage and final window size of current stage
+            # next stage uses an initial ui size
+            # of previous stage and final ui size of current stage
             window_size = self.window_spec[cur_stage - 1]
 
             if self.global_att_blocks is not None:
@@ -810,7 +768,7 @@ class Hiera(nn.Module):
         )
 
     def _get_pos_embed(self, hw: Tuple[int, int]) -> torch.Tensor:
-        """Generate positional embeddings by interpolating and combining window and background embeddings."""
+        """Generates positional embeddings by interpolating and combining ui and background embeddings."""
         h, w = hw
         window_embed = self.pos_embed_window
         pos_embed = F.interpolate(self.pos_embed, size=(h, w), mode="bicubic")
@@ -819,25 +777,7 @@ class Hiera(nn.Module):
         return pos_embed
 
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
-        """
-        Perform forward pass through Hiera model, extracting multiscale features from input images.
-
-        Args:
-            x (torch.Tensor): Input tensor with shape (B, C, H, W) representing a batch of images.
-
-        Returns:
-            (List[torch.Tensor]): List of feature maps at different scales, each with shape (B, C_i, H_i, W_i), where
-                C_i is the channel dimension and H_i, W_i are the spatial dimensions at scale i. The list is ordered
-                from highest resolution (fine features) to lowest resolution (coarse features) if return_interm_layers
-                is True, otherwise contains only the final output.
-
-        Examples:
-            >>> model = Hiera(embed_dim=96, num_heads=1, stages=(2, 3, 16, 3))
-            >>> input_tensor = torch.randn(1, 3, 224, 224)
-            >>> output_features = model(input_tensor)
-            >>> for feat in output_features:
-            ...     print(feat.shape)
-        """
+        """Performs forward pass through Hiera model, extracting multiscale features from input images."""
         x = self.patch_embed(x)
         # x: (B, H, W, C)
 

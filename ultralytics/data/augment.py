@@ -1,26 +1,26 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 
 import math
 import random
 from copy import deepcopy
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 
 import cv2
 import numpy as np
 import torch
 from PIL import Image
-from torch.nn import functional as F
 
 from ultralytics.data.utils import polygons2masks, polygons2masks_overlap
 from ultralytics.utils import LOGGER, colorstr
 from ultralytics.utils.checks import check_version
 from ultralytics.utils.instance import Instances
 from ultralytics.utils.metrics import bbox_ioa
-from ultralytics.utils.ops import segment2box, xywh2xyxy, xyxyxyxy2xywhr
+from ultralytics.utils.ops import segment2box, xyxyxyxy2xywhr
 from ultralytics.utils.torch_utils import TORCHVISION_0_10, TORCHVISION_0_11, TORCHVISION_0_13
 
 DEFAULT_MEAN = (0.0, 0.0, 0.0)
 DEFAULT_STD = (1.0, 1.0, 1.0)
+DEFAULT_CROP_FRACTION = 1.0
 
 
 class BaseTransform:
@@ -86,10 +86,10 @@ class BaseTransform:
         logic.
 
         Args:
-            labels (dict): A dictionary containing label information, including object instances.
+            labels (Dict): A dictionary containing label information, including object instances.
 
         Returns:
-            (dict): The modified labels dictionary with transformed object instances.
+            (Dict): The modified labels dictionary with transformed object instances.
 
         Examples:
             >>> transform = BaseTransform()
@@ -127,11 +127,11 @@ class BaseTransform:
         image and object instances, respectively.
 
         Args:
-            labels (dict): A dictionary containing image data and annotations. Expected keys include 'img' for
+            labels (Dict): A dictionary containing image data and annotations. Expected keys include 'img' for
                 the image data, and 'instances' for object instances.
 
         Returns:
-            (dict): The input labels dictionary with transformed image and instances.
+            (Dict): The input labels dictionary with transformed image and instances.
 
         Examples:
             >>> transform = BaseTransform()
@@ -271,9 +271,9 @@ class Compose:
         """
         assert isinstance(index, (int, list)), f"The indices should be either list or int type but got {type(index)}"
         if isinstance(index, list):
-            assert isinstance(value, list), (
-                f"The indices should be the same type as values, but got {type(index)} and {type(value)}"
-            )
+            assert isinstance(
+                value, list
+            ), f"The indices should be the same type as values, but got {type(index)} and {type(value)}"
         if isinstance(index, int):
             index, value = [index], [value]
         for i, v in zip(index, value):
@@ -285,7 +285,7 @@ class Compose:
         Converts the list of transforms to a standard Python list.
 
         Returns:
-            (list): A list containing all the transform objects in the Compose instance.
+            (List): A list containing all the transform objects in the Compose instance.
 
         Examples:
             >>> transforms = [RandomFlip(), RandomPerspective(10), CenterCrop()]
@@ -374,10 +374,10 @@ class BaseMixTransform:
         selects additional images, applies pre-transforms if specified, and then performs the mix transform.
 
         Args:
-            labels (dict): A dictionary containing label data for an image.
+            labels (Dict): A dictionary containing label data for an image.
 
         Returns:
-            (dict): The transformed labels dictionary, which may include mixed data from other images.
+            (Dict): The transformed labels dictionary, which may include mixed data from other images.
 
         Examples:
             >>> transform = BaseMixTransform(dataset, pre_transform=None, p=0.5)
@@ -414,11 +414,11 @@ class BaseMixTransform:
         Mosaic. It modifies the input label dictionary in-place with the augmented data.
 
         Args:
-            labels (dict): A dictionary containing image and label data. Expected to have a 'mix_labels' key
+            labels (Dict): A dictionary containing image and label data. Expected to have a 'mix_labels' key
                 with a list of additional image and label data for mixing.
 
         Returns:
-            (dict): The modified labels dictionary with augmented data after applying the mix transform.
+            (Dict): The modified labels dictionary with augmented data after applying the mix transform.
 
         Examples:
             >>> transform = BaseMixTransform(dataset)
@@ -441,8 +441,7 @@ class BaseMixTransform:
         """
         raise NotImplementedError
 
-    @staticmethod
-    def _update_label_text(labels):
+    def _update_label_text(self, labels):
         """
         Updates label text and class IDs for mixed labels in image augmentation.
 
@@ -450,11 +449,11 @@ class BaseMixTransform:
         creating a unified set of text labels and updating class IDs accordingly.
 
         Args:
-            labels (dict): A dictionary containing label information, including 'texts' and 'cls' fields,
+            labels (Dict): A dictionary containing label information, including 'texts' and 'cls' fields,
                 and optionally a 'mix_labels' field with additional label dictionaries.
 
         Returns:
-            (dict): The updated labels dictionary with unified text labels and updated class IDs.
+            (Dict): The updated labels dictionary with unified text labels and updated class IDs.
 
         Examples:
             >>> labels = {
@@ -576,12 +575,12 @@ class Mosaic(BaseMixTransform):
         mosaic augmentation.
 
         Args:
-            labels (dict): A dictionary containing image data and annotations. Expected keys include:
+            labels (Dict): A dictionary containing image data and annotations. Expected keys include:
                 - 'rect_shape': Should be None as rect and mosaic are mutually exclusive.
                 - 'mix_labels': A list of dictionaries containing data for other images to be used in the mosaic.
 
         Returns:
-            (dict): A dictionary containing the mosaic-augmented image and updated annotations.
+            (Dict): A dictionary containing the mosaic-augmented image and updated annotations.
 
         Raises:
             AssertionError: If 'rect_shape' is not None or if 'mix_labels' is empty.
@@ -604,12 +603,12 @@ class Mosaic(BaseMixTransform):
         additional images on either side. It's part of the Mosaic augmentation technique used in object detection.
 
         Args:
-            labels (dict): A dictionary containing image and label information for the main (center) image.
+            labels (Dict): A dictionary containing image and label information for the main (center) image.
                 Must include 'img' key with the image array, and 'mix_labels' key with a list of two
                 dictionaries containing information for the side images.
 
         Returns:
-            (dict): A dictionary with the mosaic image and updated labels. Keys include:
+            (Dict): A dictionary with the mosaic image and updated labels. Keys include:
                 - 'img' (np.ndarray): The mosaic image array with shape (H, W, C).
                 - Other keys from the input labels, updated to reflect the new image dimensions.
 
@@ -642,7 +641,7 @@ class Mosaic(BaseMixTransform):
                 c = s - w, s + h0 - h, s, s + h0
 
             padw, padh = c[:2]
-            x1, y1, x2, y2 = (max(x, 0) for x in c)  # allocate coordinates
+            x1, y1, x2, y2 = (max(x, 0) for x in c)  # allocate coords
 
             img3[y1:y2, x1:x2] = img[y1 - padh :, x1 - padw :]  # img3[ymin:ymax, xmin:xmax]
             # hp, wp = h, w  # height, width previous for next iteration
@@ -663,11 +662,11 @@ class Mosaic(BaseMixTransform):
         updates the corresponding labels for each image in the mosaic.
 
         Args:
-            labels (dict): A dictionary containing image data and labels for the base image (index 0) and three
+            labels (Dict): A dictionary containing image data and labels for the base image (index 0) and three
                 additional images (indices 1-3) in the 'mix_labels' key.
 
         Returns:
-            (dict): A dictionary containing the mosaic image and updated labels. The 'img' key contains the mosaic
+            (Dict): A dictionary containing the mosaic image and updated labels. The 'img' key contains the mosaic
                 image as a numpy array, and other keys contain the combined and adjusted labels for all four images.
 
         Examples:
@@ -721,7 +720,7 @@ class Mosaic(BaseMixTransform):
         and eight additional images from the dataset are placed around it in a 3x3 grid pattern.
 
         Args:
-            labels (dict): A dictionary containing the input image and its associated labels. It should have
+            labels (Dict): A dictionary containing the input image and its associated labels. It should have
                 the following keys:
                 - 'img' (numpy.ndarray): The input image.
                 - 'resized_shape' (Tuple[int, int]): The shape of the resized image (height, width).
@@ -729,7 +728,7 @@ class Mosaic(BaseMixTransform):
                   eight images, each with the same structure as the input labels.
 
         Returns:
-            (dict): A dictionary containing the mosaic image and updated labels. It includes the following keys:
+            (Dict): A dictionary containing the mosaic image and updated labels. It includes the following keys:
                 - 'img' (numpy.ndarray): The final mosaic image.
                 - Other keys from the input labels, updated to reflect the new mosaic arrangement.
 
@@ -771,7 +770,7 @@ class Mosaic(BaseMixTransform):
                 c = s - w, s + h0 - hp - h, s, s + h0 - hp
 
             padw, padh = c[:2]
-            x1, y1, x2, y2 = (max(x, 0) for x in c)  # allocate coordinates
+            x1, y1, x2, y2 = (max(x, 0) for x in c)  # allocate coords
 
             # Image
             img9[y1:y2, x1:x2] = img[y1 - padh :, x1 - padw :]  # img9[ymin:ymax, xmin:xmax]
@@ -794,12 +793,12 @@ class Mosaic(BaseMixTransform):
         values. It also denormalizes the coordinates if they were previously normalized.
 
         Args:
-            labels (dict): A dictionary containing image and instance information.
+            labels (Dict): A dictionary containing image and instance information.
             padw (int): Padding width to be added to the x-coordinates.
             padh (int): Padding height to be added to the y-coordinates.
 
         Returns:
-            (dict): Updated labels dictionary with adjusted instance coordinates.
+            (Dict): Updated labels dictionary with adjusted instance coordinates.
 
         Examples:
             >>> labels = {"img": np.zeros((100, 100, 3)), "instances": Instances(...)}
@@ -823,7 +822,7 @@ class Mosaic(BaseMixTransform):
             mosaic_labels (List[Dict]): A list of label dictionaries for each image in the mosaic.
 
         Returns:
-            (dict): A dictionary containing concatenated and processed labels for the mosaic image, including:
+            (Dict): A dictionary containing concatenated and processed labels for the mosaic image, including:
                 - im_file (str): File path of the first image in the mosaic.
                 - ori_shape (Tuple[int, int]): Original shape of the first image.
                 - resized_shape (Tuple[int, int]): Shape of the mosaic image (imgsz * 2, imgsz * 2).
@@ -868,8 +867,8 @@ class MixUp(BaseMixTransform):
     """
     Applies MixUp augmentation to image datasets.
 
-    This class implements the MixUp augmentation technique as described in the paper [mixup: Beyond Empirical Risk
-    Minimization](https://arxiv.org/abs/1710.09412). MixUp combines two images and their labels using a random weight.
+    This class implements the MixUp augmentation technique as described in the paper "mixup: Beyond Empirical Risk
+    Minimization" (https://arxiv.org/abs/1710.09412). MixUp combines two images and their labels using a random weight.
 
     Attributes:
         dataset (Any): The dataset to which MixUp augmentation will be applied.
@@ -932,10 +931,10 @@ class MixUp(BaseMixTransform):
         "mixup: Beyond Empirical Risk Minimization" (https://arxiv.org/abs/1710.09412).
 
         Args:
-            labels (dict): A dictionary containing the original image and label information.
+            labels (Dict): A dictionary containing the original image and label information.
 
         Returns:
-            (dict): A dictionary containing the mixed-up image and combined label information.
+            (Dict): A dictionary containing the mixed-up image and combined label information.
 
         Examples:
             >>> mixer = MixUp(dataset)
@@ -1191,16 +1190,16 @@ class RandomPerspective:
         and keypoints accordingly.
 
         Args:
-            labels (dict): A dictionary containing image data and annotations.
+            labels (Dict): A dictionary containing image data and annotations.
                 Must include:
-                    'img' (np.ndarray): The input image.
-                    'cls' (np.ndarray): Class labels.
+                    'img' (ndarray): The input image.
+                    'cls' (ndarray): Class labels.
                     'instances' (Instances): Object instances with bounding boxes, segments, and keypoints.
                 May include:
                     'mosaic_border' (Tuple[int, int]): Border size for mosaic augmentation.
 
         Returns:
-            (dict): Transformed labels dictionary containing:
+            (Dict): Transformed labels dictionary containing:
                 - 'img' (np.ndarray): The transformed image.
                 - 'cls' (np.ndarray): Updated class labels.
                 - 'instances' (Instances): Updated object instances.
@@ -1260,8 +1259,7 @@ class RandomPerspective:
         labels["resized_shape"] = img.shape[:2]
         return labels
 
-    @staticmethod
-    def box_candidates(box1, box2, wh_thr=2, ar_thr=100, area_thr=0.1, eps=1e-16):
+    def box_candidates(self, box1, box2, wh_thr=2, ar_thr=100, area_thr=0.1, eps=1e-16):
         """
         Compute candidate boxes for further processing based on size and aspect ratio criteria.
 
@@ -1283,7 +1281,7 @@ class RandomPerspective:
             eps (float): Small epsilon value to prevent division by zero.
 
         Returns:
-            (numpy.ndarray): Boolean array of shape (n) indicating which boxes are candidates.
+            (numpy.ndarray): Boolean array of shape (n,) indicating which boxes are candidates.
                 True values correspond to boxes that meet all criteria.
 
         Examples:
@@ -1320,7 +1318,7 @@ class RandomHSV:
         >>> augmenter = RandomHSV(hgain=0.5, sgain=0.5, vgain=0.5)
         >>> image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
         >>> labels = {"img": image}
-        >>> augmenter(labels)
+        >>> augmented_labels = augmenter(labels)
         >>> augmented_image = augmented_labels["img"]
     """
 
@@ -1337,7 +1335,7 @@ class RandomHSV:
 
         Examples:
             >>> hsv_aug = RandomHSV(hgain=0.5, sgain=0.5, vgain=0.5)
-            >>> hsv_aug(image)
+            >>> augmented_image = hsv_aug(image)
         """
         self.hgain = hgain
         self.sgain = sgain
@@ -1351,7 +1349,7 @@ class RandomHSV:
         The adjustments are made within the limits set by hgain, sgain, and vgain during initialization.
 
         Args:
-            labels (dict): A dictionary containing image data and metadata. Must include an 'img' key with
+            labels (Dict): A dictionary containing image data and metadata. Must include an 'img' key with
                 the image as a numpy array.
 
         Returns:
@@ -1364,19 +1362,17 @@ class RandomHSV:
             >>> hsv_augmenter(labels)
             >>> augmented_img = labels["img"]
         """
+        img = labels["img"]
         if self.hgain or self.sgain or self.vgain:
-            img = labels["img"]
+            r = np.random.uniform(-1, 1, 3) * [self.hgain, self.sgain, self.vgain] + 1  # random gains
+            hue, sat, val = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
             dtype = img.dtype  # uint8
 
-            r = np.random.uniform(-1, 1, 3) * [self.hgain, self.sgain, self.vgain]  # random gains
             x = np.arange(0, 256, dtype=r.dtype)
-            # lut_hue = ((x * (r[0] + 1)) % 180).astype(dtype)   # original hue implementation from ultralytics<=8.3.78
-            lut_hue = ((x + r[0] * 180) % 180).astype(dtype)
-            lut_sat = np.clip(x * (r[1] + 1), 0, 255).astype(dtype)
-            lut_val = np.clip(x * (r[2] + 1), 0, 255).astype(dtype)
-            lut_sat[0] = 0  # prevent pure white changing color, introduced in 8.3.79
+            lut_hue = ((x * r[0]) % 180).astype(dtype)
+            lut_sat = np.clip(x * r[1], 0, 255).astype(dtype)
+            lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
 
-            hue, sat, val = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
             im_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val)))
             cv2.cvtColor(im_hsv, cv2.COLOR_HSV2BGR, dst=img)  # no return needed
         return labels
@@ -1421,7 +1417,7 @@ class RandomFlip:
 
         Examples:
             >>> flip = RandomFlip(p=0.5, direction="horizontal")
-            >>> flip_with_idx = RandomFlip(p=0.7, direction="vertical", flip_idx=[1, 0, 3, 2, 5, 4])
+            >>> flip = RandomFlip(p=0.7, direction="vertical", flip_idx=[1, 0, 3, 2, 5, 4])
         """
         assert direction in {"horizontal", "vertical"}, f"Support direction `horizontal` or `vertical`, got {direction}"
         assert 0 <= p <= 1.0, f"The probability should be in range [0, 1], but got {p}."
@@ -1439,13 +1435,13 @@ class RandomFlip:
         match the flipped image.
 
         Args:
-            labels (dict): A dictionary containing the following keys:
+            labels (Dict): A dictionary containing the following keys:
                 'img' (numpy.ndarray): The image to be flipped.
                 'instances' (ultralytics.utils.instance.Instances): An object containing bounding boxes and
                     optionally keypoints.
 
         Returns:
-            (dict): The same dictionary with the flipped image and updated instances:
+            (Dict): The same dictionary with the flipped image and updated instances:
                 'img' (numpy.ndarray): The flipped image.
                 'instances' (ultralytics.utils.instance.Instances): Updated instances matching the flipped image.
 
@@ -1486,7 +1482,7 @@ class LetterBox:
     Attributes:
         new_shape (tuple): Target shape (height, width) for resizing.
         auto (bool): Whether to use minimum rectangle.
-        scale_fill (bool): Whether to stretch the image to new_shape.
+        scaleFill (bool): Whether to stretch the image to new_shape.
         scaleup (bool): Whether to allow scaling up. If False, only scale down.
         stride (int): Stride for rounding padding.
         center (bool): Whether to center the image or align to top-left.
@@ -1501,7 +1497,7 @@ class LetterBox:
         >>> updated_instances = result["instances"]
     """
 
-    def __init__(self, new_shape=(640, 640), auto=False, scale_fill=False, scaleup=True, center=True, stride=32):
+    def __init__(self, new_shape=(640, 640), auto=False, scaleFill=False, scaleup=True, center=True, stride=32):
         """
         Initialize LetterBox object for resizing and padding images.
 
@@ -1511,7 +1507,7 @@ class LetterBox:
         Args:
             new_shape (Tuple[int, int]): Target size (height, width) for the resized image.
             auto (bool): If True, use minimum rectangle to resize. If False, use new_shape directly.
-            scale_fill (bool): If True, stretch the image to new_shape without padding.
+            scaleFill (bool): If True, stretch the image to new_shape without padding.
             scaleup (bool): If True, allow scaling up. If False, only scale down.
             center (bool): If True, center the placed image. If False, place image in top-left corner.
             stride (int): Stride of the model (e.g., 32 for YOLOv5).
@@ -1519,17 +1515,17 @@ class LetterBox:
         Attributes:
             new_shape (Tuple[int, int]): Target size for the resized image.
             auto (bool): Flag for using minimum rectangle resizing.
-            scale_fill (bool): Flag for stretching image without padding.
+            scaleFill (bool): Flag for stretching image without padding.
             scaleup (bool): Flag for allowing upscaling.
             stride (int): Stride value for ensuring image size is divisible by stride.
 
         Examples:
-            >>> letterbox = LetterBox(new_shape=(640, 640), auto=False, scale_fill=False, scaleup=True, stride=32)
+            >>> letterbox = LetterBox(new_shape=(640, 640), auto=False, scaleFill=False, scaleup=True, stride=32)
             >>> resized_img = letterbox(original_img)
         """
         self.new_shape = new_shape
         self.auto = auto
-        self.scale_fill = scale_fill
+        self.scaleFill = scaleFill
         self.scaleup = scaleup
         self.stride = stride
         self.center = center  # Put the image in the middle or top-left
@@ -1575,7 +1571,7 @@ class LetterBox:
         dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
         if self.auto:  # minimum rectangle
             dw, dh = np.mod(dw, self.stride), np.mod(dh, self.stride)  # wh padding
-        elif self.scale_fill:  # stretch
+        elif self.scaleFill:  # stretch
             dw, dh = 0.0, 0.0
             new_unpad = (new_shape[1], new_shape[0])
             ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]  # width, height ratios
@@ -1602,8 +1598,7 @@ class LetterBox:
         else:
             return img
 
-    @staticmethod
-    def _update_labels(labels, ratio, padw, padh):
+    def _update_labels(self, labels, ratio, padw, padh):
         """
         Updates labels after applying letterboxing to an image.
 
@@ -1611,13 +1606,13 @@ class LetterBox:
         to account for resizing and padding applied during letterboxing.
 
         Args:
-            labels (dict): A dictionary containing image labels and instances.
+            labels (Dict): A dictionary containing image labels and instances.
             ratio (Tuple[float, float]): Scaling ratios (width, height) applied to the image.
             padw (float): Padding width added to the image.
             padh (float): Padding height added to the image.
 
         Returns:
-            (dict): Updated labels dictionary with modified instance coordinates.
+            (Dict): Updated labels dictionary with modified instance coordinates.
 
         Examples:
             >>> letterbox = LetterBox(new_shape=(640, 640))
@@ -1852,7 +1847,7 @@ class Albumentations:
                 A.CLAHE(p=0.01),
                 A.RandomBrightnessContrast(p=0.0),
                 A.RandomGamma(p=0.0),
-                A.ImageCompression(quality_range=(75, 100), p=0.0),
+                A.ImageCompression(quality_lower=75, p=0.0),
             ]
 
             # Compose transforms
@@ -1862,9 +1857,6 @@ class Albumentations:
                 if self.contains_spatial
                 else A.Compose(T)
             )
-            if hasattr(self.transform, "set_random_seed"):
-                # Required for deterministic transforms in albumentations>=1.4.21
-                self.transform.set_random_seed(torch.initial_seed())
             LOGGER.info(prefix + ", ".join(f"{x}".replace("always_apply=False, ", "") for x in T if x.p))
         except ImportError:  # package not installed, skip
             pass
@@ -1879,13 +1871,13 @@ class Albumentations:
         spatial and non-spatial transformations on the input image and its corresponding labels.
 
         Args:
-            labels (dict): A dictionary containing image data and annotations. Expected keys are:
+            labels (Dict): A dictionary containing image data and annotations. Expected keys are:
                 - 'img': numpy.ndarray representing the image
                 - 'cls': numpy.ndarray of class labels
                 - 'instances': object containing bounding boxes and other instance information
 
         Returns:
-            (dict): The input dictionary with augmented image and updated annotations.
+            (Dict): The input dictionary with augmented image and updated annotations.
 
         Examples:
             >>> transform = Albumentations(p=0.5)
@@ -2019,15 +2011,15 @@ class Format:
         applying normalization if required.
 
         Args:
-            labels (dict): A dictionary containing image and annotation data with the following keys:
+            labels (Dict): A dictionary containing image and annotation data with the following keys:
                 - 'img': The input image as a numpy array.
                 - 'cls': Class labels for instances.
                 - 'instances': An Instances object containing bounding boxes, segments, and keypoints.
 
         Returns:
-            (dict): A dictionary with formatted data, including:
+            (Dict): A dictionary with formatted data, including:
                 - 'img': Formatted image tensor.
-                - 'cls': Class label's tensor.
+                - 'cls': Class labels tensor.
                 - 'bboxes': Bounding boxes tensor in the specified format.
                 - 'masks': Instance masks tensor (if return_mask is True).
                 - 'keypoints': Keypoints tensor (if return_keypoint is True).
@@ -2140,99 +2132,6 @@ class Format:
         return masks, instances, cls
 
 
-class LoadVisualPrompt:
-    """Creates visual prompts from bounding boxes or masks for model input."""
-
-    def __init__(self, scale_factor=1 / 8):
-        """
-        Initialize the LoadVisualPrompt with a scale factor.
-
-        Args:
-            scale_factor (float): Factor to scale the input image dimensions.
-        """
-        self.scale_factor = scale_factor
-
-    def make_mask(self, boxes, h, w):
-        """
-        Create binary masks from bounding boxes.
-
-        Args:
-            boxes (torch.Tensor): Bounding boxes in xyxy format, shape: (N, 4).
-            h (int): Height of the mask.
-            w (int): Width of the mask.
-
-        Returns:
-            (torch.Tensor): Binary masks with shape (N, h, w).
-        """
-        x1, y1, x2, y2 = torch.chunk(boxes[:, :, None], 4, 1)  # x1 shape(n,1,1)
-        r = torch.arange(w)[None, None, :]  # rows shape(1,1,w)
-        c = torch.arange(h)[None, :, None]  # cols shape(1,h,1)
-
-        return (r >= x1) * (r < x2) * (c >= y1) * (c < y2)
-
-    def __call__(self, labels):
-        """
-        Process labels to create visual prompts.
-
-        Args:
-            labels (dict): Dictionary containing image data and annotations.
-
-        Returns:
-            (dict): Updated labels with visual prompts added.
-        """
-        imgsz = labels["img"].shape[1:]
-        bboxes, masks = None, None
-        if "bboxes" in labels:
-            bboxes = labels["bboxes"]
-            bboxes = xywh2xyxy(bboxes) * torch.tensor(imgsz)[[1, 0, 1, 0]]  # denormalize boxes
-
-        cls = labels["cls"].squeeze(-1).to(torch.int)
-        visuals = self.get_visuals(cls, imgsz, bboxes=bboxes, masks=masks)
-        labels["visuals"] = visuals
-        return labels
-
-    def get_visuals(self, category, shape, bboxes=None, masks=None):
-        """
-        Generate visual masks based on bounding boxes or masks.
-
-        Args:
-            category (int | np.ndarray | torch.Tensor): The category labels for the objects.
-            shape (tuple): The shape of the image (height, width).
-            bboxes (np.ndarray | torch.Tensor, optional): Bounding boxes for the objects, xyxy format. Defaults to None.
-            masks (np.ndarray | torch.Tensor, optional): Masks for the objects. Defaults to None.
-
-        Returns:
-            (torch.Tensor): A tensor containing the visual masks for each category.
-
-        Raises:
-            ValueError: If neither bboxes nor masks are provided.
-        """
-        masksz = (int(shape[0] * self.scale_factor), int(shape[1] * self.scale_factor))
-        if bboxes is not None:
-            if isinstance(bboxes, np.ndarray):
-                bboxes = torch.from_numpy(bboxes)
-            bboxes *= self.scale_factor
-            masks = self.make_mask(bboxes, *masksz).float()
-        elif masks is not None:
-            if isinstance(masks, np.ndarray):
-                masks = torch.from_numpy(masks)  # (N, H, W)
-            masks = F.interpolate(masks.unsqueeze(1), masksz, mode="nearest").squeeze(1).float()
-        else:
-            raise ValueError("LoadVisualPrompt must have bboxes or masks in the label")
-        if not isinstance(category, torch.Tensor):
-            category = torch.tensor(category, dtype=torch.int)
-        cls_unique, inverse_indices = torch.unique(category, sorted=True, return_inverse=True)
-        # NOTE: `cls` indices from RandomLoadText should be continuous.
-        # if len(cls_unique):
-        #     assert len(cls_unique) == cls_unique[-1] + 1, (
-        #         f"Expected a continuous range of class indices, but got {cls_unique}"
-        #     )
-        visuals = torch.zeros(len(cls_unique), *masksz)
-        for idx, mask in zip(inverse_indices, masks):
-            visuals[idx] = torch.logical_or(visuals[idx], mask)
-        return visuals
-
-
 class RandomLoadText:
     """
     Randomly samples positive and negative texts and updates class indices accordingly.
@@ -2265,7 +2164,7 @@ class RandomLoadText:
         neg_samples: Tuple[int, int] = (80, 80),
         max_samples: int = 80,
         padding: bool = False,
-        padding_value: List[str] = [""],
+        padding_value: str = "",
     ) -> None:
         """
         Initializes the RandomLoadText class for randomly sampling positive and negative texts.
@@ -2315,10 +2214,10 @@ class RandomLoadText:
         new sampled text order.
 
         Args:
-            labels (dict): A dictionary containing image labels and metadata. Must include 'texts' and 'cls' keys.
+            labels (Dict): A dictionary containing image labels and metadata. Must include 'texts' and 'cls' keys.
 
         Returns:
-            (dict): Updated labels dictionary with new 'cls' and 'texts' entries.
+            (Dict): Updated labels dictionary with new 'cls' and 'texts' entries.
 
         Examples:
             >>> loader = RandomLoadText(prompt_format="A photo of {}", neg_samples=(5, 10), max_samples=20)
@@ -2339,8 +2238,7 @@ class RandomLoadText:
         neg_labels = random.sample(neg_labels, k=neg_samples)
 
         sampled_labels = pos_labels + neg_labels
-        # Randomness
-        # random.shuffle(sampled_labels)
+        random.shuffle(sampled_labels)
 
         label2ids = {label: i for i, label in enumerate(sampled_labels)}
         valid_idx = np.zeros(len(labels["instances"]), dtype=bool)
@@ -2365,9 +2263,8 @@ class RandomLoadText:
             valid_labels = len(pos_labels) + len(neg_labels)
             num_padding = self.max_samples - valid_labels
             if num_padding > 0:
-                texts += random.choices(self.padding_value, k=num_padding)
+                texts += [self.padding_value] * num_padding
 
-        assert len(texts) == self.max_samples
         labels["texts"] = texts
         return labels
 
@@ -2445,7 +2342,7 @@ def classify_transforms(
     mean=DEFAULT_MEAN,
     std=DEFAULT_STD,
     interpolation="BILINEAR",
-    crop_fraction=None,
+    crop_fraction: float = DEFAULT_CROP_FRACTION,
 ):
     """
     Creates a composition of image transforms for classification tasks.
@@ -2460,7 +2357,7 @@ def classify_transforms(
         mean (tuple): Mean values for each RGB channel used in normalization.
         std (tuple): Standard deviation values for each RGB channel used in normalization.
         interpolation (str): Interpolation method of either 'NEAREST', 'BILINEAR' or 'BICUBIC'.
-        crop_fraction (float): Deprecated, will be removed in a future version.
+        crop_fraction (float): Fraction of the image to be cropped.
 
     Returns:
         (torchvision.transforms.Compose): A composition of torchvision transforms.
@@ -2472,12 +2369,12 @@ def classify_transforms(
     """
     import torchvision.transforms as T  # scope for faster 'import ultralytics'
 
-    scale_size = size if isinstance(size, (tuple, list)) and len(size) == 2 else (size, size)
-
-    if crop_fraction:
-        raise DeprecationWarning(
-            "'crop_fraction' arg of classify_transforms is deprecated, will be removed in a future version."
-        )
+    if isinstance(size, (tuple, list)):
+        assert len(size) == 2, f"'size' tuples must be length 2, not length {len(size)}"
+        scale_size = tuple(math.floor(x / crop_fraction) for x in size)
+    else:
+        scale_size = math.floor(size / crop_fraction)
+        scale_size = (scale_size, scale_size)
 
     # Aspect ratio is preserved, crops center within image, no borders are added, image is lost
     if scale_size[0] == scale_size[1]:
@@ -2486,7 +2383,13 @@ def classify_transforms(
     else:
         # Resize the shortest edge to matching target dim for non-square target
         tfl = [T.Resize(scale_size)]
-    tfl += [T.CenterCrop(size), T.ToTensor(), T.Normalize(mean=torch.tensor(mean), std=torch.tensor(std))]
+    tfl.extend(
+        [
+            T.CenterCrop(size),
+            T.ToTensor(),
+            T.Normalize(mean=torch.tensor(mean), std=torch.tensor(std)),
+        ]
+    )
     return T.Compose(tfl)
 
 

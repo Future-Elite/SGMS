@@ -1,4 +1,4 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 
 import json
 from time import time
@@ -14,16 +14,18 @@ def on_pretrain_routine_start(trainer):
 
 
 def on_pretrain_routine_end(trainer):
-    """Initialize timers for upload rate limiting before training begins."""
-    if session := getattr(trainer, "hub_session", None):
+    """Logs info before starting timer for upload rate limit."""
+    session = getattr(trainer, "hub_session", None)
+    if session:
         # Start timer for upload rate limit
-        session.timers = {"metrics": time(), "ckpt": time()}  # start timer for session rate limiting
+        session.timers = {"metrics": time(), "ckpt": time()}  # start timer on session.rate_limit
 
 
 def on_fit_epoch_end(trainer):
-    """Upload training progress metrics to Ultralytics HUB at the end of each epoch."""
-    if session := getattr(trainer, "hub_session", None):
-        # Upload metrics after validation ends
+    """Uploads training progress metrics at the end of each epoch."""
+    session = getattr(trainer, "hub_session", None)
+    if session:
+        # Upload metrics after val end
         all_plots = {
             **trainer.label_loss_items(trainer.tloss, prefix="train"),
             **trainer.metrics,
@@ -35,7 +37,7 @@ def on_fit_epoch_end(trainer):
 
         session.metrics_queue[trainer.epoch] = json.dumps(all_plots)
 
-        # If any metrics failed to upload previously, add them to the queue to attempt uploading again
+        # If any metrics fail to upload, add them to the queue to attempt uploading again.
         if session.metrics_upload_failed_queue:
             session.metrics_queue.update(session.metrics_upload_failed_queue)
 
@@ -46,8 +48,9 @@ def on_fit_epoch_end(trainer):
 
 
 def on_model_save(trainer):
-    """Upload model checkpoints to Ultralytics HUB with rate limiting."""
-    if session := getattr(trainer, "hub_session", None):
+    """Saves checkpoints to Ultralytics HUB with rate limiting."""
+    session = getattr(trainer, "hub_session", None)
+    if session:
         # Upload checkpoints with rate limiting
         is_best = trainer.best_fitness == trainer.fitness
         if time() - session.timers["ckpt"] > session.rate_limits["ckpt"]:
@@ -58,7 +61,8 @@ def on_model_save(trainer):
 
 def on_train_end(trainer):
     """Upload final model and metrics to Ultralytics HUB at the end of training."""
-    if session := getattr(trainer, "hub_session", None):
+    session = getattr(trainer, "hub_session", None)
+    if session:
         # Upload final model and metrics with exponential standoff
         LOGGER.info(f"{PREFIX}Syncing final model...")
         session.upload_model(
@@ -68,7 +72,7 @@ def on_train_end(trainer):
             final=True,
         )
         session.alive = False  # stop heartbeats
-        LOGGER.info(f"{PREFIX}Done ✅\n{PREFIX}View model at {session.model_url} 🚀")
+        LOGGER.info(f"{PREFIX}Done ✅\n" f"{PREFIX}View model at {session.model_url} 🚀")
 
 
 def on_train_start(trainer):
@@ -77,7 +81,7 @@ def on_train_start(trainer):
 
 
 def on_val_start(validator):
-    """Run events on validation start."""
+    """Runs events on validation start."""
     events(validator.args)
 
 
@@ -105,4 +109,4 @@ callbacks = (
     }
     if SETTINGS["hub"] is True
     else {}
-)  # verify hub is enabled before registering callbacks
+)  # verify enabled

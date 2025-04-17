@@ -1,4 +1,4 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 
 # --------------------------------------------------------
 # TinyViT Model Architecture
@@ -27,7 +27,7 @@ class Conv2d_BN(torch.nn.Sequential):
 
     Attributes:
         c (torch.nn.Conv2d): 2D convolution layer.
-        bn (torch.nn.BatchNorm2d): Batch normalization layer.
+        1 (torch.nn.BatchNorm2d): Batch normalization layer.
 
     Methods:
         __init__: Initializes the Conv2d_BN with specified parameters.
@@ -265,9 +265,9 @@ class ConvLayer(nn.Module):
             dim (int): The dimensionality of the input and output.
             input_resolution (Tuple[int, int]): The resolution of the input image.
             depth (int): The number of MBConv layers in the block.
-            activation (nn.Module): Activation function applied after each convolution.
+            activation (Callable): Activation function applied after each convolution.
             drop_path (float | List[float]): Drop path rate. Single float or a list of floats for each MBConv.
-            downsample (Optional[nn.Module]): Function for downsampling the output. None to skip downsampling.
+            downsample (Optional[Callable]): Function for downsampling the output. None to skip downsampling.
             use_checkpoint (bool): Whether to use gradient checkpointing to save memory.
             out_dim (Optional[int]): The dimensionality of the output. None means it will be the same as `dim`.
             conv_expand_ratio (float): Expansion ratio for the MBConv layers.
@@ -413,9 +413,12 @@ class Attention(torch.nn.Module):
         Args:
             dim (int): The dimensionality of the input and output.
             key_dim (int): The dimensionality of the keys and queries.
-            num_heads (int): Number of attention heads.
-            attn_ratio (float): Attention ratio, affecting the dimensions of the value vectors.
-            resolution (Tuple[int, int]): Spatial resolution of the input feature map.
+            num_heads (int): Number of attention heads. Default is 8.
+            attn_ratio (float): Attention ratio, affecting the dimensions of the value vectors. Default is 4.
+            resolution (Tuple[int, int]): Spatial resolution of the input feature map. Default is (14, 14).
+
+        Raises:
+            AssertionError: If 'resolution' is not a tuple of length 2.
 
         Examples:
             >>> attn = Attention(dim=256, key_dim=64, num_heads=8, resolution=(14, 14))
@@ -497,7 +500,7 @@ class TinyViTBlock(nn.Module):
         dim (int): The dimensionality of the input and output.
         input_resolution (Tuple[int, int]): Spatial resolution of the input feature map.
         num_heads (int): Number of attention heads.
-        window_size (int): Size of the attention window.
+        window_size (int): Size of the attention ui.
         mlp_ratio (float): Ratio of MLP hidden dimension to embedding dimension.
         drop_path (nn.Module): Stochastic depth layer, identity function during inference.
         attn (Attention): Self-attention module.
@@ -538,7 +541,7 @@ class TinyViTBlock(nn.Module):
             dim (int): Dimensionality of the input and output features.
             input_resolution (Tuple[int, int]): Spatial resolution of the input feature map (height, width).
             num_heads (int): Number of attention heads.
-            window_size (int): Size of the attention window. Must be greater than 0.
+            window_size (int): Size of the attention ui. Must be greater than 0.
             mlp_ratio (float): Ratio of MLP hidden dimension to embedding dimension.
             drop (float): Dropout rate.
             drop_path (float): Stochastic depth rate.
@@ -628,7 +631,7 @@ class TinyViTBlock(nn.Module):
         Returns a string representation of the TinyViTBlock's parameters.
 
         This method provides a formatted string containing key information about the TinyViTBlock, including its
-        dimension, input resolution, number of attention heads, window size, and MLP ratio.
+        dimension, input resolution, number of attention heads, ui size, and MLP ratio.
 
         Returns:
             (str): A formatted string containing the block's parameters.
@@ -698,7 +701,7 @@ class BasicLayer(nn.Module):
             input_resolution (Tuple[int, int]): Spatial resolution of the input feature map (height, width).
             depth (int): Number of TinyViT blocks in this layer.
             num_heads (int): Number of attention heads in each TinyViT block.
-            window_size (int): Size of the local window for attention computation.
+            window_size (int): Size of the local ui for attention computation.
             mlp_ratio (float): Ratio of MLP hidden dimension to embedding dimension.
             drop (float): Dropout rate.
             drop_path (float | List[float]): Stochastic depth rate. Can be a float or a list of floats for each block.
@@ -818,20 +821,22 @@ class TinyViT(nn.Module):
         attention and convolution blocks, and a classification head.
 
         Args:
-            img_size (int): Size of the input image.
-            in_chans (int): Number of input channels.
-            num_classes (int): Number of classes for classification.
+            img_size (int): Size of the input image. Default is 224.
+            in_chans (int): Number of input channels. Default is 3.
+            num_classes (int): Number of classes for classification. Default is 1000.
             embed_dims (Tuple[int, int, int, int]): Embedding dimensions for each stage.
-            depths (Tuple[int, int, int, int]): Number of blocks in each stage.
+                Default is (96, 192, 384, 768).
+            depths (Tuple[int, int, int, int]): Number of blocks in each stage. Default is (2, 2, 6, 2).
             num_heads (Tuple[int, int, int, int]): Number of attention heads in each stage.
-            window_sizes (Tuple[int, int, int, int]): Window sizes for each stage.
-            mlp_ratio (float): Ratio of MLP hidden dim to embedding dim.
-            drop_rate (float): Dropout rate.
-            drop_path_rate (float): Stochastic depth rate.
-            use_checkpoint (bool): Whether to use checkpointing to save memory.
-            mbconv_expand_ratio (float): Expansion ratio for MBConv layer.
-            local_conv_size (int): Kernel size for local convolutions.
-            layer_lr_decay (float): Layer-wise learning rate decay factor.
+                Default is (3, 6, 12, 24).
+            window_sizes (Tuple[int, int, int, int]): Window sizes for each stage. Default is (7, 7, 14, 7).
+            mlp_ratio (float): Ratio of MLP hidden dim to embedding dim. Default is 4.0.
+            drop_rate (float): Dropout rate. Default is 0.0.
+            drop_path_rate (float): Stochastic depth rate. Default is 0.1.
+            use_checkpoint (bool): Whether to use checkpointing to save memory. Default is False.
+            mbconv_expand_ratio (float): Expansion ratio for MBConv layer. Default is 4.0.
+            local_conv_size (int): Kernel size for local convolutions. Default is 3.
+            layer_lr_decay (float): Layer-wise learning rate decay factor. Default is 1.0.
 
         Examples:
             >>> model = TinyViT(img_size=224, num_classes=1000)
@@ -950,8 +955,7 @@ class TinyViT(nn.Module):
 
         self.apply(_check_lr_scale)
 
-    @staticmethod
-    def _init_weights(m):
+    def _init_weights(self, m):
         """Initializes weights for linear and normalization layers in the TinyViT model."""
         if isinstance(m, nn.Linear):
             # NOTE: This initialization is needed only for training.
@@ -987,7 +991,12 @@ class TinyViT(nn.Module):
         return self.forward_features(x)
 
     def set_imgsz(self, imgsz=[1024, 1024]):
-        """Set image size to make model compatible with different image sizes."""
+        """
+        Set image size to make model compatible with different image sizes.
+
+        Args:
+            imgsz (Tuple[int, int]): The size of the input image.
+        """
         imgsz = [s // 4 for s in imgsz]
         self.patches_resolution = imgsz
         for i, layer in enumerate(self.layers):

@@ -7,4 +7,4 @@ if __name__ == '__main__':
     model = YOLO("yolo11n-cls.pt")
 
     # Train the model
-    results = model.train(data="../datasets/dataset_a", cfg='./config.yaml')
+    results = model.train(data="../datasets/dataset_a_split_mp", cfg='./config.yaml')

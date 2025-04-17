@@ -1,5 +1,4 @@
-# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
-
+# Ultralytics YOLO 🚀, AGPL-3.0 license
 # ImageNet-1k dataset https://www.image-net.org/index.php by Stanford University
 # Simplified class names from https://github.com/anishathalye/imagenet-simple-labels
 # Documentation: https://docs.ultralytics.com/datasets/classify/imagenet/
@@ -921,8 +920,8 @@ names:
   901: whiskey jug
   902: whistle
   903: wig
-  904: window screen
-  905: window shade
+  904: ui screen
+  905: ui shade
   906: Windsor tie
   907: wine bottle
   908: wing
@@ -2022,4 +2021,4 @@ map:
   n15075141: toilet_tissue
 
 # Download script/URL (optional)
-download: ultralytics/data/scripts/get_imagenet.sh
+download: yolo/data/scripts/get_imagenet.sh

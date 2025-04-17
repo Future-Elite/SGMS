@@ -54,8 +54,8 @@ shiboken6==6.8.1
 six==1.17.0
 sounddevice==0.5.1
 sympy==1.13.1
-torch==2.5.1
-torchvision==0.20.1
+torch==2.0.1
+torchvision==0.15.2
 tqdm==4.67.1
 typing_extensions==4.12.2
 tzdata==2024.2

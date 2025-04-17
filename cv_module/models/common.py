@@ -360,6 +360,7 @@ if True:
             """
             super().__init__()
             w = str(weights[0] if isinstance(weights, list) else weights)
+            print()
             nn_module = isinstance(weights, torch.nn.Module)
             (
                 pt,
