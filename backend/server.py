@@ -2,10 +2,18 @@ from flask import Flask, request, jsonify, Response
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 import cv2
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
 
 flask_app = Flask(__name__)
 SECRET_KEY = 'SGMS_Secret_Key'
 
+# 创建数据库引擎和会话（请根据实际数据库修改 URL）
+DATABASE_URL = 'sqlite:///data/database.db'  # 你可以换成 'mysql://user:pass@host/db' 等
+engine = create_engine(DATABASE_URL, echo=True)
+SessionLocal = sessionmaker(bind=engine)
 
 camera = cv2.VideoCapture(0)
 
@@ -55,8 +63,48 @@ def upload_result():
     data = request.get_json()
     print("接收到检测结果:", data)
 
-    # 假设数据格式：{"objects": [{"label": "person", "confidence": 0.98}, ...]}
-    return jsonify({"message": "检测结果上传成功"}), 200
+    gesture_labels = {
+        "start": 0,
+        "pause": 1,
+        "forward": 2,
+        "backward": 3,
+        "high": 4,
+        "low": 5
+    }
+
+    session = SessionLocal()
+    try:
+        # 获取检测结果 格式为{"xxx": 1}
+        gesture_name = list(data.keys())[0] if data else None
+        gesture_name = gesture_name.strip() if gesture_name else None
+        print("检测到的手势:", gesture_name)
+
+        if not gesture_name:
+            return jsonify({"error": "未知手势"}), 400
+
+        # 查找 gesture_id 和操作类型
+        gesture = session.query(GestureMap).filter_by(gesture_name=gesture_name).first()
+        if not gesture:
+            return jsonify({"error": "手势未注册"}), 404
+
+        # 写入 operation_log
+        log = OperationLog(
+            gesture_id=gesture_labels[gesture_name],  # 假设 gesture_name 对应的 ID
+            operation_type=gesture.operation_type,
+            device_type=DeviceTypeEnum.tv,  # 可根据实际需求动态指定
+            result=ResultEnum.success,  # 假设检测成功
+            detail=f"检测到手势：{gesture_name}"
+        )
+        session.add(log)
+        session.commit()
+
+        return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
+    except Exception as e:
+        session.rollback()
+        print("数据库写入出错:", e)
+        return jsonify({"error": "服务端异常"}), 500
+    finally:
+        session.close()
 
 
 @flask_app.route('/')

@@ -27,7 +27,7 @@ from frontend.utils.logger import LoggerUtils
 
 glo.init()
 glo.set_value('yoloname', "yolov8 yolov11"
-                          "yolov8-seg yolov11-seg yolov8-pose yolov8-obb yolov11-obb yolov11-pose"
+                          ""
                           "")
 
 GLOBAL_WINDOW_STATE = True
@@ -36,15 +36,11 @@ WIDTH_LEFT_BOX_EXTENDED = 200
 WIDTH_SETTING_BAR = 290
 WIDTH_LOGO = 60
 WINDOW_SPLIT_BODY = 20
-KEYS_LEFT_BOX_MENU = ['src_menu', 'src_setting', 'src_webcam', 'src_folder', 'src_camera']
+KEYS_LEFT_BOX_MENU = ['src_menu', 'src_webcam', 'src_folder', 'src_camera']
 # 模型名称和线程类映射
 MODEL_THREAD_CLASSES = {
     "yolov8": YOLOThread,
     "yolov11": YOLOv11Thread,
-    "yolov8-seg": YOLOSegThread,
-    "yolov11-seg": YOLOv11SegThread,
-    "yolov8-pose": YOLOPoseThread,
-    "yolov11-pose": YOLOv11PoseThread,
 }
 # 扩展MODEL_THREAD_CLASSES字典
 MODEL_NAME_DICT = list(MODEL_THREAD_CLASSES.items())

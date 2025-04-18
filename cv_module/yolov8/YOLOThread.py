@@ -46,11 +46,10 @@ class LatestResultUploader:
 
                 try:
                     response = requests.post(self.url, json=result_to_send, timeout=1)  # 设置超时为1秒
-                    # print("上传成功:", response.status_code)
                 except Exception as e:
                     print("上传失败:", e)
 
-            time.sleep(0.05)  # 控制发送频率（20次/秒）
+            time.sleep(0.1)
 
 
 uploader = LatestResultUploader('http://localhost:5000/result')
@@ -104,7 +103,7 @@ class YOLOThread(QThread):
         self.imgsz = 640
         self.device = ''
         self.dataset = None
-        self.task = 'detect'
+        self.task = 'classify'
         self.dnn = False
         self.half = False
         self.agnostic_nms = False
@@ -424,24 +423,33 @@ class YOLOThread(QThread):
 
     def postprocess(self, preds, img, orig_imgs):
         """Post-processes predictions and returns a list of Results objects."""
-        preds = ops.non_max_suppression(
-            preds,
-            self.conf_thres,
-            self.iou_thres,
-            agnostic=self.agnostic_nms,
-            max_det=self.max_det,
-            classes=self.classes,
-        )
+        if not 'cls' in self.current_model_name:
+            preds = ops.non_max_suppression(
+                preds,
+                self.conf_thres,
+                self.iou_thres,
+                agnostic=self.agnostic_nms,
+                max_det=self.max_det,
+                classes=self.classes,
+            )
 
         if not isinstance(orig_imgs, list):  # input images are a torch.Tensor, not a list
             orig_imgs = ops.convert_torch2numpy_batch(orig_imgs)
 
         results = []
+
+        if 'cls' in self.current_model_name:
+            a = preds[0].cpu().numpy().tolist()[0]
+            class_index = a.index(max(a))
+            conf = a[class_index]
+            preds = [torch.Tensor([[0, 0, 1, 1, conf, class_index]])]
+
         for i, pred in enumerate(preds):
             orig_img = orig_imgs[i]
             pred[:, :4] = ops.scale_boxes(img.shape[2:], pred[:, :4], orig_img.shape)
             img_path = self.batch[0][i]
             results.append(Results(orig_img, path=img_path, names=self.model.names, boxes=pred))
+
         return results
 
     def preprocess(self, im):
