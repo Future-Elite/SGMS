@@ -12,12 +12,8 @@ from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationG
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QPushButton
 from cv_module.models import common, experimental, yolo
-from cv_module.yolov11.YOLOv11PoseThread import YOLOv11PoseThread
-from cv_module.yolov11.YOLOv11SegThread import YOLOv11SegThread
-from cv_module.yolov11.YOLOv11Thread import YOLOv11Thread
-from cv_module.yolov8.YOLOThread import YOLOThread
-from cv_module.yolov8.YOLOPoseThread import YOLOPoseThread
-from cv_module.yolov8.YOLOSegThread import YOLOSegThread
+from cv_module.YOLOv11Thread import YOLOv11Thread
+from cv_module.YOLOThread import YOLOThread
 from gui.ui.utils.AcrylicFlyout import AcrylicFlyoutView, AcrylicFlyout
 from gui.ui.utils.TableView import TableViewQWidget
 from gui.ui.utils.drawFigure import PlottingThread

@@ -4,7 +4,7 @@ import random
 
 # 配置
 dataset_dir = '../datasets/dataset_a/train'  # 原始数据集路径
-output_dir = '../datasets/dataset_a_split'  # 输出路径
+output_dir = '../../datasets/dataset_a_split'  # 输出路径
 train_ratio = 0.8  # 训练集比例
 
 # 创建输出目录

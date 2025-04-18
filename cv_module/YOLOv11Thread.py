@@ -1,4 +1,4 @@
-from cv_module.yolov8.YOLOThread import YOLOThread
+from cv_module.YOLOThread import YOLOThread
 
 
 class YOLOv11Thread(YOLOThread):

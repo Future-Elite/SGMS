@@ -5,8 +5,8 @@ import mediapipe as mp
 from tqdm import tqdm
 
 # ========== 配置路径 ==========
-SOURCE_DIR = '../datasets/dataset_a_split/val'  # 原始图像数据集路径（按类别分类）
-OUTPUT_DIR = '../datasets/dataset_a_split_mp/val'  # 输出图像数据集路径
+SOURCE_DIR = '../../datasets/dataset_a_split/val'  # 原始图像数据集路径（按类别分类）
+OUTPUT_DIR = '../../datasets/dataset_a_split_mp/val'  # 输出图像数据集路径
 
 # ========== 创建输出目录 ==========
 os.makedirs(OUTPUT_DIR, exist_ok=True)

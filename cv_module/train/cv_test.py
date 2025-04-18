@@ -13,7 +13,7 @@ hands_detector = mp_hands.Hands(static_image_mode=True,
                                 min_detection_confidence=0.3,
                                 min_tracking_confidence=0.5)
 
-model = YOLO('./ptfiles/yolo11n-cls.pt')
+model = YOLO('../ptfiles/yolo11n-cls.pt')
 
 
 if __name__ == '__main__':
