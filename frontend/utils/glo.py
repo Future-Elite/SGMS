@@ -1,4 +1,3 @@
-# 该文件用于实现跨文件访问全局变量
 def init():  # 初始化
     global _global_dict
     _global_dict = {}

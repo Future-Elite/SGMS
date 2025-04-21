@@ -8,11 +8,10 @@ import shutil
 import cv2
 import numpy as np
 import torch
-from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QParallelAnimationGroup
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QPushButton
 from cv_module.models import common, experimental, yolo
-from cv_module.YOLOv11Thread import YOLOv11Thread
+from cv_module.YOLOThread import YOLOv11Thread
 from cv_module.YOLOThread import YOLOThread
 from gui.ui.utils.AcrylicFlyout import AcrylicFlyoutView, AcrylicFlyout
 from gui.ui.utils.TableView import TableViewQWidget
@@ -22,13 +21,11 @@ from frontend.utils import glo
 from frontend.utils.logger import LoggerUtils
 
 glo.init()
-glo.set_value('yoloname', "yolov8 yolov11"
-                          ""
-                          "")
+glo.set_value('yoloname', "yolov8 yolov11")
 
 GLOBAL_WINDOW_STATE = True
-WIDTH_LEFT_BOX_STANDARD = 180
-WIDTH_LEFT_BOX_EXTENDED = 200
+WIDTH_LEFT_BOX_STANDARD = 240
+WIDTH_LEFT_BOX_EXTENDED = 240
 WIDTH_SETTING_BAR = 290
 WIDTH_LOGO = 60
 WINDOW_SPLIT_BODY = 20
@@ -52,7 +49,6 @@ class BASEWINDOW:
     def __init__(self):
         super().__init__()
 
-        self.backend_thread = None
         self.inputPath = None
         self.yolo_threads = None
         self.result_statistic = None
@@ -63,8 +59,6 @@ class BASEWINDOW:
     def initSiderWidget(self):
         # --- 侧边栏 --- #
         self.ui.leftBox.setFixedWidth(WIDTH_LEFT_BOX_STANDARD)
-        # logo
-        # self.ui.logo.setFixedSize(WIDTH_LOGO, WIDTH_LOGO)
 
         # 将左侧菜单栏的按钮固定宽度
         for child_left_box_widget in self.ui.leftbox_bottom.children():
@@ -76,6 +70,14 @@ class BASEWINDOW:
                     if isinstance(child_left_box_widget_btn, QPushButton):
                         child_left_box_widget_btn.setFixedWidth(WIDTH_LEFT_BOX_EXTENDED)
 
+        # 显示用户信息
+        self.ui.user_info.setStyleSheet(u"font: 700 11pt \"Segoe UI\";\n"
+                                        "color: rgba(0, 0, 0, 140);")
+        self.ui.user_info.setReadOnly(True)
+        self.ui.user_info.append('User:{0}\nResponse:{1}\nToken:{2}'.format(glo.get_value('user_name'),
+                                                                            glo.get_value('resp'),
+                                                                            glo.get_value('token')))
+
     # 加载模型
     def initModel(self, yoloname=None):
         thread = self.yolo_threads.get(yoloname)
@@ -85,7 +87,6 @@ class BASEWINDOW:
         thread.progress_value = self.ui.progress_bar.maximum()
 
         # 信号槽连接使用单独定义的函数，减少闭包的创建
-        thread.send_input.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
         thread.send_output.connect(lambda x: self.showImg(x, self.ui.main_rightbox, 'img'))
         thread.send_msg.connect(lambda x: self.showStatus(x))
         thread.send_progress.connect(lambda x: self.ui.progress_bar.setValue(x))
@@ -107,100 +108,6 @@ class BASEWINDOW:
         shadow.setBlurRadius(10)  # 阴影半径
         shadow.setColor(Color)  # 阴影颜色
         widget.setGraphicsEffect(shadow)
-
-    # 侧边栏缩放
-    def scaleMenu(self):
-        # standard = 80
-        # maxExtend = 180
-
-        leftBoxStart = self.ui.leftBox.width()
-        _IS_EXTENDED = leftBoxStart == WIDTH_LEFT_BOX_EXTENDED
-
-        if _IS_EXTENDED:
-            leftBoxEnd = WIDTH_LEFT_BOX_STANDARD
-        else:
-            leftBoxEnd = WIDTH_LEFT_BOX_EXTENDED
-
-        # animation
-        self.animation = QPropertyAnimation(self.ui.leftBox, b"minimumWidth")
-        self.animation.setDuration(500)  # ms
-        self.animation.setStartValue(leftBoxStart)
-        self.animation.setEndValue(leftBoxEnd)
-        self.animation.setEasingCurve(QEasingCurve.InOutQuint)
-        self.animation.start()
-
-    # 设置栏缩放
-    def scalSetting(self):
-        # GET WIDTH
-        widthSettingBox = self.ui.settingBox.width()  # right set column width
-        widthLeftBox = self.ui.leftBox.width()  # left column length
-        maxExtend = WIDTH_SETTING_BAR
-        standard = 0
-
-        # SET MAX WIDTH
-        if widthSettingBox == 0:
-            widthExtended = maxExtend
-            self.ui.mainbox.setStyleSheet("""
-                                  QFrame#mainbox{
-                                    border: 1px solid rgba(0, 0, 0, 15%);
-                                    border-bottom-left-radius: 0;
-                                    border-bottom-right-radius: 0;
-                                    border-radius:30%;
-                                    background-color: qlineargradient(x1:0, y1:0, x2:1 , y2:0, stop:0 white, stop:0.9 #8EC5FC, stop:1 #E0C3FC);
-                                }
-                              """)
-        else:
-            widthExtended = standard
-            self.ui.mainbox.setStyleSheet("""
-                                  QFrame#mainbox{
-                                    border: 1px solid rgba(0, 0, 0, 15%);
-                                    border-bottom-left-radius: 0;
-                                    border-bottom-right-radius: 0;
-                                    border-radius:30%;
-                                }
-                              """)
-
-        # ANIMATION LEFT BOX
-        self.left_box = QPropertyAnimation(self.ui.leftBox, b"minimumWidth")
-        self.left_box.setDuration(500)
-        self.left_box.setStartValue(widthLeftBox)
-        self.left_box.setEndValue(68)
-        self.left_box.setEasingCurve(QEasingCurve.InOutQuart)
-
-        # ANIMATION SETTING BOX
-        self.setting_box = QPropertyAnimation(self.ui.settingBox, b"minimumWidth")
-        self.setting_box.setDuration(500)
-        self.setting_box.setStartValue(widthSettingBox)
-        self.setting_box.setEndValue(widthExtended)
-        self.setting_box.setEasingCurve(QEasingCurve.InOutQuart)
-
-        # SET QSS Change
-        self.qss_animation = QPropertyAnimation(self.ui.mainbox, b"styleSheet")
-        self.qss_animation.setDuration(300)
-        self.qss_animation.setStartValue("""
-            QFrame#mainbox {
-                border: 1px solid rgba(0, 0, 0, 15%);
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-                border-radius:30%;
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 white, stop:0.9 #8EC5FC, stop:1 #E0C3FC);
-            }
-        """)
-        self.qss_animation.setEndValue("""
-             QFrame#mainbox {
-                border: 1px solid rgba(0, 0, 0, 15%);
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-                border-radius:30%;
-            }
-        """)
-        self.qss_animation.setEasingCurve(QEasingCurve.InOutQuart)
-
-        # GROUP ANIMATION
-        self.group = QParallelAnimationGroup()
-        self.group.addAnimation(self.left_box)
-        self.group.addAnimation(self.setting_box)
-        self.group.start()
 
     # 最大化最小化窗口
     def maxorRestore(self):
@@ -277,7 +184,7 @@ class BASEWINDOW:
     def actionWebcam(self, cam):
         self.showStatus(f'Loading camera：Camera_{cam}')
         self.thread = WebcamThread(cam)
-        self.thread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
+        # self.thread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
         self.thread.start()
         self.inputPath = int(cam)
 
@@ -297,14 +204,12 @@ class BASEWINDOW:
             FileFormat = [".mp4", ".mkv", ".avi", ".flv", ".jpg", ".png", ".jpeg", ".bmp", ".dib", ".jpe", ".jp2"]
             Foldername = [(FolderPath + "/" + filename) for filename in os.listdir(FolderPath) for jpgname in FileFormat
                           if jpgname in filename]
-            # self.yolov5_thread.source = Foldername
             self.inputPath = Foldername
             self.showStatus('Loaded Folder：{}'.format(os.path.basename(FolderPath)))
             config['folder_path'] = FolderPath
             config_json = json.dumps(config, ensure_ascii=False, indent=2)
             with open(config_file, 'w', encoding='utf-8') as f:
                 f.write(config_json)
-
 
     # 显示Label图片
     def showImg(self, img, label, flag):
@@ -376,12 +281,6 @@ class BASEWINDOW:
                 func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
             "yolov11": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and not any(
                 func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
-            "yolov8-seg": lambda name: "yolov8" in name and self.checkSegName(name),
-            "yolov11-seg": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkSegName(name),
-            "yolov8-pose": lambda name: "yolov8" in name and self.checkPoseName(name),
-            "yolov11-pose": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkPoseName(name),
-            "yolov8-obb": lambda name: "yolov8" in name and self.checkObbName(name),
-            "yolov11-obb": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkObbName(name),
         }
 
         if mode:
@@ -443,13 +342,10 @@ class BASEWINDOW:
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
             self.ui.progress_bar.setValue(0)
-            # self.ui.save_status_button.setEnabled(True)
         elif msg == 'Stop Detection':
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
-            # self.ui.save_status_button.setEnabled(True)
             self.ui.progress_bar.setValue(0)
-            self.ui.main_leftbox.clear()  # clear image display
             self.ui.main_rightbox.clear()
             self.ui.Class_num.setText('--')
             self.ui.Target_num.setText('--')
@@ -541,7 +437,6 @@ class BASEWINDOW:
     def use_mp(self, use_mp):
         for yolo_thread in self.yolo_threads.threads_pool.values():
             yolo_thread.use_mp = use_mp
-
 
     # 调整超参数
     def changeValue(self, x, flag):

@@ -12,8 +12,8 @@ from gui.ui.UI import Ui_MainWindow
 from frontend.utils import glo
 
 GLOBAL_WINDOW_STATE = True
-WIDTH_LEFT_BOX_STANDARD = 80
-WIDTH_LEFT_BOX_EXTENDED = 100
+WIDTH_LEFT_BOX_STANDARD = 240
+WIDTH_LEFT_BOX_EXTENDED = 240
 WIDTH_LOGO = 60
 UI_FILE_PATH = "ui/UI.ui"
 KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
@@ -22,7 +22,6 @@ KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
 class SHOWWINDOW(QMainWindow, BASEWINDOW):
     def __init__(self):
         super().__init__()
-        self.backend_thread = None
         self.current_model = None
         self.current_workpath = os.getcwd()
         self.inputPath = None
@@ -66,7 +65,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.model_box.addItems(self.pt_list)
         self.qtimer_search = QTimer(self)
         self.qtimer_search.timeout.connect(lambda: self.loadModels())
-        self.qtimer_search.start(2000)
         self.ui.model_box.currentTextChanged.connect(self.changeModel)
         # --- 自动加载/动态改变 PT 模型 --- #
 
@@ -79,14 +77,12 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 导入 图片/视频、调用摄像头、导入文件夹（批量处理）、调用网络摄像头 --- #
 
         # --- 导入模型、 导出结果 --- #
-        # self.ui.import_button.clicked.connect(self.importModel)
-        # self.ui.save_status_button.clicked.connect(self.saveStatus)
         self.ui.save_button.clicked.connect(self.saveResult)
         self.ui.save_button.setEnabled(True)
         # --- 导入模型、 导出结果 --- #
 
         # --- 视频、图片 预览 --- #
-        self.ui.main_leftbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+        # self.ui.main_leftbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         self.ui.main_rightbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         # --- 视频、图片 预览 --- #
 
@@ -283,10 +279,8 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.quitRunningModel(stop_status=True)
         self.ui.run_button.setChecked(False)
         self.ui.progress_bar.setValue(0)
-        self.ui.main_leftbox.clear()  # clear image display
+        # self.ui.main_leftbox.clear()  # clear image display
         self.ui.main_rightbox.clear()
         self.ui.Class_num.setText('--')
         self.ui.Target_num.setText('--')
         self.ui.fps_label.setText('--')
-
-

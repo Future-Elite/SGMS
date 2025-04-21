@@ -18,7 +18,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QFrame, QHBoxLayout,
     QLabel, QLayout, QMainWindow, QProgressBar,
     QPushButton, QSizePolicy, QSlider, QSpacerItem,
-    QSpinBox, QSplitter, QVBoxLayout, QWidget)
+    QSpinBox, QSplitter, QTextEdit, QVBoxLayout,
+    QWidget)
 
 from qfluentwidgets import ComboBox
 from gui.ui.utils.UpdateFrame import DoubleClickQFrame
@@ -28,7 +29,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1772, 832)
+        MainWindow.resize(1668, 832)
         MainWindow.setStyleSheet(u"")
         self.mainWindow = QWidget(MainWindow)
         self.mainWindow.setObjectName(u"mainWindow")
@@ -208,8 +209,8 @@ class Ui_MainWindow(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.leftBox.sizePolicy().hasHeightForWidth())
         self.leftBox.setSizePolicy(sizePolicy1)
-        self.leftBox.setMinimumSize(QSize(180, 0))
-        self.leftBox.setMaximumSize(QSize(180, 16777215))
+        self.leftBox.setMinimumSize(QSize(240, 0))
+        self.leftBox.setMaximumSize(QSize(240, 16777215))
         self.leftBox.setStyleSheet(u"QFrame#leftBox  {\n"
 "    /*background-color: rgba(255, 255, 255, 80%);*/\n"
 "    border: 0px solid rgba(0, 0, 0, 40%);\n"
@@ -231,40 +232,20 @@ class Ui_MainWindow(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.leftbox_top.sizePolicy().hasHeightForWidth())
         self.leftbox_top.setSizePolicy(sizePolicy2)
-        self.leftbox_top.setMinimumSize(QSize(180, 0))
+        self.leftbox_top.setMinimumSize(QSize(240, 200))
         self.leftbox_top.setFrameShape(QFrame.Shape.StyledPanel)
         self.leftbox_top.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_8 = QHBoxLayout(self.leftbox_top)
         self.horizontalLayout_8.setSpacing(5)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.horizontalLayout_8.setContentsMargins(10, 10, 15, 3)
-        self.top_intro = QFrame(self.leftbox_top)
-        self.top_intro.setObjectName(u"top_intro")
-        self.top_intro.setMinimumSize(QSize(160, 0))
-        self.top_intro.setMaximumSize(QSize(160, 180))
-        self.top_intro.setStyleSheet(u"QLabel{\n"
-"	color: black;\n"
-"	font: 600 italic 9pt \"Segoe UI\";\n"
-"	font-weight: bold;\n"
-"}\n"
-"QFrame{\n"
-"	border:none;\n"
-"}")
-        self.top_intro.setFrameShape(QFrame.Shape.StyledPanel)
-        self.top_intro.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_20 = QVBoxLayout(self.top_intro)
-        self.verticalLayout_20.setSpacing(0)
-        self.verticalLayout_20.setObjectName(u"verticalLayout_20")
-        self.verticalLayout_20.setContentsMargins(5, 0, 0, 0)
-        self.label_3 = QLabel(self.top_intro)
-        self.label_3.setObjectName(u"label_3")
+        self.user_info = QTextEdit(self.leftbox_top)
+        self.user_info.setObjectName(u"user_info")
+        self.user_info.setMinimumSize(QSize(230, 0))
+        self.user_info.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
 
-        self.verticalLayout_20.addWidget(self.label_3, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.horizontalLayout_8.addWidget(self.user_info)
 
-
-        self.horizontalLayout_8.addWidget(self.top_intro)
-
-        self.horizontalLayout_8.setStretch(0, 6)
 
         self.verticalLayout_2.addWidget(self.leftbox_top)
 
@@ -353,8 +334,8 @@ class Ui_MainWindow(object):
 
         self.imgBox = QFrame(self.leftbox_bottom)
         self.imgBox.setObjectName(u"imgBox")
-        self.imgBox.setMinimumSize(QSize(180, 0))
-        self.imgBox.setMaximumSize(QSize(180, 16777215))
+        self.imgBox.setMinimumSize(QSize(240, 0))
+        self.imgBox.setMaximumSize(QSize(240, 16777215))
         self.imgBox.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.imgBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.imgBox.setFrameShadow(QFrame.Shadow.Raised)
@@ -366,8 +347,8 @@ class Ui_MainWindow(object):
         self.src_img.setObjectName(u"src_img")
         sizePolicy2.setHeightForWidth(self.src_img.sizePolicy().hasHeightForWidth())
         self.src_img.setSizePolicy(sizePolicy2)
-        self.src_img.setMinimumSize(QSize(180, 0))
-        self.src_img.setMaximumSize(QSize(180, 16777215))
+        self.src_img.setMinimumSize(QSize(240, 0))
+        self.src_img.setMaximumSize(QSize(240, 16777215))
         self.src_img.setIconSize(QSize(30, 30))
 
         self.horizontalLayout_4.addWidget(self.src_img, 0, Qt.AlignmentFlag.AlignLeft)
@@ -382,7 +363,7 @@ class Ui_MainWindow(object):
         self.webcamBox = QFrame(self.leftbox_bottom)
         self.webcamBox.setObjectName(u"webcamBox")
         self.webcamBox.setMinimumSize(QSize(180, 0))
-        self.webcamBox.setMaximumSize(QSize(180, 16777215))
+        self.webcamBox.setMaximumSize(QSize(240, 16777215))
         self.webcamBox.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.webcamBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.webcamBox.setFrameShadow(QFrame.Shadow.Raised)
@@ -394,8 +375,8 @@ class Ui_MainWindow(object):
         self.src_webcam.setObjectName(u"src_webcam")
         sizePolicy2.setHeightForWidth(self.src_webcam.sizePolicy().hasHeightForWidth())
         self.src_webcam.setSizePolicy(sizePolicy2)
-        self.src_webcam.setMinimumSize(QSize(180, 0))
-        self.src_webcam.setMaximumSize(QSize(180, 16777215))
+        self.src_webcam.setMinimumSize(QSize(240, 0))
+        self.src_webcam.setMaximumSize(QSize(240, 16777215))
         self.src_webcam.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.src_webcam.setIconSize(QSize(30, 30))
 
@@ -411,7 +392,7 @@ class Ui_MainWindow(object):
         self.folderBox = QFrame(self.leftbox_bottom)
         self.folderBox.setObjectName(u"folderBox")
         self.folderBox.setMinimumSize(QSize(180, 0))
-        self.folderBox.setMaximumSize(QSize(180, 16777215))
+        self.folderBox.setMaximumSize(QSize(240, 16777215))
         self.folderBox.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.folderBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.folderBox.setFrameShadow(QFrame.Shadow.Raised)
@@ -423,8 +404,8 @@ class Ui_MainWindow(object):
         self.src_folder.setObjectName(u"src_folder")
         sizePolicy2.setHeightForWidth(self.src_folder.sizePolicy().hasHeightForWidth())
         self.src_folder.setSizePolicy(sizePolicy2)
-        self.src_folder.setMinimumSize(QSize(180, 0))
-        self.src_folder.setMaximumSize(QSize(180, 16777215))
+        self.src_folder.setMinimumSize(QSize(240, 0))
+        self.src_folder.setMaximumSize(QSize(240, 16777215))
         self.src_folder.setIconSize(QSize(30, 30))
 
         self.horizontalLayout_6.addWidget(self.src_folder, 0, Qt.AlignmentFlag.AlignLeft)
@@ -516,28 +497,23 @@ class Ui_MainWindow(object):
 "	margin-bottom: -1px;\n"
 "    background-color:  #ffffff;\n"
 "    border: 1px solid rgba(0, 0, 0, 15%);\n"
-"	border-radius: 30%;\n"
 "	background-color: rgb(245, 249, 254);\n"
 "}\n"
 "QFrame#rightbox_top{\n"
 "	border:2px solid rgb(255, 255, 255);\n"
-"	border-radius:15%;\n"
 "	background-color: rgb(238, 242, 255);\n"
 "}\n"
 "\n"
 "QFrame#main_leftbox{\n"
 "	border:2px solid rgb(255, 255, 255);\n"
-"	border-radius:15%;\n"
 "	background-color: rgb(238, 242, 255);\n"
 "}\n"
 "QFrame#main_rightbox{\n"
 "	border:2px solid rgb(255, 255, 255);\n"
-"	border-radius:15%;\n"
 "	background-color: rgb(238, 242, 255);\n"
 "}\n"
 "/*QFrame#rightbox_bottom{\n"
 "	border:2px solid rgb(255, 255, 255);\n"
-"	border-radius:10%;\n"
 "}*/")
         self.rightBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.rightBox.setFrameShadow(QFrame.Shadow.Raised)
@@ -557,10 +533,6 @@ class Ui_MainWindow(object):
         self.splitter = QSplitter(self.rightbox_main)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setOrientation(Qt.Orientation.Horizontal)
-        self.main_leftbox = QLabel(self.splitter)
-        self.main_leftbox.setObjectName(u"main_leftbox")
-        self.main_leftbox.setMinimumSize(QSize(200, 100))
-        self.splitter.addWidget(self.main_leftbox)
         self.main_rightbox = QLabel(self.splitter)
         self.main_rightbox.setObjectName(u"main_rightbox")
         self.main_rightbox.setMinimumSize(QSize(200, 100))
@@ -1845,7 +1817,6 @@ class Ui_MainWindow(object):
         self.minimizeButton.setText("")
         self.maximizeButton.setText("")
         self.title.setText(QCoreApplication.translate("MainWindow", u"Multi-Scenario Intelligent Gesture Recognition Control System", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"SGMS", None))
         self.src_img.setText(QCoreApplication.translate("MainWindow", u"Media", None))
         self.src_webcam.setText(QCoreApplication.translate("MainWindow", u" Webcam", None))
         self.src_folder.setText(QCoreApplication.translate("MainWindow", u" Folder  ", None))
@@ -1854,7 +1825,6 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.src_result.setText(QCoreApplication.translate("MainWindow", u"    Result Pic  ", None))
         self.src_table.setText(QCoreApplication.translate("MainWindow", u"    Result Tab  ", None))
-        self.main_leftbox.setText("")
         self.main_rightbox.setText("")
         self.classesLabel.setText("")
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Classes", None))

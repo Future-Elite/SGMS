@@ -10,9 +10,8 @@ from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
 flask_app = Flask(__name__)
 SECRET_KEY = 'SGMS_Secret_Key'
 
-# 创建数据库引擎和会话（请根据实际数据库修改 URL）
-DATABASE_URL = 'sqlite:///data/database.db'  # 你可以换成 'mysql://user:pass@host/db' 等
-engine = create_engine(DATABASE_URL, echo=True)
+# 创建数据库引擎和会话
+engine = create_engine('sqlite:///data/database.db', echo=False)
 SessionLocal = sessionmaker(bind=engine)
 
 camera = cv2.VideoCapture(0)
@@ -61,7 +60,6 @@ def stream():
 @flask_app.route('/result', methods=['POST'])
 def upload_result():
     data = request.get_json()
-    print("接收到检测结果:", data)
 
     gesture_labels = {
         "start": 0,
@@ -74,7 +72,6 @@ def upload_result():
 
     session = SessionLocal()
     try:
-        # 获取检测结果 格式为{"xxx": 1}
         gesture_name = list(data.keys())[0] if data else None
         gesture_name = gesture_name.strip() if gesture_name else None
         print("检测到的手势:", gesture_name)
@@ -89,14 +86,15 @@ def upload_result():
 
         # 写入 operation_log
         log = OperationLog(
-            gesture_id=gesture_labels[gesture_name],  # 假设 gesture_name 对应的 ID
+            gesture_id=gesture_labels[gesture_name],
             operation_type=gesture.operation_type,
-            device_type=DeviceTypeEnum.tv,  # 可根据实际需求动态指定
-            result=ResultEnum.success,  # 假设检测成功
+            device_type=DeviceTypeEnum.tv,
+            result=ResultEnum.success,
             detail=f"检测到手势：{gesture_name}"
         )
         session.add(log)
         session.commit()
+
 
         return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
     except Exception as e:

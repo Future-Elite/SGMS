@@ -57,7 +57,7 @@ uploader = LatestResultUploader('http://localhost:5000/result')
 
 class YOLOThread(QThread):
     # 输入 输出 消息
-    send_input = Signal(np.ndarray)
+    # send_input = Signal(np.ndarray)
     send_output = Signal(np.ndarray)
     send_msg = Signal(str)
     # 状态栏显示数据 进度条数据
@@ -247,7 +247,7 @@ class YOLOThread(QThread):
                         im0s[i] = black_img
 
                 # 原始图片送入 input框
-                self.send_input.emit(self.ori_img if isinstance(self.ori_img, np.ndarray) else self.ori_img[0])
+                # self.send_input.emit(self.ori_img if isinstance(self.ori_img, np.ndarray) else self.ori_img[0])
                 count += 1
 
                 # 处理processBar
@@ -540,3 +540,8 @@ class YOLOThread(QThread):
         }
         self.plotted_img = result.plot(**plot_args)
         return log_string
+
+
+class YOLOv11Thread(YOLOThread):
+    def __init__(self):
+        super(YOLOv11Thread, self).__init__()

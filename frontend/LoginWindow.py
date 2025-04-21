@@ -9,8 +9,9 @@ from sqlalchemy.orm import sessionmaker
 
 from data.models import User
 from frontend.api import send_jwt_to_server
+from frontend.utils import glo
 
-engine = create_engine("sqlite:///data/database.db")
+engine = create_engine("sqlite:///data/database.db", echo=False)
 Session = sessionmaker(bind=engine)
 SECRET_KEY = 'SGMS_Secret_Key'
 
@@ -101,9 +102,12 @@ class LoginWindow(QDialog):
             if user and user.password == password:
                 token = generate_jwt(username)
                 status, resp = send_jwt_to_server(token)
+                glo.set_value('resp', resp)
+                glo.set_value('token', token)
                 if not status:
                     self.status_label.setText(f"登录失败: {resp}")
                     return
+                glo.set_value('user_name', username)
                 self.accept()
             else:
                 self.status_label.setText("用户名或密码错误")
