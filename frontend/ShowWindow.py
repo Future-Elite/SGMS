@@ -82,7 +82,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 导入模型、 导出结果 --- #
 
         # --- 视频、图片 预览 --- #
-        # self.ui.main_leftbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         self.ui.main_rightbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         # --- 视频、图片 预览 --- #
 

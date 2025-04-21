@@ -1,8 +1,8 @@
 import datetime
-
 import jwt
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel
+    QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QTextEdit, QLabel, QFrame
 )
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -28,50 +28,173 @@ def generate_jwt(username):
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("用户登录")
-        self.setFixedSize(350, 300)
+        self.setAttribute(Qt.WA_TranslucentBackground)  # 圆角支持
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.setFixedSize(560, 480)
 
         self.is_login_mode = True
+        self.old_pos = self.pos()
 
         # 主布局
-        self.layout = QVBoxLayout()
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+
+        # 卡片背景
+        self.card = QFrame()
+        self.card.setStyleSheet("""
+                    QFrame {
+                        background-color: #ffffff;
+                        border-radius: 15px;
+                        border: 1px solid #ccc;
+                    }
+                """)
+        self.card_layout = QVBoxLayout(self.card)
+        self.card_layout.setContentsMargins(20, 10, 20, 20)
+        self.main_layout.addWidget(self.card)
+
+        # ========== 登录标题 + 最小化/关闭按钮 ==========
+        top_bar = QHBoxLayout()
+        title_label = QLabel("🔐 SGMS 系统")
+        title_label.setStyleSheet("font-size: 16px;"
+                                  "border: none;")
+        top_bar.addWidget(title_label)
+        top_bar.addStretch()
+
+        minimize_btn = QPushButton("—")
+        minimize_btn.setFixedSize(24, 24)
+        minimize_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #ddd;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #bbb;
+            }
+        """)
+        minimize_btn.clicked.connect(self.showMinimized)
+
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(24, 24)
+        close_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f44336;
+                color: white;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #d32f2f;
+            }
+        """)
+        close_btn.clicked.connect(self.close)
+
+        top_bar.addWidget(minimize_btn)
+        top_bar.addWidget(close_btn)
+
+        self.card_layout.addLayout(top_bar)
+
+        # 图标
+        self.icon_label = QLabel("🔐")
+        self.icon_label.setAlignment(Qt.AlignCenter)
+        self.icon_label.setStyleSheet("font-size: 28px;")
+        self.card_layout.addWidget(self.icon_label)
 
         # 用户名输入框
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("用户名")
-        self.layout.addWidget(self.username_input)
+        self.username_input.setStyleSheet(self.input_style())
+        self.username_input.setFixedHeight(40)
+        self.card_layout.addWidget(self.username_input)
 
         # 密码输入框
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("密码")
         self.password_input.setEchoMode(QLineEdit.Password)
-        self.layout.addWidget(self.password_input)
+        self.password_input.setStyleSheet(self.input_style())
+        self.password_input.setFixedHeight(40)
+        self.card_layout.addWidget(self.password_input)
 
-        # 确认密码输入框（仅在注册模式下显示）
+        # 确认密码输入框（注册时显示）
         self.confirm_input = QLineEdit()
         self.confirm_input.setPlaceholderText("确认密码（注册）")
         self.confirm_input.setEchoMode(QLineEdit.Password)
-        self.layout.addWidget(self.confirm_input)
+        self.confirm_input.setStyleSheet(self.input_style())
+        self.confirm_input.setFixedHeight(40)
         self.confirm_input.hide()
+        self.card_layout.addWidget(self.confirm_input)
 
-        # 登录/注册按钮
+        # 登录或注册按钮
         self.action_button = QPushButton("登录")
+        self.action_button.setFixedHeight(40)
+        self.action_button.setStyleSheet(self.button_style("#4CAF50", "#45a049"))
         self.action_button.clicked.connect(self.handle_action)
-        self.layout.addWidget(self.action_button)
+        self.card_layout.addWidget(self.action_button)
 
         # 切换按钮
         self.switch_button = QPushButton("没有账号？点击注册")
+        self.switch_button.setFixedHeight(35)
+        self.switch_button.setStyleSheet(self.button_style("#2196F3", "#1976D2"))
         self.switch_button.clicked.connect(self.switch_mode)
-        self.layout.addWidget(self.switch_button)
+        self.card_layout.addWidget(self.switch_button)
 
-        # 显示信息的区域（放在最下方）
-        self.status_label = QLabel("")
-        self.status_label.setStyleSheet("font-size: 6pt; color: green;")  # 修改字体大小和颜色
-        self.status_label.setStyleSheet("border: 1px solid black; padding: 5px;")
-        self.layout.addWidget(self.status_label)
+        # 状态栏
+        self.status_label = QTextEdit()
+        self.status_label.setReadOnly(True)
+        self.status_label.setStyleSheet("""
+            QTextEdit {
+                font: 10pt "Segoe UI";
+                color: rgba(0, 0, 0, 180);
+                background-color: #fafafa;
+                border-radius: 8px;
+                padding: 8px;
+                border: 1px solid #ccc;
+            }
+        """)
+        self.status_label.setMinimumHeight(80)
+        self.card_layout.addWidget(self.status_label)
 
-        # 设置布局
-        self.setLayout(self.layout)
+        # 初始提示
+        self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Flask Running on http://127.0.0.1:5000")
+
+
+    def input_style(self):
+        return """
+            QLineEdit {
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                padding: 8px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #4CAF50;
+            }
+        """
+
+    def button_style(self, color, hover_color):
+        return f"""
+            QPushButton {{
+                background-color: {color};
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {hover_color};
+            }}
+        """
+
+    def title_button_style(self):
+        return """
+            QPushButton {
+                background-color: #444;
+                color: white;
+                border: none;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #666;
+            }
+        """
 
     def switch_mode(self):
         self.is_login_mode = not self.is_login_mode
@@ -85,14 +208,16 @@ class LoginWindow(QDialog):
             self.confirm_input.show()
             self.action_button.setText("注册")
             self.switch_button.setText("已有账号？点击登录")
-        self.status_label.setText("")
+
+        status = "登录中" if self.is_login_mode else "注册中"
+        self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + f" | {status}")
 
     def handle_action(self):
         username = self.username_input.text().strip()
         password = self.password_input.text().strip()
 
         if not username or not password:
-            self.status_label.setText("请输入用户名和密码")
+            self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码不能为空")
             return
 
         session = Session()
@@ -105,21 +230,37 @@ class LoginWindow(QDialog):
                 glo.set_value('resp', resp)
                 glo.set_value('token', token)
                 if not status:
-                    self.status_label.setText(f"登录失败: {resp}")
+                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | JWT 发送失败")
                     return
                 glo.set_value('user_name', username)
                 self.accept()
             else:
-                self.status_label.setText("用户名或密码错误")
+                self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码错误")
                 self.password_input.clear()
         else:
             if session.query(User).filter_by(username=username).first():
-                self.status_label.setText("用户名已存在")
+                self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名已存在")
             else:
                 new_user = User(username=username, password=password)
                 session.add(new_user)
                 session.commit()
-                self.status_label.setText("注册成功，请登录！")
+                self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 注册成功")
                 self.switch_mode()
 
         session.close()
+
+    def update_info(self, message):
+        self.status_label.append(message)
+        self.status_label.verticalScrollBar().setValue(
+            self.status_label.verticalScrollBar().maximum()
+        )
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.old_pos = event.globalPosition().toPoint()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            delta = event.globalPosition().toPoint() - self.old_pos
+            self.move(self.pos() + delta)
+            self.old_pos = event.globalPosition().toPoint()
