@@ -232,7 +232,7 @@ class Ui_MainWindow(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.leftbox_top.sizePolicy().hasHeightForWidth())
         self.leftbox_top.setSizePolicy(sizePolicy2)
-        self.leftbox_top.setMinimumSize(QSize(240, 200))
+        self.leftbox_top.setMinimumSize(QSize(240, 240))
         self.leftbox_top.setFrameShape(QFrame.Shape.StyledPanel)
         self.leftbox_top.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_8 = QHBoxLayout(self.leftbox_top)
@@ -425,15 +425,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout_27.setSpacing(0)
         self.horizontalLayout_27.setObjectName(u"horizontalLayout_27")
         self.horizontalLayout_27.setContentsMargins(0, 0, 0, 0)
-        self.src_result = QPushButton(self.resultBox)
-        self.src_result.setObjectName(u"src_result")
-        sizePolicy2.setHeightForWidth(self.src_result.sizePolicy().hasHeightForWidth())
-        self.src_result.setSizePolicy(sizePolicy2)
-        self.src_result.setMinimumSize(QSize(180, 0))
-        self.src_result.setMaximumSize(QSize(180, 16777215))
-        self.src_result.setIconSize(QSize(30, 30))
+        self.src_table = QPushButton(self.resultBox)
+        self.src_table.setObjectName(u"src_table")
+        sizePolicy2.setHeightForWidth(self.src_table.sizePolicy().hasHeightForWidth())
+        self.src_table.setSizePolicy(sizePolicy2)
+        self.src_table.setMinimumSize(QSize(240, 0))
+        self.src_table.setMaximumSize(QSize(180, 16777215))
+        self.src_table.setIconSize(QSize(30, 30))
 
-        self.horizontalLayout_27.addWidget(self.src_result)
+        self.horizontalLayout_27.addWidget(self.src_table)
 
 
         self.verticalLayout_3.addWidget(self.resultBox)
@@ -444,22 +444,13 @@ class Ui_MainWindow(object):
 
         self.tableBox = QFrame(self.leftbox_bottom)
         self.tableBox.setObjectName(u"tableBox")
+        self.tableBox.setMaximumSize(QSize(240, 16777215))
         self.tableBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.tableBox.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_28 = QHBoxLayout(self.tableBox)
         self.horizontalLayout_28.setSpacing(0)
         self.horizontalLayout_28.setObjectName(u"horizontalLayout_28")
         self.horizontalLayout_28.setContentsMargins(0, 0, 0, 0)
-        self.src_table = QPushButton(self.tableBox)
-        self.src_table.setObjectName(u"src_table")
-        sizePolicy2.setHeightForWidth(self.src_table.sizePolicy().hasHeightForWidth())
-        self.src_table.setSizePolicy(sizePolicy2)
-        self.src_table.setMinimumSize(QSize(180, 0))
-        self.src_table.setMaximumSize(QSize(180, 16777215))
-        self.src_table.setIconSize(QSize(30, 30))
-
-        self.horizontalLayout_28.addWidget(self.src_table)
-
 
         self.verticalLayout_3.addWidget(self.tableBox)
 
@@ -476,13 +467,60 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.leftbox_bottom)
 
+        self.run_button = QPushButton(self.leftBox)
+        self.run_button.setObjectName(u"run_button")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.run_button.sizePolicy().hasHeightForWidth())
+        self.run_button.setSizePolicy(sizePolicy3)
+        self.run_button.setMinimumSize(QSize(80, 30))
+        self.run_button.setMaximumSize(QSize(80, 30))
+        self.run_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.run_button.setMouseTracking(True)
+        self.run_button.setStyleSheet(u"QPushButton{\n"
+"background-image: url(:/rightbox/images/newsize/play.png);\n"
+"background-repeat: no-repeat;\n"
+"background-position: center;\n"
+"border: none;\n"
+"}\n"
+"QPushButton:hover{\n"
+"\n"
+"}")
+        self.run_button.setIconSize(QSize(40, 40))
+        self.run_button.setCheckable(True)
+        self.run_button.setChecked(False)
+
+        self.verticalLayout_2.addWidget(self.run_button)
+
+        self.stop_button = QPushButton(self.leftBox)
+        self.stop_button.setObjectName(u"stop_button")
+        sizePolicy3.setHeightForWidth(self.stop_button.sizePolicy().hasHeightForWidth())
+        self.stop_button.setSizePolicy(sizePolicy3)
+        self.stop_button.setMinimumSize(QSize(80, 30))
+        self.stop_button.setMaximumSize(QSize(80, 30))
+        self.stop_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.stop_button.setStyleSheet(u"QPushButton{\n"
+"background-image: url(:/rightbox/images/newsize/stop.png);\n"
+"background-repeat: no-repeat;\n"
+"background-position: center;\n"
+"border: none;\n"
+"}\n"
+"\n"
+"QPushButton:hover{\n"
+"\n"
+"}")
+        self.stop_button.setIconSize(QSize(40, 40))
+
+        self.verticalLayout_2.addWidget(self.stop_button)
+
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_2.addItem(self.verticalSpacer_2)
 
         self.verticalLayout_2.setStretch(0, 10)
         self.verticalLayout_2.setStretch(1, 80)
-        self.verticalLayout_2.setStretch(2, 10)
+        self.verticalLayout_2.setStretch(4, 10)
 
         self.mainBox.addWidget(self.leftBox)
 
@@ -521,28 +559,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.setSpacing(3)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.verticalLayout_5.setContentsMargins(8, 8, 8, 8)
-        self.rightbox_main = QFrame(self.rightBox)
-        self.rightbox_main.setObjectName(u"rightbox_main")
-        self.rightbox_main.setStyleSheet(u"")
-        self.rightbox_main.setFrameShape(QFrame.Shape.StyledPanel)
-        self.rightbox_main.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_9 = QHBoxLayout(self.rightbox_main)
-        self.horizontalLayout_9.setSpacing(0)
-        self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.horizontalLayout_9.setContentsMargins(0, 0, 0, 0)
-        self.splitter = QSplitter(self.rightbox_main)
-        self.splitter.setObjectName(u"splitter")
-        self.splitter.setOrientation(Qt.Orientation.Horizontal)
-        self.main_rightbox = QLabel(self.splitter)
-        self.main_rightbox.setObjectName(u"main_rightbox")
-        self.main_rightbox.setMinimumSize(QSize(200, 100))
-        self.splitter.addWidget(self.main_rightbox)
-
-        self.horizontalLayout_9.addWidget(self.splitter)
-
-
-        self.verticalLayout_5.addWidget(self.rightbox_main)
-
         self.rightbox_top = QFrame(self.rightBox)
         self.rightbox_top.setObjectName(u"rightbox_top")
         self.rightbox_top.setStyleSheet(u"")
@@ -969,6 +985,28 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.rightbox_top)
 
+        self.rightbox_main = QFrame(self.rightBox)
+        self.rightbox_main.setObjectName(u"rightbox_main")
+        self.rightbox_main.setStyleSheet(u"")
+        self.rightbox_main.setFrameShape(QFrame.Shape.StyledPanel)
+        self.rightbox_main.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout_9 = QHBoxLayout(self.rightbox_main)
+        self.horizontalLayout_9.setSpacing(0)
+        self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
+        self.horizontalLayout_9.setContentsMargins(0, 0, 0, 0)
+        self.splitter = QSplitter(self.rightbox_main)
+        self.splitter.setObjectName(u"splitter")
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
+        self.main_rightbox = QLabel(self.splitter)
+        self.main_rightbox.setObjectName(u"main_rightbox")
+        self.main_rightbox.setMinimumSize(QSize(200, 100))
+        self.splitter.addWidget(self.main_rightbox)
+
+        self.horizontalLayout_9.addWidget(self.splitter)
+
+
+        self.verticalLayout_5.addWidget(self.rightbox_main)
+
         self.rightbox_play = QFrame(self.rightBox)
         self.rightbox_play.setObjectName(u"rightbox_play")
         self.rightbox_play.setFrameShape(QFrame.Shape.StyledPanel)
@@ -976,46 +1014,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_20 = QHBoxLayout(self.rightbox_play)
         self.horizontalLayout_20.setObjectName(u"horizontalLayout_20")
         self.horizontalLayout_20.setContentsMargins(5, 5, 5, 5)
-        self.run_button = QPushButton(self.rightbox_play)
-        self.run_button.setObjectName(u"run_button")
-        self.run_button.setMinimumSize(QSize(0, 30))
-        self.run_button.setMaximumSize(QSize(16777215, 30))
-        self.run_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.run_button.setMouseTracking(True)
-        self.run_button.setStyleSheet(u"QPushButton{\n"
-"background-image: url(:/rightbox/images/newsize/play.png);\n"
-"background-repeat: no-repeat;\n"
-"background-position: center;\n"
-"border: none;\n"
-"}\n"
-"QPushButton:hover{\n"
-"\n"
-"}")
-        self.run_button.setIconSize(QSize(40, 40))
-        self.run_button.setCheckable(True)
-        self.run_button.setChecked(False)
-
-        self.horizontalLayout_20.addWidget(self.run_button)
-
-        self.stop_button = QPushButton(self.rightbox_play)
-        self.stop_button.setObjectName(u"stop_button")
-        self.stop_button.setMinimumSize(QSize(0, 30))
-        self.stop_button.setMaximumSize(QSize(16777215, 30))
-        self.stop_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.stop_button.setStyleSheet(u"QPushButton{\n"
-"background-image: url(:/rightbox/images/newsize/stop.png);\n"
-"background-repeat: no-repeat;\n"
-"background-position: center;\n"
-"border: none;\n"
-"}\n"
-"\n"
-"QPushButton:hover{\n"
-"\n"
-"}")
-        self.stop_button.setIconSize(QSize(40, 40))
-
-        self.horizontalLayout_20.addWidget(self.stop_button)
-
         self.progress_bar = QProgressBar(self.rightbox_play)
         self.progress_bar.setObjectName(u"progress_bar")
         self.progress_bar.setMinimumSize(QSize(0, 20))
@@ -1061,7 +1059,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.rightbox_bottom)
 
-        self.verticalLayout_5.setStretch(0, 86)
+        self.verticalLayout_5.setStretch(1, 86)
         self.verticalLayout_5.setStretch(3, 2)
 
         self.mainBox.addWidget(self.rightBox)
@@ -1081,14 +1079,18 @@ class Ui_MainWindow(object):
         self.setting_page.setObjectName(u"setting_page")
         self.setting_page.setMinimumSize(QSize(0, 0))
         self.setting_page.setMaximumSize(QSize(300, 16777215))
-        self.setting_page.setStyleSheet(u"QFrame#setting_page{\n"
-"	background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8EC5FC, stop:1 #E0C3FC);\n"
-"	border-top-left-radius:0px;\n"
-"	border-top-right-radius:30%;\n"
-"	border-bottom-right-radius:30%;\n"
-"	border-bottom-left-radius:0px;\n"
-"	border:none;\n"
-"}")
+        self.setting_page.setStyleSheet(u"QFrame#setting_page {\n"
+"       background-color: qlineargradient(\n"
+"            x1:0, y1:0, x2:1, y2:0,\n"
+"            stop:0 #4A6FA5,\n"
+"            stop:1 #2E3C5D\n"
+"        );\n"
+"        border-top-left-radius: 0px;\n"
+"        border-top-right-radius: 20px;\n"
+"        border-bottom-right-radius: 20px;\n"
+"        border-bottom-left-radius: 0px;\n"
+"        border: none;\n"
+"    }")
         self.setting_page.setFrameShape(QFrame.Shape.StyledPanel)
         self.setting_page.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_22 = QVBoxLayout(self.setting_page)
@@ -1123,11 +1125,11 @@ class Ui_MainWindow(object):
         self.verticalLayout_21.setContentsMargins(9, 9, 9, 9)
         self.ToggleBotton_6 = QPushButton(self.Model_QF_2)
         self.ToggleBotton_6.setObjectName(u"ToggleBotton_6")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.ToggleBotton_6.sizePolicy().hasHeightForWidth())
-        self.ToggleBotton_6.setSizePolicy(sizePolicy3)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.ToggleBotton_6.sizePolicy().hasHeightForWidth())
+        self.ToggleBotton_6.setSizePolicy(sizePolicy4)
         self.ToggleBotton_6.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_6.setMaximumSize(QSize(16777215, 30))
         font3 = QFont()
@@ -1251,8 +1253,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_15.setObjectName(u"verticalLayout_15")
         self.ToggleBotton_2 = QPushButton(self.IOU_QF)
         self.ToggleBotton_2.setObjectName(u"ToggleBotton_2")
-        sizePolicy3.setHeightForWidth(self.ToggleBotton_2.sizePolicy().hasHeightForWidth())
-        self.ToggleBotton_2.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.ToggleBotton_2.sizePolicy().hasHeightForWidth())
+        self.ToggleBotton_2.setSizePolicy(sizePolicy4)
         self.ToggleBotton_2.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_2.setMaximumSize(QSize(16777215, 30))
         self.ToggleBotton_2.setFont(font3)
@@ -1374,8 +1376,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_18.setObjectName(u"verticalLayout_18")
         self.ToggleBotton_3 = QPushButton(self.Conf_QF)
         self.ToggleBotton_3.setObjectName(u"ToggleBotton_3")
-        sizePolicy3.setHeightForWidth(self.ToggleBotton_3.sizePolicy().hasHeightForWidth())
-        self.ToggleBotton_3.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.ToggleBotton_3.sizePolicy().hasHeightForWidth())
+        self.ToggleBotton_3.setSizePolicy(sizePolicy4)
         self.ToggleBotton_3.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_3.setMaximumSize(QSize(16777215, 30))
         self.ToggleBotton_3.setFont(font3)
@@ -1497,8 +1499,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_19.setObjectName(u"verticalLayout_19")
         self.ToggleBotton_4 = QPushButton(self.Delay_QF)
         self.ToggleBotton_4.setObjectName(u"ToggleBotton_4")
-        sizePolicy3.setHeightForWidth(self.ToggleBotton_4.sizePolicy().hasHeightForWidth())
-        self.ToggleBotton_4.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.ToggleBotton_4.sizePolicy().hasHeightForWidth())
+        self.ToggleBotton_4.setSizePolicy(sizePolicy4)
         self.ToggleBotton_4.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_4.setMaximumSize(QSize(16777215, 30))
         self.ToggleBotton_4.setFont(font3)
@@ -1618,8 +1620,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_23.setObjectName(u"verticalLayout_23")
         self.ToggleBotton_5 = QPushButton(self.LINE_THICKNESS)
         self.ToggleBotton_5.setObjectName(u"ToggleBotton_5")
-        sizePolicy3.setHeightForWidth(self.ToggleBotton_5.sizePolicy().hasHeightForWidth())
-        self.ToggleBotton_5.setSizePolicy(sizePolicy3)
+        sizePolicy4.setHeightForWidth(self.ToggleBotton_5.sizePolicy().hasHeightForWidth())
+        self.ToggleBotton_5.setSizePolicy(sizePolicy4)
         self.ToggleBotton_5.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_5.setMaximumSize(QSize(16777215, 30))
         self.ToggleBotton_5.setFont(font3)
@@ -1823,9 +1825,9 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(shortcut)
         self.src_folder.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+S", None))
 #endif // QT_CONFIG(shortcut)
-        self.src_result.setText(QCoreApplication.translate("MainWindow", u"    Result Pic  ", None))
         self.src_table.setText(QCoreApplication.translate("MainWindow", u"    Result Tab  ", None))
-        self.main_rightbox.setText("")
+        self.run_button.setText("")
+        self.stop_button.setText("")
         self.classesLabel.setText("")
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"Classes", None))
         self.Class_num.setText("")
@@ -1838,8 +1840,7 @@ class Ui_MainWindow(object):
         self.modelLabel.setText("")
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Model", None))
         self.Model_label.setText("")
-        self.run_button.setText("")
-        self.stop_button.setText("")
+        self.main_rightbox.setText("")
         self.message_bar.setText(QCoreApplication.translate("MainWindow", u"Message Bar ... ", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.backend_button.setText(QCoreApplication.translate("MainWindow", u"Backend", None))

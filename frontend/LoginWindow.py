@@ -1,5 +1,6 @@
 import datetime
 import jwt
+import requests
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QTextEdit, QLabel, QFrame
@@ -8,7 +9,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from data.models import User
-from frontend.api import send_jwt_to_server
 from frontend.utils import glo
 
 engine = create_engine("sqlite:///data/database.db", echo=False)
@@ -25,12 +25,20 @@ def generate_jwt(username):
     return token
 
 
+def send_jwt_to_server(jwt_token: str):
+    try:
+        response = requests.post("http://127.0.0.1:5000/api/auth", json={"token": jwt_token})
+        return response.status_code, response.json()
+    except Exception as e:
+        return 500, {"error": str(e)}
+
+
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
         self.setAttribute(Qt.WA_TranslucentBackground)  # 圆角支持
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
-        self.setFixedSize(560, 480)
+        self.setFixedSize(500, 480)
 
         self.is_login_mode = True
         self.old_pos = self.pos()

@@ -74,7 +74,6 @@ def upload_result():
     try:
         gesture_name = list(data.keys())[0] if data else None
         gesture_name = gesture_name.strip() if gesture_name else None
-        print("检测到的手势:", gesture_name)
 
         if not gesture_name:
             return jsonify({"error": "未知手势"}), 400
@@ -99,7 +98,6 @@ def upload_result():
         return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
     except Exception as e:
         session.rollback()
-        print("数据库写入出错:", e)
         return jsonify({"error": "服务端异常"}), 500
     finally:
         session.close()

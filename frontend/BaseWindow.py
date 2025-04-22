@@ -10,15 +10,17 @@ import numpy as np
 import torch
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect, QFrame, QPushButton
+
 from cv_module.models import common, experimental, yolo
 from cv_module.YOLOThread import YOLOv11Thread
 from cv_module.YOLOThread import YOLOThread
+from frontend.ResultWindow import ResultWindow
 from gui.ui.utils.AcrylicFlyout import AcrylicFlyoutView, AcrylicFlyout
-from gui.ui.utils.TableView import TableViewQWidget
 from gui.ui.utils.drawFigure import PlottingThread
 from gui.ui.utils.webCamera import Camera, WebcamThread
 from frontend.utils import glo
 from frontend.utils.logger import LoggerUtils
+
 
 glo.init()
 glo.set_value('yoloname', "yolov8 yolov11")
@@ -49,11 +51,13 @@ class BASEWINDOW:
     def __init__(self):
         super().__init__()
 
+        self.result_window = None
         self.inputPath = None
         self.yolo_threads = None
         self.result_statistic = None
         self.detect_result = None
         self.allModelNames = ALL_MODEL_NAMES
+
 
     # 初始化左侧菜单栏
     def initSiderWidget(self):
@@ -629,5 +633,5 @@ class BASEWINDOW:
 
     # 展示表格结果
     def showTableResult(self):
-        self.table_result = TableViewQWidget(infoList=self.detect_result)
-        self.table_result.show()
+        self.result_window = ResultWindow()
+        self.result_window.show()

@@ -72,7 +72,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.src_img.clicked.connect(self.selectFile)
         self.ui.src_webcam.clicked.connect(self.selectWebcam)
         self.ui.src_folder.clicked.connect(self.selectFolder)
-        self.ui.src_result.clicked.connect(self.showResultStatics)
         self.ui.src_table.clicked.connect(self.showTableResult)
         # --- 导入 图片/视频、调用摄像头、导入文件夹（批量处理）、调用网络摄像头 --- #
 
@@ -253,7 +252,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
             self.showStatus('Pause Detection')
 
     def runModel(self, runbuttonStatus=None):
-        # self.ui.save_status_button.setEnabled(False)
         if runbuttonStatus:
             self.ui.run_button.setChecked(True)
         current_model_name = self.checkCurrentModel()
@@ -283,3 +281,4 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.Class_num.setText('--')
         self.ui.Target_num.setText('--')
         self.ui.fps_label.setText('--')
+
