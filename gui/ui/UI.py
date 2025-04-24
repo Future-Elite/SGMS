@@ -29,7 +29,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1668, 832)
+        MainWindow.resize(1475, 816)
         MainWindow.setStyleSheet(u"")
         self.mainWindow = QWidget(MainWindow)
         self.mainWindow.setObjectName(u"mainWindow")
@@ -242,6 +242,9 @@ class Ui_MainWindow(object):
         self.user_info = QTextEdit(self.leftbox_top)
         self.user_info.setObjectName(u"user_info")
         self.user_info.setMinimumSize(QSize(230, 0))
+        self.user_info.setMouseTracking(False)
+        self.user_info.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.user_info.setAcceptDrops(False)
         self.user_info.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
 
         self.horizontalLayout_8.addWidget(self.user_info)
@@ -444,13 +447,77 @@ class Ui_MainWindow(object):
 
         self.tableBox = QFrame(self.leftbox_bottom)
         self.tableBox.setObjectName(u"tableBox")
+        self.tableBox.setMinimumSize(QSize(240, 120))
         self.tableBox.setMaximumSize(QSize(240, 16777215))
+        self.tableBox.setStyleSheet(u"QFrame#Conf_QF{\n"
+"border:2px solid rgba(255, 255, 255, 70);\n"
+"}")
         self.tableBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.tableBox.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_28 = QHBoxLayout(self.tableBox)
         self.horizontalLayout_28.setSpacing(0)
         self.horizontalLayout_28.setObjectName(u"horizontalLayout_28")
         self.horizontalLayout_28.setContentsMargins(0, 0, 0, 0)
+        self.run_button = QPushButton(self.tableBox)
+        self.run_button.setObjectName(u"run_button")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.run_button.sizePolicy().hasHeightForWidth())
+        self.run_button.setSizePolicy(sizePolicy3)
+        self.run_button.setMinimumSize(QSize(80, 80))
+        self.run_button.setMaximumSize(QSize(120, 80))
+        self.run_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.run_button.setMouseTracking(True)
+        self.run_button.setStyleSheet(u"QPushButton{\n"
+"background-repeat: no-repeat;\n"
+"background-position: center;\n"
+"background-size: 100% 100%;\n"
+"border: none;\n"
+"background-color: transparent;\n"
+"}\n"
+"QPushButton:hover{\n"
+"\n"
+"}")
+        self.run_button.setIconSize(QSize(40, 40))
+        self.run_button.setCheckable(True)
+        self.run_button.setChecked(False)
+
+        self.horizontalLayout_28.addWidget(self.run_button)
+
+        self.control_button = QPushButton(self.tableBox)
+        self.control_button.setObjectName(u"control_button")
+        sizePolicy3.setHeightForWidth(self.control_button.sizePolicy().hasHeightForWidth())
+        self.control_button.setSizePolicy(sizePolicy3)
+        self.control_button.setMinimumSize(QSize(80, 80))
+        self.control_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.control_button.setMouseTracking(True)
+
+        self.horizontalLayout_28.addWidget(self.control_button)
+
+        self.stop_button = QPushButton(self.tableBox)
+        self.stop_button.setObjectName(u"stop_button")
+        sizePolicy3.setHeightForWidth(self.stop_button.sizePolicy().hasHeightForWidth())
+        self.stop_button.setSizePolicy(sizePolicy3)
+        self.stop_button.setMinimumSize(QSize(80, 80))
+        self.stop_button.setMaximumSize(QSize(120, 80))
+        self.stop_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.stop_button.setStyleSheet(u"QPushButton{\n"
+"background-image: url(:/rightbox/images/newsize/stop.png);\n"
+"background-repeat: no-repeat;\n"
+"background-position: center;\n"
+"background-size: 100% 100%;\n"
+"border: none;\n"
+"background-color: transparent;\n"
+"}\n"
+"\n"
+"QPushButton:hover{\n"
+"\n"
+"}")
+        self.stop_button.setIconSize(QSize(40, 40))
+
+        self.horizontalLayout_28.addWidget(self.stop_button)
+
 
         self.verticalLayout_3.addWidget(self.tableBox)
 
@@ -467,60 +534,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.leftbox_bottom)
 
-        self.run_button = QPushButton(self.leftBox)
-        self.run_button.setObjectName(u"run_button")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.run_button.sizePolicy().hasHeightForWidth())
-        self.run_button.setSizePolicy(sizePolicy3)
-        self.run_button.setMinimumSize(QSize(80, 30))
-        self.run_button.setMaximumSize(QSize(80, 30))
-        self.run_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.run_button.setMouseTracking(True)
-        self.run_button.setStyleSheet(u"QPushButton{\n"
-"background-image: url(:/rightbox/images/newsize/play.png);\n"
-"background-repeat: no-repeat;\n"
-"background-position: center;\n"
-"border: none;\n"
-"}\n"
-"QPushButton:hover{\n"
-"\n"
-"}")
-        self.run_button.setIconSize(QSize(40, 40))
-        self.run_button.setCheckable(True)
-        self.run_button.setChecked(False)
-
-        self.verticalLayout_2.addWidget(self.run_button)
-
-        self.stop_button = QPushButton(self.leftBox)
-        self.stop_button.setObjectName(u"stop_button")
-        sizePolicy3.setHeightForWidth(self.stop_button.sizePolicy().hasHeightForWidth())
-        self.stop_button.setSizePolicy(sizePolicy3)
-        self.stop_button.setMinimumSize(QSize(80, 30))
-        self.stop_button.setMaximumSize(QSize(80, 30))
-        self.stop_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.stop_button.setStyleSheet(u"QPushButton{\n"
-"background-image: url(:/rightbox/images/newsize/stop.png);\n"
-"background-repeat: no-repeat;\n"
-"background-position: center;\n"
-"border: none;\n"
-"}\n"
-"\n"
-"QPushButton:hover{\n"
-"\n"
-"}")
-        self.stop_button.setIconSize(QSize(40, 40))
-
-        self.verticalLayout_2.addWidget(self.stop_button)
-
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_2.addItem(self.verticalSpacer_2)
 
         self.verticalLayout_2.setStretch(0, 10)
         self.verticalLayout_2.setStretch(1, 80)
-        self.verticalLayout_2.setStretch(4, 10)
 
         self.mainBox.addWidget(self.leftBox)
 
@@ -567,214 +586,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_14 = QHBoxLayout(self.rightbox_top)
         self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
         self.horizontalLayout_14.setContentsMargins(0, 0, 0, 0)
-        self.frame_6 = QFrame(self.rightbox_top)
-        self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_6.setFrameShadow(QFrame.Shadow.Raised)
-        self.frame_6.setLineWidth(1)
-        self.horizontalLayout_22 = QHBoxLayout(self.frame_6)
-        self.horizontalLayout_22.setSpacing(6)
-        self.horizontalLayout_22.setObjectName(u"horizontalLayout_22")
-        self.horizontalLayout_22.setContentsMargins(9, 9, 9, 9)
-        self.classesLabel = QLabel(self.frame_6)
-        self.classesLabel.setObjectName(u"classesLabel")
-        self.classesLabel.setMaximumSize(QSize(80, 80))
-        self.classesLabel.setPixmap(QPixmap(u":/statusbar/images/newsize/classesBar.png"))
-        self.classesLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.horizontalLayout_22.addWidget(self.classesLabel)
-
-        self.Class_QF = QFrame(self.frame_6)
-        self.Class_QF.setObjectName(u"Class_QF")
-        self.Class_QF.setMinimumSize(QSize(170, 80))
-        self.Class_QF.setMaximumSize(QSize(170, 80))
-        self.Class_QF.setToolTipDuration(0)
-        self.Class_QF.setStyleSheet(u"QFrame#Class_QF{\n"
-"color: rgb(255, 255, 255);\n"
-"border-radius: 15px;\n"
-"background-color:qradialgradient(cx:0, cy:0, radius:1, fx:0.1, fy:0.1, stop:0  #97D9E1,  stop:1   #8EC5FC);\n"
-"border: 1px outset #97D9E1;\n"
-"}\n"
-"")
-        self.Class_QF.setFrameShape(QFrame.Shape.StyledPanel)
-        self.Class_QF.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_7 = QVBoxLayout(self.Class_QF)
-        self.verticalLayout_7.setSpacing(0)
-        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
-        self.Class_top = QFrame(self.Class_QF)
-        self.Class_top.setObjectName(u"Class_top")
-        self.Class_top.setStyleSheet(u"border:none")
-        self.Class_top.setFrameShape(QFrame.Shape.StyledPanel)
-        self.Class_top.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_11 = QHBoxLayout(self.Class_top)
-        self.horizontalLayout_11.setSpacing(0)
-        self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
-        self.horizontalLayout_11.setContentsMargins(0, 3, 0, 3)
-        self.label_5 = QLabel(self.Class_top)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMaximumSize(QSize(16777215, 30))
-        font = QFont()
-        font.setFamilies([u"Segoe UI"])
-        font.setPointSize(16)
-        font.setBold(True)
-        font.setItalic(True)
-        self.label_5.setFont(font)
-        self.label_5.setStyleSheet(u"color: rgba(255, 255,255, 210);\n"
-"text-align:center;\n"
-"font: 700 italic 16pt \"Segoe UI\";")
-        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_5.setIndent(0)
-
-        self.horizontalLayout_11.addWidget(self.label_5)
-
-
-        self.verticalLayout_7.addWidget(self.Class_top)
-
-        self.line_2 = QFrame(self.Class_QF)
-        self.line_2.setObjectName(u"line_2")
-        self.line_2.setMaximumSize(QSize(16777215, 1))
-        self.line_2.setStyleSheet(u"background-color: rgba(255, 255, 255, 89);")
-        self.line_2.setFrameShape(QFrame.Shape.HLine)
-        self.line_2.setFrameShadow(QFrame.Shadow.Sunken)
-
-        self.verticalLayout_7.addWidget(self.line_2)
-
-        self.Class_bottom = QFrame(self.Class_QF)
-        self.Class_bottom.setObjectName(u"Class_bottom")
-        self.Class_bottom.setStyleSheet(u"border:none")
-        self.Class_bottom.setFrameShape(QFrame.Shape.StyledPanel)
-        self.Class_bottom.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_8 = QVBoxLayout(self.Class_bottom)
-        self.verticalLayout_8.setSpacing(0)
-        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
-        self.verticalLayout_8.setContentsMargins(0, 6, 0, 6)
-        self.Class_num = QLabel(self.Class_bottom)
-        self.Class_num.setObjectName(u"Class_num")
-        self.Class_num.setMinimumSize(QSize(0, 30))
-        self.Class_num.setMaximumSize(QSize(16777215, 30))
-        font1 = QFont()
-        font1.setFamilies([u"Microsoft YaHei UI"])
-        font1.setPointSize(17)
-        font1.setBold(False)
-        font1.setItalic(False)
-        font1.setUnderline(False)
-        self.Class_num.setFont(font1)
-        self.Class_num.setStyleSheet(u"color: rgb(255, 255, 255);\n"
-"font: 17pt \"Microsoft YaHei UI\";")
-        self.Class_num.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.verticalLayout_8.addWidget(self.Class_num, 0, Qt.AlignmentFlag.AlignTop)
-
-
-        self.verticalLayout_7.addWidget(self.Class_bottom)
-
-        self.verticalLayout_7.setStretch(1, 2)
-        self.verticalLayout_7.setStretch(2, 1)
-
-        self.horizontalLayout_22.addWidget(self.Class_QF)
-
-
-        self.horizontalLayout_14.addWidget(self.frame_6)
-
-        self.frame_7 = QFrame(self.rightbox_top)
-        self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_23 = QHBoxLayout(self.frame_7)
-        self.horizontalLayout_23.setSpacing(6)
-        self.horizontalLayout_23.setObjectName(u"horizontalLayout_23")
-        self.horizontalLayout_23.setContentsMargins(0, 9, 9, 9)
-        self.targetLabel = QLabel(self.frame_7)
-        self.targetLabel.setObjectName(u"targetLabel")
-        self.targetLabel.setMaximumSize(QSize(80, 80))
-        self.targetLabel.setPixmap(QPixmap(u":/statusbar/images/newsize/targetBar.png"))
-        self.targetLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.horizontalLayout_23.addWidget(self.targetLabel)
-
-        self.Target_QF = QFrame(self.frame_7)
-        self.Target_QF.setObjectName(u"Target_QF")
-        self.Target_QF.setMinimumSize(QSize(170, 80))
-        self.Target_QF.setMaximumSize(QSize(170, 80))
-        self.Target_QF.setToolTipDuration(0)
-        self.Target_QF.setStyleSheet(u"QFrame#Target_QF{\n"
-"color: rgb(255, 255, 255);\n"
-"border-radius: 15px;\n"
-"background-color: qradialgradient(cx:0, cy:0, radius:1, fx:0.1, fy:0.1, stop:0 #E0C3FC,  stop:1  #9599E2);\n"
-"border: 1px outset #9599E2;\n"
-"}\n"
-"")
-        self.Target_QF.setFrameShape(QFrame.Shape.StyledPanel)
-        self.Target_QF.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_9 = QVBoxLayout(self.Target_QF)
-        self.verticalLayout_9.setSpacing(0)
-        self.verticalLayout_9.setObjectName(u"verticalLayout_9")
-        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
-        self.Target_top = QFrame(self.Target_QF)
-        self.Target_top.setObjectName(u"Target_top")
-        self.Target_top.setStyleSheet(u"border:none")
-        self.Target_top.setFrameShape(QFrame.Shape.StyledPanel)
-        self.Target_top.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_12 = QHBoxLayout(self.Target_top)
-        self.horizontalLayout_12.setSpacing(0)
-        self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
-        self.horizontalLayout_12.setContentsMargins(0, 3, 0, 3)
-        self.label_6 = QLabel(self.Target_top)
-        self.label_6.setObjectName(u"label_6")
-        self.label_6.setMaximumSize(QSize(16777215, 30))
-        self.label_6.setFont(font)
-        self.label_6.setStyleSheet(u"color: rgba(255, 255,255, 210);\n"
-"text-align:center;\n"
-"font: 700 italic 16pt \"Segoe UI\";")
-        self.label_6.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_6.setIndent(0)
-
-        self.horizontalLayout_12.addWidget(self.label_6)
-
-
-        self.verticalLayout_9.addWidget(self.Target_top)
-
-        self.line_3 = QFrame(self.Target_QF)
-        self.line_3.setObjectName(u"line_3")
-        self.line_3.setMaximumSize(QSize(16777215, 1))
-        self.line_3.setStyleSheet(u"background-color: rgba(255, 255, 255, 89);")
-        self.line_3.setFrameShape(QFrame.Shape.HLine)
-        self.line_3.setFrameShadow(QFrame.Shadow.Sunken)
-
-        self.verticalLayout_9.addWidget(self.line_3)
-
-        self.Target_bottom = QFrame(self.Target_QF)
-        self.Target_bottom.setObjectName(u"Target_bottom")
-        self.Target_bottom.setStyleSheet(u"border:none")
-        self.Target_bottom.setFrameShape(QFrame.Shape.StyledPanel)
-        self.Target_bottom.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_10 = QVBoxLayout(self.Target_bottom)
-        self.verticalLayout_10.setSpacing(0)
-        self.verticalLayout_10.setObjectName(u"verticalLayout_10")
-        self.verticalLayout_10.setContentsMargins(0, 6, 0, 6)
-        self.Target_num = QLabel(self.Target_bottom)
-        self.Target_num.setObjectName(u"Target_num")
-        self.Target_num.setMinimumSize(QSize(0, 30))
-        self.Target_num.setMaximumSize(QSize(16777215, 30))
-        self.Target_num.setFont(font1)
-        self.Target_num.setStyleSheet(u"color: rgb(255, 255, 255);\n"
-"font: 17pt \"Microsoft YaHei UI\";")
-        self.Target_num.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.verticalLayout_10.addWidget(self.Target_num, 0, Qt.AlignmentFlag.AlignTop)
-
-
-        self.verticalLayout_9.addWidget(self.Target_bottom)
-
-        self.verticalLayout_9.setStretch(1, 2)
-        self.verticalLayout_9.setStretch(2, 1)
-
-        self.horizontalLayout_23.addWidget(self.Target_QF)
-
-
-        self.horizontalLayout_14.addWidget(self.frame_7)
-
         self.frame_8 = QFrame(self.rightbox_top)
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setFrameShape(QFrame.Shape.StyledPanel)
@@ -821,6 +632,11 @@ class Ui_MainWindow(object):
         self.label_7 = QLabel(self.Fps_top)
         self.label_7.setObjectName(u"label_7")
         self.label_7.setMaximumSize(QSize(16777215, 30))
+        font = QFont()
+        font.setFamilies([u"Segoe UI"])
+        font.setPointSize(16)
+        font.setBold(True)
+        font.setItalic(True)
         self.label_7.setFont(font)
         self.label_7.setStyleSheet(u"color: rgba(255, 255,255, 210);\n"
 "text-align:center;\n"
@@ -857,6 +673,12 @@ class Ui_MainWindow(object):
         self.fps_label.setObjectName(u"fps_label")
         self.fps_label.setMinimumSize(QSize(0, 30))
         self.fps_label.setMaximumSize(QSize(16777215, 30))
+        font1 = QFont()
+        font1.setFamilies([u"Microsoft YaHei UI"])
+        font1.setPointSize(17)
+        font1.setBold(False)
+        font1.setItalic(False)
+        font1.setUnderline(False)
         self.fps_label.setFont(font1)
         self.fps_label.setStyleSheet(u"color: rgb(255, 255, 255);\n"
 "font: 17pt \"Microsoft YaHei UI\";")
@@ -1080,11 +902,7 @@ class Ui_MainWindow(object):
         self.setting_page.setMinimumSize(QSize(0, 0))
         self.setting_page.setMaximumSize(QSize(300, 16777215))
         self.setting_page.setStyleSheet(u"QFrame#setting_page {\n"
-"       background-color: qlineargradient(\n"
-"            x1:0, y1:0, x2:1, y2:0,\n"
-"            stop:0 #4A6FA5,\n"
-"            stop:1 #2E3C5D\n"
-"        );\n"
+"       background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8ED5FC, stop:1 #E0F3FC);\n"
 "        border-top-left-radius: 0px;\n"
 "        border-top-right-radius: 20px;\n"
 "        border-bottom-right-radius: 20px;\n"
@@ -1106,11 +924,6 @@ class Ui_MainWindow(object):
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout_22.addWidget(self.label_2)
-
-        self.backend_button = QPushButton(self.setting_page)
-        self.backend_button.setObjectName(u"backend_button")
-
-        self.verticalLayout_22.addWidget(self.backend_button)
 
         self.Model_QF_2 = QWidget(self.setting_page)
         self.Model_QF_2.setObjectName(u"Model_QF_2")
@@ -1827,13 +1640,8 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(shortcut)
         self.src_table.setText(QCoreApplication.translate("MainWindow", u"    Result Tab  ", None))
         self.run_button.setText("")
+        self.control_button.setText(QCoreApplication.translate("MainWindow", u"control", None))
         self.stop_button.setText("")
-        self.classesLabel.setText("")
-        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Classes", None))
-        self.Class_num.setText("")
-        self.targetLabel.setText("")
-        self.label_6.setText(QCoreApplication.translate("MainWindow", u"Targets", None))
-        self.Target_num.setText("")
         self.fpsLabel.setText("")
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"Fps", None))
         self.fps_label.setText("")
@@ -1843,7 +1651,6 @@ class Ui_MainWindow(object):
         self.main_rightbox.setText("")
         self.message_bar.setText(QCoreApplication.translate("MainWindow", u"Message Bar ... ", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
-        self.backend_button.setText(QCoreApplication.translate("MainWindow", u"Backend", None))
         self.ToggleBotton_6.setText(QCoreApplication.translate("MainWindow", u"Model", None))
         self.model_box.setProperty(u"placeholderText", "")
         self.mp_button.setText(QCoreApplication.translate("MainWindow", u"Mediapipe", None))

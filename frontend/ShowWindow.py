@@ -1,9 +1,9 @@
 import json
 import os
 
-from PySide6 import QtCore, QtGui
-from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QColor
+from PySide6 import QtCore
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
@@ -13,15 +13,16 @@ from frontend.utils import glo
 
 GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 240
-WIDTH_LEFT_BOX_EXTENDED = 240
+WIDTH_LEFT_BOX_EXTENDED = 0
 WIDTH_LOGO = 60
-UI_FILE_PATH = "ui/UI.ui"
+UI_FILE_PATH = "gui/ui/UI.ui"
 KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
 
 
 class SHOWWINDOW(QMainWindow, BASEWINDOW):
     def __init__(self):
         super().__init__()
+        self.is_playing = False
         self.current_model = None
         self.current_workpath = os.getcwd()
         self.inputPath = None
@@ -44,15 +45,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 最大化 最小化 关闭 --- #
 
         # --- 播放 暂停 停止 --- #
-        self.playIcon = QtGui.QIcon()
-        self.playIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/play.png"), QtGui.QIcon.Normal,
-                                QtGui.QIcon.Off)
-        self.playIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/pause.png"), QtGui.QIcon.Active,
-                                QtGui.QIcon.On)
-        self.playIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/pause.png"),
-                                QtGui.QIcon.Selected, QtGui.QIcon.On)
-        self.ui.run_button.setCheckable(True)
-        self.ui.run_button.setIcon(self.playIcon)
+        self.ui.run_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/newsize/play.png"))
         # --- 播放 暂停 停止 --- #
 
         # --- 自动加载/动态改变 PT 模型 --- #
@@ -63,8 +56,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/cv_module/ptfiles/' + x))
         self.ui.model_box.clear()
         self.ui.model_box.addItems(self.pt_list)
-        self.qtimer_search = QTimer(self)
-        self.qtimer_search.timeout.connect(lambda: self.loadModels())
+        self.loadModels()
         self.ui.model_box.currentTextChanged.connect(self.changeModel)
         # --- 自动加载/动态改变 PT 模型 --- #
 
@@ -87,18 +79,12 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 状态栏 初始化 --- #
         # 状态栏阴影效果
         self.shadowStyle(self.ui.mainBody, QColor(0, 0, 0, 38), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.Class_QF, QColor(142, 197, 252), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.classesLabel, QColor(142, 197, 252), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.Target_QF, QColor(159, 172, 230), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.targetLabel, QColor(159, 172, 230), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.Fps_QF, QColor(170, 128, 213), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.fpsLabel, QColor(170, 128, 213), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.Model_QF, QColor(162, 129, 247), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.modelLabel, QColor(162, 129, 247), top_bottom=['top', 'bottom'])
         # 状态栏默认显示
         self.model_name = self.ui.model_box.currentText()  # 获取默认 model
-        self.ui.Class_num.setText('--')
-        self.ui.Target_num.setText('--')
         self.ui.fps_label.setText('--')
         self.ui.Model_label.setText(str(self.model_name).replace(".pt", ""))
         # --- 状态栏 初始化 --- #
@@ -106,8 +92,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.initThreads()
 
         # --- 超参数调整 --- #
-        self.ui.iou_spinbox.valueChanged.connect(
-            lambda x: self.changeValue(x, 'iou_spinbox'))  # iou box
+        self.ui.iou_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'iou_spinbox'))  # iou box
         self.ui.iou_slider.valueChanged.connect(lambda x: self.changeValue(x, 'iou_slider'))  # iou scroll bar
         self.ui.conf_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'conf_spinbox'))  # conf box
         self.ui.conf_slider.valueChanged.connect(lambda x: self.changeValue(x, 'conf_slider'))  # conf scroll bar
@@ -131,20 +116,12 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- MessageBar Init --- #
 
         # mediapipe
-        self.mpIcon = QtGui.QIcon()
-        self.mpIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/check_no.png"), QtGui.QIcon.Normal,
-                                QtGui.QIcon.Off)
-        self.mpIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/check_yes.png"), QtGui.QIcon.Active,
-                                QtGui.QIcon.On)
-        self.mpIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/check_yes.png"),
-                                QtGui.QIcon.Selected, QtGui.QIcon.On)
         self.ui.mp_button.setCheckable(True)
-        self.ui.mp_button.setIcon(self.mpIcon)
         self.ui.mp_button.clicked.connect(self.use_mp)
 
-        # Backend
-        self.ui.backend_button.setChecked(True)
-
+        # Control Function
+        self.ui.control_button.setCheckable(True)
+        self.ui.control_button.clicked.connect(self.start_control)
 
     def initThreads(self):
         self.yolo_threads = ThreadPool()
@@ -265,6 +242,10 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
     # 开始/暂停 预测
     def runorContinue(self):
         if self.inputPath is not None:
+            self.is_playing = not self.is_playing
+            icon_path = "gui/images/newsize/pause.png" if self.is_playing else "gui/images/newsize/play.png"
+            self.ui.run_button.setIcon(QIcon())
+            self.ui.run_button.setIcon(QIcon(icon_path))
             self.changeModel()
             self.runModel()
         else:
@@ -274,11 +255,9 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
     # 停止识别
     def stopDetect(self):
         self.quitRunningModel(stop_status=True)
+        self.is_playing = False
         self.ui.run_button.setChecked(False)
+        self.ui.run_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/newsize/play.png"))
         self.ui.progress_bar.setValue(0)
-        # self.ui.main_leftbox.clear()  # clear image display
         self.ui.main_rightbox.clear()
-        self.ui.Class_num.setText('--')
-        self.ui.Target_num.setText('--')
         self.ui.fps_label.setText('--')
-

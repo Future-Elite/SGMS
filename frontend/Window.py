@@ -31,8 +31,7 @@ class MainWindow(SHOWWINDOW):
 
 
     def dropEvent(self, event):
-        # files = [url.toLocalFile() for url in event.mimeData().urls()]  # 获取所有文件路径
-        file = event.mimeData().urls()[0].toLocalFile()  # ==> 获取文件路径
+        file = event.mimeData().urls()[0].toLocalFile()
         if file:
             # 判断是否是文件夹
             if os.path.isdir(file):
@@ -41,7 +40,7 @@ class MainWindow(SHOWWINDOW):
                               FileFormat
                               if jpgname in filename]
                 self.inputPath = Foldername
-                self.showImg(self.inputPath[0], self.main_leftbox, 'path')  # 显示文件夹中第一张图片
+                self.showImg(self.inputPath[0], self.main_rightbox, 'path')  # 显示文件夹中第一张图片
                 self.showStatus('Loaded Folder：{}'.format(os.path.basename(file)))
             # 图片 / 视频
             else:
@@ -52,11 +51,10 @@ class MainWindow(SHOWWINDOW):
                     self.cap = cv2.VideoCapture(self.inputPath)
                     ret, frame = self.cap.read()
                     if ret:
-                        # rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                        self.showImg(frame, self.main_leftbox, 'img')
+                        self.showImg(frame, self.main_rightbox, 'img')
                 # 如果是图片 正常显示
                 else:
-                    self.showImg(self.inputPath, self.main_leftbox, 'path')
+                    self.showImg(self.inputPath, self.main_rightbox, 'path')
                 self.showStatus('Loaded File：{}'.format(os.path.basename(self.inputPath)))
         glo.set_value('inputPath', self.inputPath)
 
@@ -76,7 +74,6 @@ class MainWindow(SHOWWINDOW):
             self.drag = False
 
     def center(self):
-        # PyQt6获取屏幕参数
         screen = QGuiApplication.primaryScreen().size()
         size = self.geometry()
         self.move((screen.width() - size.width()) / 2,
@@ -108,6 +105,7 @@ class MainWindow(SHOWWINDOW):
             config_json = json.dumps(config, ensure_ascii=False, indent=2)
             with open(config_file, 'w', encoding='utf-8') as f:
                 f.write(config_json)
+            self.stopDetect()
             self.animation_window = QPropertyAnimation(self, b"windowOpacity")
             self.animation_window.setStartValue(1)
             self.animation_window.setEndValue(0)

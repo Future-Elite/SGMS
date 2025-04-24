@@ -4,8 +4,8 @@ from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 import cv2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
+
 
 flask_app = Flask(__name__)
 SECRET_KEY = 'SGMS_Secret_Key'
@@ -39,16 +39,17 @@ def auth():
 # 视频流接口
 def generate_frames():
     while True:
+        # 读取视频帧
         success, frame = camera.read()
         if not success:
             break
         else:
-            # 编码为 JPEG 格式
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame_bytes = buffer.tobytes()
-            # 使用 multipart 返回视频流
+            # 编码为 JPEG
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            # 生成多部分响应
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
 
 @flask_app.route('/stream')
