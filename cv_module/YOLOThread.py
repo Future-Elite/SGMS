@@ -157,11 +157,9 @@ class YOLOThread(QThread):
             if self.stop_dtc:
                 self.send_msg.emit('Stop Detection')
                 # --- 发送图片和表格结果 --- #
-                # self.send_result_picture.emit(self.results_picture)  # 发送图片结果
                 for key, value in self.results_picture.items():
                     self.results_table.append([key, str(value)])
                 self.results_picture = dict()
-                # self.send_result_table.emit(self.results_table)  # 发送表格结果
                 self.results_table = list()
                 # --- 发送图片和表格结果 --- #
                 self.all_labels_dict = {}

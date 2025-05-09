@@ -245,6 +245,7 @@ class Ui_MainWindow(object):
         self.user_info.setMouseTracking(False)
         self.user_info.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.user_info.setAcceptDrops(False)
+        self.user_info.setFrameShape(QFrame.Shape.WinPanel)
         self.user_info.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
 
         self.horizontalLayout_8.addWidget(self.user_info)

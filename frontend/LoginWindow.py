@@ -1,7 +1,8 @@
 import datetime
+
 import jwt
 import requests
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QTextEdit, QLabel, QFrame
 )
@@ -36,10 +37,13 @@ def send_jwt_to_server(jwt_token: str):
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
+
+        self.timer = None
         self.setAttribute(Qt.WA_TranslucentBackground)  # 圆角支持
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
         self.setFixedSize(500, 480)
 
+        self._try_times = 0
         self.is_login_mode = True
         self.old_pos = self.pos()
 
@@ -136,6 +140,7 @@ class LoginWindow(QDialog):
         self.action_button.setStyleSheet(self.button_style("#4CAF50", "#45a049"))
         self.action_button.clicked.connect(self.handle_action)
         self.card_layout.addWidget(self.action_button)
+        self.action_button.setShortcut("Return")
 
         # 切换按钮
         self.switch_button = QPushButton("没有账号？点击注册")
@@ -240,11 +245,15 @@ class LoginWindow(QDialog):
                 if not status:
                     self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | JWT 发送失败")
                     return
+                if status != 200:
+                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Flask 返回错误:" + str(resp))
+                    return
                 glo.set_value('user_name', username)
                 self.accept()
             else:
                 self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码错误")
                 self.password_input.clear()
+                self._try_times += 1
         else:
             if session.query(User).filter_by(username=username).first():
                 self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名已存在")
@@ -256,6 +265,23 @@ class LoginWindow(QDialog):
                 self.switch_mode()
 
         session.close()
+
+        if self._try_times >= 3:
+            self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 尝试次数过多，请稍后再试")
+            self.action_button.setEnabled(False)
+            # 设置定时器，5秒后重新启用按钮
+            self.timer = QTimer(self)
+            self.timer.start(5000)
+            self.timer.timeout.connect(self.enable_button)
+            self._try_times = 0
+
+
+    def enable_button(self):
+        self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 请重新登录")
+        self.action_button.setEnabled(True)
+        self.timer.stop()
+        self.timer.deleteLater()
+
 
     def update_info(self, message):
         self.status_label.append(message)

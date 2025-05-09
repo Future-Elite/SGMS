@@ -15,8 +15,8 @@ from frontend.utils import glo
 # 启动 Flask 后端
 flask_process = subprocess.Popen(
     [sys.executable, 'backend/server.py'],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE
+    # stdout=subprocess.PIPE,
+    # stderr=subprocess.PIPE
 )
 
 

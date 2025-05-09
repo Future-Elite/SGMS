@@ -4,13 +4,14 @@ import os
 import random
 import re
 import shutil
+import subprocess
+import sys
 
 import cv2
 import numpy as np
 
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect
-
 from cv_module.models import common, experimental, yolo
 from cv_module.YOLOThread import YOLOThread
 from frontend.ResultWindow import ResultWindow
@@ -47,6 +48,8 @@ class BASEWINDOW:
     def __init__(self):
         super().__init__()
 
+        self.is_controling = None
+        self.controller = None
         self.current_workpath = None
         self.ui = None
         self.result_window = None
@@ -160,7 +163,7 @@ class BASEWINDOW:
                 self.showStatus(f'Loaded camera：Camera_{cam}')
                 self.inputPath = int(cam)
             else:
-                self.showStatus('No camera found !!!')
+                self.showStatus('No camera found')
         except Exception as e:
             self.showStatus('%s' % e)
 
@@ -389,7 +392,20 @@ class BASEWINDOW:
             yolo_thread.use_mp = use_mp
 
     def start_control(self):
-        print("Start control")
+        if not self.is_controling:
+            self.controller = subprocess.Popen(
+                [sys.executable, 'backend/gesture_controller.py'],
+                # stdout=subprocess.PIPE,
+                # stderr=subprocess.PIPE
+            )
+            self.is_controling = True
+            self.showStatus('Gesture Control Started')
+
+        else:
+            self.controller.terminate()
+            self.controller.wait()
+            self.is_controling = False
+            self.showStatus('Gesture Control Stopped')
 
     # 调整超参数
     def changeValue(self, x, flag):

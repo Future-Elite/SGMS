@@ -6,7 +6,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
 
-
 flask_app = Flask(__name__)
 SECRET_KEY = 'SGMS_Secret_Key'
 
@@ -60,6 +59,7 @@ def stream():
 # 上传检测结果接口（JSON 方式）
 @flask_app.route('/result', methods=['POST'])
 def upload_result():
+    global gesture_name
     data = request.get_json()
 
     gesture_labels = {
@@ -95,13 +95,17 @@ def upload_result():
         session.add(log)
         session.commit()
 
-
         return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
     except Exception as e:
         session.rollback()
         return jsonify({"error": "服务端异常"}), 500
     finally:
         session.close()
+
+
+@flask_app.route('/result', methods=['GET'])
+def get_result():
+    return jsonify(gesture_name), 200
 
 
 @flask_app.route('/')
