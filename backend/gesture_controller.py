@@ -51,8 +51,8 @@ ppt_app = initialize_powerpoint()
 
 # ================== 手势标签映射 ==================
 gesture_labels = {
-    "start": 0,
-    "pause": 1,
+    "start_or_pause": 0,
+    "activate": 1,
     "forward": 2,
     "backward": 3,
     "high": 4,
@@ -174,7 +174,7 @@ class GestureController:
 
     def handle_gesture(self, gesture):
         if gesture is not None:
-            if gesture == gesture_labels["pause"]:
+            if gesture == gesture_labels["activate"]:
                 self.interval_activated = True
                 self.interval_activate_time = time.time()
                 print("间隔手势已激活，2秒内等待下一个操作...")
