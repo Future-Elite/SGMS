@@ -8,7 +8,7 @@ from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
 
 flask_app = Flask(__name__)
 SECRET_KEY = 'SGMS_Secret_Key'
-
+gesture_name = None
 # 创建数据库引擎和会话
 engine = create_engine('sqlite:///data/database.db', echo=False)
 SessionLocal = sessionmaker(bind=engine)
@@ -63,12 +63,16 @@ def upload_result():
     data = request.get_json()
 
     gesture_labels = {
-        "start": 0,
-        "pause": 1,
-        "forward": 2,
-        "backward": 3,
-        "high": 4,
-        "low": 5
+        'Left_Double_Click': 0,
+        'backward': 1,
+        'forward': 2,
+        'high': 3,
+        'left_click': 4,
+        'low': 5,
+        'mouse': 6,
+        'pause': 7,
+        'right_click': 8,
+        'start': 9
     }
 
     session = SessionLocal()
@@ -96,7 +100,7 @@ def upload_result():
         session.commit()
 
         return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
-    except Exception as e:
+    except Exception:
         session.rollback()
         return jsonify({"error": "服务端异常"}), 500
     finally:

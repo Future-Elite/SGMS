@@ -6,12 +6,16 @@ from datetime import datetime
 
 # 手势初始数据
 gesture_data = [
-    {"gesture_name": "start", "operation_type": OperationTypeEnum.click, "operation_param": "start"},
-    {"gesture_name": "pause", "operation_type": OperationTypeEnum.click, "operation_param": "pause"},
-    {"gesture_name": "forward", "operation_type": OperationTypeEnum.swipe, "operation_param": "next"},
+    {"gesture_name": "Left_Double_Click", "operation_type": OperationTypeEnum.click, "operation_param": "double_left"},
     {"gesture_name": "backward", "operation_type": OperationTypeEnum.swipe, "operation_param": "prev"},
+    {"gesture_name": "forward", "operation_type": OperationTypeEnum.swipe, "operation_param": "next"},
     {"gesture_name": "high", "operation_type": OperationTypeEnum.zoom, "operation_param": "increase"},
+    {"gesture_name": "left_click", "operation_type": OperationTypeEnum.click, "operation_param": "left"},
     {"gesture_name": "low", "operation_type": OperationTypeEnum.zoom, "operation_param": "decrease"},
+    {"gesture_name": "mouse", "operation_type": OperationTypeEnum.move, "operation_param": "move"},
+    {"gesture_name": "pause", "operation_type": OperationTypeEnum.click, "operation_param": "pause"},
+    {"gesture_name": "right_click", "operation_type": OperationTypeEnum.click, "operation_param": "right"},
+    {"gesture_name": "start", "operation_type": OperationTypeEnum.click, "operation_param": "start"},
 ]
 
 
@@ -47,14 +51,15 @@ if __name__ == "__main__":
     else:
         print("❌ 数据库文件不存在")
 
-    # 数据库连接地址，根据你的配置修改
-    DATABASE_URL = 'sqlite:///database.db'  # SQLite 本地数据库文件
+    # 数据库连接地址
+    DATABASE_URL = 'sqlite:///database.db'
 
     # 初始化数据库连接
     engine = create_engine(DATABASE_URL, echo=True)
     SessionLocal = sessionmaker(bind=engine)
 
-    # 创建所有表（如果尚未创建）
+    # 创建所有表
     Base.metadata.create_all(engine)
 
+    # 初始化手势数据
     init_gestures()

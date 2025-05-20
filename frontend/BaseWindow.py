@@ -13,7 +13,7 @@ import numpy as np
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect
 from cv_module.models import common, experimental, yolo
-from cv_module.YOLOThread import YOLOThread
+from cv_module.CVThread import YOLOThread
 from frontend.ResultWindow import ResultWindow
 from gui.ui.utils.webCamera import Camera
 from frontend.utils import glo
@@ -395,17 +395,17 @@ class BASEWINDOW:
         if not self.is_controling:
             self.controller = subprocess.Popen(
                 [sys.executable, 'backend/gesture_controller.py'],
-                # stdout=subprocess.PIPE,
-                # stderr=subprocess.PIPE
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
             )
             self.is_controling = True
-            self.showStatus('Gesture Control Started')
+            self.showStatus('Gesture Controller Started')
 
         else:
             self.controller.terminate()
             self.controller.wait()
             self.is_controling = False
-            self.showStatus('Gesture Control Stopped')
+            self.showStatus('Gesture Controller Stopped')
 
     # 调整超参数
     def changeValue(self, x, flag):

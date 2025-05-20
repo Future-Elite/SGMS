@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
-from frontend.ThreadPool import ThreadPool
+from frontend.utils.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
 from frontend.utils import glo
 
@@ -77,13 +77,11 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 视频、图片 预览 --- #
 
         # --- 状态栏 初始化 --- #
-        # 状态栏阴影效果
         self.shadowStyle(self.ui.mainBody, QColor(0, 0, 0, 38), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.Fps_QF, QColor(170, 128, 213), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.fpsLabel, QColor(170, 128, 213), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.Model_QF, QColor(162, 129, 247), top_bottom=['top', 'bottom'])
         self.shadowStyle(self.ui.modelLabel, QColor(162, 129, 247), top_bottom=['top', 'bottom'])
-        # 状态栏默认显示
         self.model_name = self.ui.model_box.currentText()  # 获取默认 model
         self.ui.fps_label.setText('--')
         self.ui.Model_label.setText(str(self.model_name).replace(".pt", ""))
@@ -92,14 +90,14 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.initThreads()
 
         # --- 超参数调整 --- #
-        self.ui.iou_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'iou_spinbox'))  # iou box
-        self.ui.iou_slider.valueChanged.connect(lambda x: self.changeValue(x, 'iou_slider'))  # iou scroll bar
-        self.ui.conf_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'conf_spinbox'))  # conf box
-        self.ui.conf_slider.valueChanged.connect(lambda x: self.changeValue(x, 'conf_slider'))  # conf scroll bar
-        self.ui.speed_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'speed_spinbox'))  # speed box
-        self.ui.speed_slider.valueChanged.connect(lambda x: self.changeValue(x, 'speed_slider'))  # speed scroll bar
-        self.ui.line_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'line_spinbox'))  # line box
-        self.ui.line_slider.valueChanged.connect(lambda x: self.changeValue(x, 'line_slider'))  # line slider
+        self.ui.iou_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'iou_spinbox'))
+        self.ui.iou_slider.valueChanged.connect(lambda x: self.changeValue(x, 'iou_slider'))
+        self.ui.conf_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'conf_spinbox'))
+        self.ui.conf_slider.valueChanged.connect(lambda x: self.changeValue(x, 'conf_slider'))
+        self.ui.speed_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'speed_spinbox'))
+        self.ui.speed_slider.valueChanged.connect(lambda x: self.changeValue(x, 'speed_slider'))
+        self.ui.line_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'line_spinbox'))
+        self.ui.line_slider.valueChanged.connect(lambda x: self.changeValue(x, 'line_slider'))
         # --- 超参数调整 --- #
 
         # --- 开始 / 停止 --- #

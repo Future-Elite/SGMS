@@ -11,6 +11,7 @@ class OperationTypeEnum(enum.Enum):
     click = "click"
     swipe = "swipe"
     zoom = "zoom"
+    move = "move"
 
 
 class DeviceTypeEnum(enum.Enum):
@@ -31,7 +32,7 @@ class GestureMap(Base):
     operation_type = Column(Enum(OperationTypeEnum), nullable=False)
     operation_param = Column(String(100), default='')
     is_enabled = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
 
 class DeviceState(Base):
@@ -40,7 +41,7 @@ class DeviceState(Base):
     device_type = Column(Enum(DeviceTypeEnum), nullable=False)
     device_id = Column(String(100), nullable=False)
     current_state = Column(JSON, nullable=False)
-    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
 class OperationLog(Base):
@@ -49,7 +50,7 @@ class OperationLog(Base):
     gesture_id = Column(Integer, ForeignKey('gesture_map.id'))
     operation_type = Column(Enum(OperationTypeEnum), nullable=False)
     device_type = Column(Enum(DeviceTypeEnum), nullable=False)
-    operation_time = Column(DateTime, default=datetime.utcnow)
+    operation_time = Column(DateTime, default=datetime.now)
     result = Column(Enum(ResultEnum), nullable=False)
     detail = Column(String, default='')
 

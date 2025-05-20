@@ -15,8 +15,8 @@ from frontend.utils import glo
 # 启动 Flask 后端
 flask_process = subprocess.Popen(
     [sys.executable, 'backend/server.py'],
-    # stdout=subprocess.PIPE,
-    # stderr=subprocess.PIPE
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
 )
 
 
@@ -32,7 +32,7 @@ sys.path.append(os.path.join(os.getcwd(), "gui/ui"))
 
 # 禁用日志
 logging.disable(logging.CRITICAL)
-sys.stdout = open(os.devnull, 'w')
+# sys.stdout = open(os.devnull, 'w')
 
 
 if __name__ == '__main__':
