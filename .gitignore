@@ -2,4 +2,3 @@
 /.idea
 /cv_module/train/runs
 /datasets
-/backend/test.py

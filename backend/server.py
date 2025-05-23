@@ -70,9 +70,9 @@ def upload_result():
         'left_click': 4,
         'low': 5,
         'mouse': 6,
-        'pause': 7,
+        'activate': 7,
         'right_click': 8,
-        'start': 9
+        'start_or_pause': 9
     }
 
     session = SessionLocal()

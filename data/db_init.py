@@ -13,9 +13,9 @@ gesture_data = [
     {"gesture_name": "left_click", "operation_type": OperationTypeEnum.click, "operation_param": "left"},
     {"gesture_name": "low", "operation_type": OperationTypeEnum.zoom, "operation_param": "decrease"},
     {"gesture_name": "mouse", "operation_type": OperationTypeEnum.move, "operation_param": "move"},
-    {"gesture_name": "pause", "operation_type": OperationTypeEnum.click, "operation_param": "pause"},
+    {"gesture_name": "activate", "operation_type": OperationTypeEnum.click, "operation_param": "activate"},
     {"gesture_name": "right_click", "operation_type": OperationTypeEnum.click, "operation_param": "right"},
-    {"gesture_name": "start", "operation_type": OperationTypeEnum.click, "operation_param": "start"},
+    {"gesture_name": "start_or_pause", "operation_type": OperationTypeEnum.click, "operation_param": "start_or_pause"},
 ]
 
 

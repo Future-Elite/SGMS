@@ -249,7 +249,7 @@ class LoginWindow(QDialog):
                 if status != 200:
                     self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Flask 返回错误:" + str(resp))
                     return
-                glo.set_value('user_name', username)
+                glo.set_value('user', username)
                 self.accept()
             else:
                 self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码错误")

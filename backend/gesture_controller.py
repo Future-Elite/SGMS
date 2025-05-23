@@ -20,7 +20,7 @@ interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume_ctl = cast(interface, POINTER(IAudioEndpointVolume))
 
 # 用户自定义软件路径配置
-PPT_PATH = r"C:\Program Files\Microsoft Office\root\Office16\POWERPNT.EXE"
+PPT_PATH = r"C:\Users\29740\Desktop\需求分析和可行性分析.pptx"
 MUSIC_PATH = r"E:\网易云音乐\CloudMusic\cloudmusic.exe"
 
 
@@ -77,7 +77,7 @@ class GestureController:
         self.last_gesture = None
         self.media_control_lock = False
         self.interval_activated = False  # 间隔手势激活状态
-        self.interval_timeout = 2  # 间隔手势有效时间延长至2秒
+        self.interval_timeout = 10  # 间隔手势有效时间延长至2秒
         self.interval_activate_time = None  # 间隔激活时间戳
         self.actions = {
             0: self._action_wrapper(self.left_double_click),
@@ -115,19 +115,101 @@ class GestureController:
             return False
 
     def left_double_click(self):
-        pass
+        pyautogui.doubleClick()
+        print("左键双击")
 
     # def activate(self):
     #     pass
 
     def start_or_pause(self):
-        pass
+        """智能播放/暂停控制（系统级媒体控制+应用专属控制）"""
+        try:
+            # 第一优先级：系统级媒体控制（支持大部分播放器）
+            keyboard.press_and_release('play/pause')
+            print("发送全局播放/暂停指令")
+
+            # 第二优先级：检查特定应用状态
+            def check_specific_apps():
+                # PowerPoint放映控制
+                if ppt_app and ppt_app.SlideShowWindows.Count > 0:
+                    print("检测到PPT放映中，禁用媒体控制")
+                    return True
+
+                # 网易云音乐进程检测
+                if self._check_music_process():
+                    print("网易云音乐进程活跃")
+                    return False
+
+                return False
+
+
+            # 异常回退：发送备用空格键（适配网页播放器等）
+            time.sleep(0.3)
+            if not self._check_media_activity():
+                pyautogui.press('space')
+                print("尝试空格键回退")
+
+        except Exception as e:
+            print(f"播放控制异常: {e}")
+            # 终极回退方案
+            pyautogui.hotkey('ctrl', 'alt', 'p')  # 预留系统级热键映射
+
+    def _check_media_activity(self):
+        """通过音频会话检测媒体活动状态"""
+        try:
+            sessions = AudioUtilities.GetAllSessions()
+            for session in sessions:
+                if session.Process and session.Process.name() in ('cloudmusic.exe', 'vlc.exe', 'potplayermini64.exe'):
+                    volume = session.SimpleAudioVolume
+                    if volume.GetMute() == 0 and volume.GetMasterVolume() > 0:
+                        return True
+            return False
+        except Exception as e:
+            print(f"媒体状态检测异常: {e}")
+            return False
 
     def backward(self):
-        pass
+        try:
+            # PowerPoint控制（放映模式优先）
+            if ppt_app and ppt_app.SlideShowWindows.Count > 0:
+                ppt_app.SlideShowWindows(1).View.Previous()
+                print("PPT上一页（放映模式）")
+            elif ppt_app and ppt_app.ActivePresentation:
+                current_slide = ppt_app.ActivePresentation.SlideShowWindow.View.CurrentShowPosition
+                if current_slide > 1:
+                    ppt_app.ActivePresentation.SlideShowWindow.View.GotoSlide(current_slide - 1)
+                    print("PPT上一页（编辑模式）")
+        except Exception as e:
+            print(f"PPT控制异常: {e}")
+            # 系统级媒体控制
+            if self._check_music_process():
+                keyboard.press_and_release('previous track')
+                print("媒体上一曲")
+            else:
+                print("无活跃媒体进程")
 
     def forward(self):
-        pass
+        try:
+            # PowerPoint控制
+            if ppt_app and ppt_app.SlideShowWindows.Count > 0:
+                ppt_app.SlideShowWindows(1).View.Next()
+                print("PPT下一页（放映模式）")
+            elif ppt_app and ppt_app.ActivePresentation:
+                current_slide = ppt_app.ActivePresentation.SlideShowWindow.View.CurrentShowPosition
+                total_slides = ppt_app.ActivePresentation.Slides.Count
+                if current_slide < total_slides:
+                    ppt_app.ActivePresentation.SlideShowWindow.View.GotoSlide(current_slide + 1)
+                    print("PPT下一页（编辑模式）")
+        except Exception as e:
+            print(f"PPT控制异常: {e}")
+            # 系统级媒体控制
+            if self._check_music_process():
+                keyboard.press_and_release('next track')
+                print("媒体下一曲")
+            else:
+                # 备用方案：发送方向键（适配PDF阅读器等）
+                pyautogui.press('right')
+                print("发送方向右键")
 
     def right_click(self):
         keyboard.press_and_release('right')
@@ -149,6 +231,7 @@ class GestureController:
         volume_ctl.SetMasterVolumeLevelScalar(new_vol, None)
         print(f"音量已降至：{new_vol * 100}%")
 
+    # 修改后的mouse_control_loop方法
     def mouse_control_loop(self):
         if self.mouse_control_active:
             print("鼠标控制已在运行中")
@@ -165,7 +248,8 @@ class GestureController:
                                min_tracking_confidence=0.4)
 
         screen_w, screen_h = pyautogui.size()
-        cap = cv2.VideoCapture(0)
+        # 改为从Flask视频流获取帧
+        cap = cv2.VideoCapture('http://localhost:5000/stream')  # 修改点：使用Flask的视频流地址
         frame_margin = 30
         smooth_window = 3
         velocity_queue = deque(maxlen=5)
@@ -192,11 +276,17 @@ class GestureController:
         while cap.isOpened() and self.mouse_control_active:
             success, frame = cap.read()
             if not success:
+                print("无法从视频流获取帧，尝试重连...")
+                cap.release()
+                time.sleep(1)
+                cap = cv2.VideoCapture('http://localhost:5000/stream')
                 continue
-            frame = cv2.flip(frame, 1)
+
+            # 移除原有的flip操作（Flask端已处理）
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = hands.process(rgb_frame)
             h, w = frame.shape[:2]
+
             if results.multi_hand_landmarks:
                 hand = results.multi_hand_landmarks[0]
                 index_tip = hand.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
@@ -209,10 +299,8 @@ class GestureController:
                     mapped_y = screen_h * (y_ratio ** 1.3)
                     final_x, final_y = adaptive_smooth(mapped_x, mapped_y)
                     pyautogui.moveTo(int(screen_w - final_x), int(final_y), duration=0.001, _pause=False)
+                    # 可视化标记（可选）
                     cv2.circle(frame, (cx, cy), 8, (0, 0, 255), -1)
-            cv2.imshow('Precision Tracker', frame)
-            if cv2.waitKey(1) & 0xFF == 27:
-                break
 
         cap.release()
         cv2.destroyAllWindows()
@@ -226,7 +314,7 @@ class GestureController:
             if gesture == gesture_labels["activate"]:
                 self.interval_activated = True
                 self.interval_activate_time = time.time()
-                print("间隔手势已激活，2秒内等待下一个操作...")
+                print("间隔手势已激活，10秒内等待下一个操作...")
             elif self.interval_activated:
                 # 检查间隔激活是否超时
                 if time.time() - self.interval_activate_time > self.interval_timeout:
@@ -255,7 +343,7 @@ class GestureController:
         while True:
             current_gesture = get_gesture_from_flask()
             self.handle_gesture(current_gesture)
-            time.sleep(0.2)
+            # time.sleep(0.2)
 
 
 # ================== Flask通信模块 ==================

@@ -27,7 +27,7 @@ WIDTH_LEFT_BOX_STANDARD = 120
 WIDTH_LEFT_BOX_EXTENDED = 120
 WIDTH_SETTING_BAR = 250
 WIDTH_LOGO = 60
-KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
+KEYS_LEFT_BOX_MENU = ['src_cam', 'src_database']
 
 # 模型名称和线程类映射
 MODEL_THREAD_CLASSES = {
@@ -61,16 +61,20 @@ class BASEWINDOW:
 
     # 初始化左侧菜单栏
     def initSiderWidget(self):
+        global USER
         # --- 侧边栏 --- #
         self.ui.leftBox.setFixedWidth(WIDTH_LEFT_BOX_STANDARD)
 
         # 显示用户信息
-        self.ui.user_info.setStyleSheet(u"font: 700 12pt \"Segoe UI\";\n"
-                                        "color: rgba(0, 0, 0, 140);")
+        self.ui.user_info.setStyleSheet(u"""
+            font: 10pt "Cascadia Mono";
+            color: rgb(238, 237, 240);  
+            background-color: rgb(60, 60, 60); 
+            border: 1px solid rgb(100, 100, 100);
+            border-radius: 4px; 
+        """)
         self.ui.user_info.setReadOnly(True)
-        self.ui.user_info.append('User:{0}\nResponse:{1}'.format(glo.get_value('user_name'),
-                                                                 glo.get_value('resp'),
-                                                                 ))
+        USER = glo.get_value('user')
 
     # 加载模型
     def initModel(self, yoloname=None):
@@ -118,39 +122,6 @@ class BASEWINDOW:
                                   """)
             GLOBAL_WINDOW_STATE = True
 
-    # 选择照片/视频 并展示
-    def selectFile(self):
-        # 获取上次选择文件的路径
-        config_file = f'{self.current_workpath}/data/config/file.json'
-        config = json.load(open(config_file, 'r', encoding='utf-8'))
-        file_path = config['file_path']
-        if not os.path.exists(file_path):
-            file_path = os.getcwd()
-        file, _ = QFileDialog.getOpenFileName(
-            self,  # 父窗口对象
-            "Select your Image / Video",  # 标题
-            file_path,  # 默认打开路径为当前路径
-            "Image / Video type (*.jpg *.jpeg *.png *.bmp *.dib *.jpe *.jp2 *.mp4)"  # 选择类型过滤项，过滤内容在括号中
-        )
-        if file:
-            self.inputPath = file
-            glo.set_value('inputPath', self.inputPath)
-            # 如果是视频， 显示第一帧
-            if ".avi" in self.inputPath or ".mp4" in self.inputPath:
-                # 显示第一帧
-                self.cap = cv2.VideoCapture(self.inputPath)
-                ret, frame = self.cap.read()
-                if ret:
-                    self.showImg(frame, self.ui.main_leftbox, 'img')
-            # 如果是图片 正常显示
-            else:
-                self.showImg(self.inputPath, self.ui.main_rightbox, 'path')
-            self.showStatus('Loaded File：{}'.format(os.path.basename(self.inputPath)))
-            config['file_path'] = os.path.dirname(self.inputPath)
-            config_json = json.dumps(config, ensure_ascii=False, indent=2)
-            with open(config_file, 'w', encoding='utf-8') as f:
-                f.write(config_json)
-
     # 选择摄像头
     def selectWebcam(self):
         try:
@@ -163,29 +134,6 @@ class BASEWINDOW:
                 self.showStatus('No camera found')
         except Exception as e:
             self.showStatus('%s' % e)
-
-    # 选择文件夹
-    def selectFolder(self):
-        config_file = f'{self.current_workpath}/data/config/folder.json'
-        config = json.load(open(config_file, 'r', encoding='utf-8'))
-        folder_path = config['folder_path']
-        if not os.path.exists(folder_path):
-            folder_path = os.getcwd()
-        FolderPath = QFileDialog.getExistingDirectory(
-            self,
-            "Select your Folder",
-            folder_path  # 起始目录
-        )
-        if FolderPath:
-            FileFormat = [".mp4", ".mkv", ".avi", ".flv", ".jpg", ".png", ".jpeg", ".bmp", ".dib", ".jpe", ".jp2"]
-            Foldername = [(FolderPath + "/" + filename) for filename in os.listdir(FolderPath) for jpgname in FileFormat
-                          if jpgname in filename]
-            self.inputPath = Foldername
-            self.showStatus('Loaded Folder：{}'.format(os.path.basename(FolderPath)))
-            config['folder_path'] = FolderPath
-            config_json = json.dumps(config, ensure_ascii=False, indent=2)
-            with open(config_file, 'w', encoding='utf-8') as f:
-                f.write(config_json)
 
     # 显示Label图片
     def showImg(self, img, label, flag):
@@ -222,32 +170,6 @@ class BASEWINDOW:
         self.right_grip.setGeometry(self.width() - 10, 10, 10, self.height())
         self.top_grip.setGeometry(0, 0, self.width(), 10)
         self.bottom_grip.setGeometry(0, self.height() - 10, self.width(), 10)
-
-    # 导入模块
-    def importModel(self):
-        # 获取上次选择文件的路径
-        config_file = f'{self.current_workpath}/data/config/model.json'
-        config = json.load(open(config_file, 'r', encoding='utf-8'))
-        self.model_path = config['model_path']
-        if not os.path.exists(self.model_path):
-            self.model_path = os.getcwd()
-        file, _ = QFileDialog.getOpenFileName(
-            self,  # 父窗口对象
-            "Select your YOLO Model",  # 标题
-            self.model_path,  # 默认打开路径为当前路径
-            "Model File (*.pt)"  # 选择类型过滤项，过滤内容在括号中
-        )
-        if file:
-            fileptPath = os.path.join(self.pt_Path, os.path.basename(file))
-            if not os.path.exists(fileptPath):
-                shutil.copy(file, self.pt_Path)
-                self.showStatus('Loaded Model：{}'.format(os.path.basename(file)))
-                config['model_path'] = os.path.dirname(file)
-                config_json = json.dumps(config, ensure_ascii=False, indent=2)
-                with open(config_file, 'w', encoding='utf-8') as f:
-                    f.write(config_json)
-            else:
-                self.showStatus('Model already exists')
 
     # 查看当前模型
     def checkCurrentModel(self, mode=None):
@@ -306,7 +228,9 @@ class BASEWINDOW:
 
     # 在MessageBar显示消息
     def showStatus(self, msg):
-        self.ui.message_bar.setText(msg)
+        last_msg = self.ui.user_info.toPlainText().split('\n')[-1]
+        if msg != last_msg:
+            self.ui.user_info.append('SGMS_User:{0} > {1}'.format(USER, msg))
         if msg == 'Finish Detection':
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
@@ -315,32 +239,6 @@ class BASEWINDOW:
             self.ui.run_button.setChecked(False)
             self.ui.main_rightbox.clear()
 
-    # 导出检测结果 --- 过程代码
-    def saveResultProcess(self, outdir, current_model_name, folder):
-        yolo_thread = self.yolo_threads.get(current_model_name)
-        if folder:
-            try:
-                output_dir = os.path.dirname(yolo_thread.res_path)
-                if not os.path.exists(output_dir):
-                    self.showStatus('Please wait for the result to be generated')
-                    return
-                for filename in os.listdir(output_dir):
-                    source_path = os.path.join(output_dir, filename)
-                    destination_path = os.path.join(outdir, filename)
-                    if os.path.isfile(source_path):
-                        shutil.copy(source_path, destination_path)
-                self.showStatus('Saved Successfully in {}'.format(outdir))
-            except Exception as err:
-                self.showStatus(f"Error occurred while saving the result: {err}")
-        else:
-            try:
-                if not os.path.exists(yolo_thread.res_path):
-                    self.showStatus('Please wait for the result to be generated')
-                    return
-                shutil.copy(yolo_thread.res_path, outdir)
-                self.showStatus('Saved Successfully in {}'.format(outdir))
-            except Exception as err:
-                self.showStatus(f"Error occurred while saving the result: {err}")
 
     def loadAndSetParams(self, config_file, params):
         if not os.path.exists(config_file):
@@ -355,12 +253,10 @@ class BASEWINDOW:
     def loadConfig(self):
         # 1、随机初始化超参数，防止切换模型时，超参数不变
         params = {"iou": round(random.uniform(0, 1), 2),
-                  "conf": round(random.uniform(0, 1), 2),
-                  "delay": random.randint(10, 50),
-                  "line_thickness": random.randint(1, 5)}
+                  "conf": round(random.uniform(0, 1), 2)}
         self.updateParams(params)
         # 2、绑定配置项超参数
-        params = {"iou": 0.45, "conf": 0.25, "delay": 10, "line_thickness": 3}
+        params = {"iou": 0.45, "conf": 0.25}
         params = self.loadAndSetParams('data/config/setting.json', params)
         self.updateParams(params)
 
@@ -377,9 +273,6 @@ class BASEWINDOW:
         importlib.reload(yolo)
         importlib.reload(experimental)
 
-    def use_mp(self, use_mp):
-        for yolo_thread in self.yolo_threads.threads_pool.values():
-            yolo_thread.use_mp = use_mp
 
     def start_control(self):
         if not self.is_controling:
@@ -403,30 +296,14 @@ class BASEWINDOW:
             self.ui.iou_slider.setValue(int(x * 100))  # The box value changes, changing the slider
         elif flag == 'iou_slider':
             self.ui.iou_spinbox.setValue(x / 100)  # The slider value changes, changing the box
-            self.showStatus('IOU Threshold: %s' % str(x / 100))
             for yolo_thread in self.yolo_threads.threads_pool.values():
                 yolo_thread.iou_thres = x / 100
         elif flag == 'conf_spinbox':
             self.ui.conf_slider.setValue(int(x * 100))
         elif flag == 'conf_slider':
             self.ui.conf_spinbox.setValue(x / 100)
-            self.showStatus('Conf Threshold: %s' % str(x / 100))
             for yolo_thread in self.yolo_threads.threads_pool.values():
                 yolo_thread.conf_thres = x / 100
-        elif flag == 'speed_spinbox':
-            self.ui.speed_slider.setValue(x)
-        elif flag == 'speed_slider':
-            self.ui.speed_spinbox.setValue(x)
-            self.showStatus('Delay: %s ms' % str(x))
-            for yolo_thread in self.yolo_threads.threads_pool.values():
-                yolo_thread.speed_thres = x  # ms
-        elif flag == 'line_spinbox':
-            self.ui.line_slider.setValue(x)
-        elif flag == 'line_slider':
-            self.ui.line_spinbox.setValue(x)
-            self.showStatus('Line Width: %s' % str(x))
-            for yolo_thread in self.yolo_threads.threads_pool.values():
-                yolo_thread.line_thickness = x
 
     # 展示表格结果
     def showTableResult(self):

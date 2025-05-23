@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="leftbox">
+    <file>icon.png</file>
     <file>../images/newsize/statistics.png</file>
     <file>../images/newsize/table.png</file>
     <file>../images/newsize/single.png</file>
@@ -14,13 +15,6 @@
     <file>../images/newsize/menu.png</file>
     <file>../images/newsize/photo-camera.png</file>
     <file>../images/newsize/security-camera.png</file>
-  </qresource>
-  <qresource prefix="images/newsize/icon.png"/>
-  <qresource prefix="statusbarVS">
-    <file>../images/newsize/classesBarVS.png</file>
-    <file>../images/newsize/fpsBarVS.png</file>
-    <file>../images/newsize/modelBarVS.png</file>
-    <file>../images/newsize/targetBarVS.png</file>
   </qresource>
   <qresource prefix="statusbar">
     <file>../images/newsize/fpsBar.png</file>

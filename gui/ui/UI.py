@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(834, 486)
+        MainWindow.resize(758, 446)
         MainWindow.setStyleSheet(u"")
         self.mainWindow = QWidget(MainWindow)
         self.mainWindow.setObjectName(u"mainWindow")
@@ -65,9 +65,38 @@ class Ui_MainWindow(object):
         self.topBox.setSpacing(0)
         self.topBox.setObjectName(u"topBox")
         self.topBox.setContentsMargins(0, 8, 0, 8)
+        self.right_top = QFrame(self.topbox)
+        self.right_top.setObjectName(u"right_top")
+        self.right_top.setStyleSheet(u"QLabel#title{\n"
+"    background-color: none;\n"
+"	font-size: 22px;\n"
+"	font-family: \"Shojumaru\";\n"
+"	color: black;\n"
+"}\n"
+"Spacer{\n"
+"	border:none;\n"
+"}")
+        self.right_top.setFrameShape(QFrame.Shape.StyledPanel)
+        self.right_top.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout = QHBoxLayout(self.right_top)
+        self.horizontalLayout.setSpacing(0)
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.title = QLabel(self.right_top)
+        self.title.setObjectName(u"title")
+        self.title.setStyleSheet(u"")
+        self.title.setIndent(-1)
+
+        self.horizontalLayout.addWidget(self.title)
+
+
+        self.topBox.addWidget(self.right_top, 0, Qt.AlignmentFlag.AlignHCenter)
+
         self.left_top = QFrame(self.topbox)
         self.left_top.setObjectName(u"left_top")
+        self.left_top.setMinimumSize(QSize(80, 0))
         self.left_top.setMaximumSize(QSize(150, 16777215))
+        self.left_top.setAutoFillBackground(False)
         self.left_top.setStyleSheet(u"/* QFrame#left_top{\n"
 "	border: 1px solid red;\n"
 "} */\n"
@@ -107,18 +136,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setSpacing(0)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.closeButton = QPushButton(self.left_top)
-        self.closeButton.setObjectName(u"closeButton")
-        self.closeButton.setStyleSheet(u"QPushButton:hover{\n"
-"	background-color:rgb(139, 29, 31);\n"
-"	border-image: url(:/leftbox/images/newsize/close.png);\n"
-"}\n"
-"QPushButton:pressed {\n"
-"	background-color: rgb(232, 59, 35);\n"
-"}")
-
-        self.horizontalLayout_2.addWidget(self.closeButton)
-
         self.minimizeButton = QPushButton(self.left_top)
         self.minimizeButton.setObjectName(u"minimizeButton")
         self.minimizeButton.setStyleSheet(u"QPushButton:hover{\n"
@@ -145,38 +162,22 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.maximizeButton)
 
+        self.closeButton = QPushButton(self.left_top)
+        self.closeButton.setObjectName(u"closeButton")
+        self.closeButton.setStyleSheet(u"QPushButton:hover{\n"
+"	background-color:rgb(139, 29, 31);\n"
+"	border-image: url(:/leftbox/images/newsize/close.png);\n"
+"}\n"
+"QPushButton:pressed {\n"
+"	background-color: rgb(232, 59, 35);\n"
+"}")
+
+        self.horizontalLayout_2.addWidget(self.closeButton)
+
 
         self.topBox.addWidget(self.left_top)
 
-        self.right_top = QFrame(self.topbox)
-        self.right_top.setObjectName(u"right_top")
-        self.right_top.setStyleSheet(u"QLabel#title{\n"
-"    background-color: none;\n"
-"	font-size: 22px;\n"
-"	font-family: \"Shojumaru\";\n"
-"	color: black;\n"
-"}\n"
-"Spacer{\n"
-"	border:none;\n"
-"}")
-        self.right_top.setFrameShape(QFrame.Shape.StyledPanel)
-        self.right_top.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout = QHBoxLayout(self.right_top)
-        self.horizontalLayout.setSpacing(0)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.title = QLabel(self.right_top)
-        self.title.setObjectName(u"title")
-        self.title.setStyleSheet(u"")
-        self.title.setIndent(-1)
-
-        self.horizontalLayout.addWidget(self.title)
-
-
-        self.topBox.addWidget(self.right_top, 0, Qt.AlignmentFlag.AlignHCenter)
-
-        self.topBox.setStretch(0, 1)
-        self.topBox.setStretch(1, 9)
+        self.topBox.setStretch(0, 9)
 
         self.verticalLayout.addWidget(self.topbox)
 
@@ -209,8 +210,8 @@ class Ui_MainWindow(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.leftBox.sizePolicy().hasHeightForWidth())
         self.leftBox.setSizePolicy(sizePolicy1)
-        self.leftBox.setMinimumSize(QSize(120, 0))
-        self.leftBox.setMaximumSize(QSize(120, 16777215))
+        self.leftBox.setMinimumSize(QSize(100, 0))
+        self.leftBox.setMaximumSize(QSize(100, 16777215))
         self.leftBox.setStyleSheet(u"QFrame#leftBox  {\n"
 "    /*background-color: rgba(255, 255, 255, 80%);*/\n"
 "    border: 0px solid rgba(0, 0, 0, 40%);\n"
@@ -230,7 +231,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.leftbox_bottom.sizePolicy().hasHeightForWidth())
         self.leftbox_bottom.setSizePolicy(sizePolicy)
         self.leftbox_bottom.setMinimumSize(QSize(0, 0))
-        self.leftbox_bottom.setMaximumSize(QSize(16777215, 16777215))
+        self.leftbox_bottom.setMaximumSize(QSize(100, 16777215))
         self.leftbox_bottom.setStyleSheet(u"QPushButton#src_menu{\n"
 "	background-image: url(:/leftbox/images/newsize/menu.png);\n"
 "}\n"
@@ -306,29 +307,30 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setContentsMargins(0, 10, 0, 0)
         self.ControlBox = QFrame(self.leftbox_bottom)
         self.ControlBox.setObjectName(u"ControlBox")
-        self.ControlBox.setMinimumSize(QSize(120, 120))
-        self.ControlBox.setMaximumSize(QSize(120, 120))
+        self.ControlBox.setMinimumSize(QSize(100, 120))
+        self.ControlBox.setMaximumSize(QSize(100, 120))
         self.ControlBox.setFrameShape(QFrame.Shape.StyledPanel)
         self.ControlBox.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout_8 = QVBoxLayout(self.ControlBox)
         self.verticalLayout_8.setSpacing(0)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
         self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
-        self.src_webcam = QPushButton(self.ControlBox)
-        self.src_webcam.setObjectName(u"src_webcam")
-        self.src_webcam.setMinimumSize(QSize(120, 60))
-        self.src_webcam.setMaximumSize(QSize(120, 60))
-        self.src_webcam.setMouseTracking(True)
-        self.src_webcam.setTabletTracking(True)
+        self.src_cam = QPushButton(self.ControlBox)
+        self.src_cam.setObjectName(u"src_cam")
+        self.src_cam.setMinimumSize(QSize(0, 60))
+        self.src_cam.setMaximumSize(QSize(120, 16777215))
+        self.src_cam.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+        self.src_cam.setStyleSheet(u"image: url(:/leftbox/images/newsize/photo-camera.png);")
 
-        self.verticalLayout_8.addWidget(self.src_webcam)
+        self.verticalLayout_8.addWidget(self.src_cam)
 
         self.src_database = QPushButton(self.ControlBox)
         self.src_database.setObjectName(u"src_database")
-        self.src_database.setMinimumSize(QSize(0, 60))
-        self.src_database.setMaximumSize(QSize(120, 16777215))
+        self.src_database.setMinimumSize(QSize(100, 60))
+        self.src_database.setMaximumSize(QSize(100, 16777215))
         self.src_database.setMouseTracking(True)
         self.src_database.setTabletTracking(True)
+        self.src_database.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.src_database.setStyleSheet(u"image: url(:/leftbox/images/newsize/table.png);")
 
         self.verticalLayout_8.addWidget(self.src_database)
@@ -343,8 +345,8 @@ class Ui_MainWindow(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.leftbox_top.sizePolicy().hasHeightForWidth())
         self.leftbox_top.setSizePolicy(sizePolicy2)
-        self.leftbox_top.setMinimumSize(QSize(120, 180))
-        self.leftbox_top.setMaximumSize(QSize(120, 16777215))
+        self.leftbox_top.setMinimumSize(QSize(100, 180))
+        self.leftbox_top.setMaximumSize(QSize(100, 16777215))
         self.leftbox_top.setFrameShape(QFrame.Shape.StyledPanel)
         self.leftbox_top.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_8 = QHBoxLayout(self.leftbox_top)
@@ -352,8 +354,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.horizontalLayout_8.setContentsMargins(10, 10, 15, 3)
         self.verticalLayout_7 = QVBoxLayout()
+        self.verticalLayout_7.setSpacing(6)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.verticalLayout_7.setSizeConstraint(QLayout.SizeConstraint.SetMinAndMaxSize)
+        self.verticalLayout_7.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+        self.verticalLayout_7.setContentsMargins(-1, 0, -1, -1)
         self.run_button = QPushButton(self.leftbox_top)
         self.run_button.setObjectName(u"run_button")
         sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -362,7 +366,7 @@ class Ui_MainWindow(object):
         sizePolicy3.setHeightForWidth(self.run_button.sizePolicy().hasHeightForWidth())
         self.run_button.setSizePolicy(sizePolicy3)
         self.run_button.setMinimumSize(QSize(40, 40))
-        self.run_button.setMaximumSize(QSize(40, 40))
+        self.run_button.setMaximumSize(QSize(60, 60))
         self.run_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.run_button.setMouseTracking(True)
         self.run_button.setStyleSheet(u"QPushButton{\n"
@@ -386,7 +390,7 @@ class Ui_MainWindow(object):
         sizePolicy3.setHeightForWidth(self.stop_button.sizePolicy().hasHeightForWidth())
         self.stop_button.setSizePolicy(sizePolicy3)
         self.stop_button.setMinimumSize(QSize(40, 40))
-        self.stop_button.setMaximumSize(QSize(40, 40))
+        self.stop_button.setMaximumSize(QSize(60, 60))
         self.stop_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.stop_button.setStyleSheet(u"QPushButton{\n"
 "background-image: url(:/rightbox/images/newsize/stop.png);\n"
@@ -409,11 +413,10 @@ class Ui_MainWindow(object):
         sizePolicy3.setHeightForWidth(self.control_button.sizePolicy().hasHeightForWidth())
         self.control_button.setSizePolicy(sizePolicy3)
         self.control_button.setMinimumSize(QSize(40, 40))
-        self.control_button.setMaximumSize(QSize(40, 40))
+        self.control_button.setMaximumSize(QSize(60, 60))
         self.control_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.control_button.setMouseTracking(True)
-        self.control_button.setStyleSheet(u"\n"
-"background-image: url(:/leftbox/images/newsize/folder.png);")
+        self.control_button.setStyleSheet(u"border-image: url(../images/icon.png);")
 
         self.verticalLayout_7.addWidget(self.control_button, 0, Qt.AlignmentFlag.AlignHCenter)
 
@@ -474,29 +477,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_14 = QHBoxLayout(self.rightbox_top)
         self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
         self.horizontalLayout_14.setContentsMargins(0, 0, 0, 0)
-        self.frame_8 = QFrame(self.rightbox_top)
-        self.frame_8.setObjectName(u"frame_8")
-        self.frame_8.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_8.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_24 = QHBoxLayout(self.frame_8)
-        self.horizontalLayout_24.setSpacing(6)
-        self.horizontalLayout_24.setObjectName(u"horizontalLayout_24")
-        self.horizontalLayout_24.setContentsMargins(0, 9, 9, 9)
-        self.user_info = QTextEdit(self.frame_8)
-        self.user_info.setObjectName(u"user_info")
-        self.user_info.setMinimumSize(QSize(110, 110))
-        self.user_info.setMaximumSize(QSize(16777215, 100))
-        self.user_info.setMouseTracking(False)
-        self.user_info.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.user_info.setAcceptDrops(False)
-        self.user_info.setFrameShape(QFrame.Shape.WinPanel)
-        self.user_info.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
-
-        self.horizontalLayout_24.addWidget(self.user_info)
-
-
-        self.horizontalLayout_14.addWidget(self.frame_8)
-
 
         self.verticalLayout_5.addWidget(self.rightbox_top)
 
@@ -522,6 +502,19 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.rightbox_main)
 
+        self.user_info = QTextEdit(self.rightBox)
+        self.user_info.setObjectName(u"user_info")
+        self.user_info.setMinimumSize(QSize(110, 110))
+        self.user_info.setMaximumSize(QSize(16777215, 100))
+        self.user_info.setMouseTracking(False)
+        self.user_info.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.user_info.setAcceptDrops(False)
+        self.user_info.setFrameShape(QFrame.Shape.WinPanel)
+        self.user_info.setUndoRedoEnabled(False)
+        self.user_info.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+
+        self.verticalLayout_5.addWidget(self.user_info)
+
         self.rightbox_play = QFrame(self.rightBox)
         self.rightbox_play.setObjectName(u"rightbox_play")
         self.rightbox_play.setFrameShape(QFrame.Shape.StyledPanel)
@@ -532,27 +525,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.rightbox_play)
 
-        self.rightbox_bottom = QFrame(self.rightBox)
-        self.rightbox_bottom.setObjectName(u"rightbox_bottom")
-        self.rightbox_bottom.setStyleSheet(u"")
-        self.rightbox_bottom.setFrameShape(QFrame.Shape.StyledPanel)
-        self.rightbox_bottom.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_15 = QHBoxLayout(self.rightbox_bottom)
-        self.horizontalLayout_15.setSpacing(0)
-        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
-        self.horizontalLayout_15.setContentsMargins(9, 0, 0, 0)
-        self.message_bar = QLabel(self.rightbox_bottom)
-        self.message_bar.setObjectName(u"message_bar")
-        self.message_bar.setStyleSheet(u"font: 700 11pt \"Segoe UI\";\n"
-"color: rgba(0, 0, 0, 140);")
-
-        self.horizontalLayout_15.addWidget(self.message_bar)
-
-
-        self.verticalLayout_5.addWidget(self.rightbox_bottom)
-
         self.verticalLayout_5.setStretch(1, 86)
-        self.verticalLayout_5.setStretch(3, 2)
 
         self.mainBox.addWidget(self.rightBox)
 
@@ -965,17 +938,16 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.closeButton.setText("")
+        self.title.setText(QCoreApplication.translate("MainWindow", u"SGMS", None))
         self.minimizeButton.setText("")
         self.maximizeButton.setText("")
-        self.title.setText(QCoreApplication.translate("MainWindow", u"SGMS", None))
-        self.src_webcam.setText(QCoreApplication.translate("MainWindow", u"cam", None))
-        self.src_database.setText("")
+        self.closeButton.setText("")
+        self.src_cam.setText(QCoreApplication.translate("MainWindow", u"Cam", None))
+        self.src_database.setText(QCoreApplication.translate("MainWindow", u"Data", None))
         self.run_button.setText("")
         self.stop_button.setText("")
         self.control_button.setText("")
         self.main_rightbox.setText("")
-        self.message_bar.setText(QCoreApplication.translate("MainWindow", u"Message Bar ... ", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.ToggleBotton_6.setText(QCoreApplication.translate("MainWindow", u"Model", None))
         self.model_box.setProperty(u"placeholderText", "")

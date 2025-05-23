@@ -16,7 +16,7 @@ WIDTH_LEFT_BOX_STANDARD = 120
 WIDTH_LEFT_BOX_EXTENDED = 0
 WIDTH_LOGO = 60
 UI_FILE_PATH = "gui/ui/UI.ui"
-KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
+KEYS_LEFT_BOX_MENU = ['src_webcam']
 
 
 class SHOWWINDOW(QMainWindow, BASEWINDOW):
@@ -60,7 +60,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.model_box.currentTextChanged.connect(self.changeModel)
         # --- 自动加载/动态改变 PT 模型 --- #
 
-        self.ui.src_webcam.clicked.connect(self.selectWebcam)
+        self.ui.src_cam.clicked.connect(self.selectWebcam)
         self.ui.src_database.clicked.connect(self.showTableResult)
 
         # --- 状态栏 初始化 --- #
@@ -92,6 +92,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
 
         # Control Function (TEST)
         self.ui.control_button.setCheckable(True)
+        self.ui.control_button.setIcon(QIcon('gui/images/icon.png'))
         self.ui.control_button.clicked.connect(self.start_control)
 
     def initThreads(self):
@@ -101,40 +102,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         if model_name:
             self.yolo_threads.set(model_name, MODEL_THREAD_CLASSES[model_name]())
             self.initModel(yoloname=model_name)
-
-    # 导出结果
-    def saveResult(self):
-        if not any(thread.res_status for thread in self.yolo_threads.threads_pool.values()):
-            self.showStatus("Please select the Image/Video before starting detection...")
-            return
-        config_file = f'{self.current_workpath}/config/save.json'
-        with open(config_file, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-
-        save_path = config.get('save_path', os.getcwd())
-        is_folder = isinstance(self.inputPath, list)
-        if is_folder:
-            self.OutputDir = QFileDialog.getExistingDirectory(
-                self,  # 父窗口对象
-                "Save Results in new Folder",  # 标题
-                save_path,  # 起始目录
-            )
-            current_model_name = self.checkCurrentModel()
-            self.saveResultProcess(self.OutputDir, current_model_name, folder=True)
-        else:
-            self.OutputDir, _ = QFileDialog.getSaveFileName(
-                self,  # 父窗口对象
-                "Save Image/Video",  # 标题
-                save_path,  # 起始目录
-                "Image/Vide Type (*.jpg *.jpeg *.png *.bmp *.dib  *.jpe  *.jp2 *.mp4)"  # 选择类型过滤项，过滤内容在括号中
-            )
-            current_model_name = self.checkCurrentModel()
-            self.saveResultProcess(self.OutputDir, current_model_name, folder=False)
-
-        config['save_path'] = self.OutputDir
-        config_json = json.dumps(config, ensure_ascii=False, indent=2)
-        with open(config_file, 'w', encoding='utf-8') as f:
-            f.write(config_json)
 
     # 加载 pt 模型到 model_box
     def loadModels(self):
