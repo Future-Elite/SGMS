@@ -100,8 +100,9 @@ def upload_result():
         session.commit()
 
         return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
-    except Exception:
+    except Exception as e:
         session.rollback()
+        print(f"Server error: {e}")
         return jsonify({"error": "服务端异常"}), 500
     finally:
         session.close()
@@ -114,7 +115,7 @@ def get_result():
 
 @flask_app.route('/')
 def index():
-    return "Flask 实时视频流和检测上传服务已启动"
+    return "Flask服务已启动"
 
 
 if __name__ == '__main__':

@@ -23,9 +23,9 @@ glo.init()
 glo.set_value('yoloname', "yolov8 yolov11")
 
 GLOBAL_WINDOW_STATE = True
-WIDTH_LEFT_BOX_STANDARD = 240
-WIDTH_LEFT_BOX_EXTENDED = 240
-WIDTH_SETTING_BAR = 290
+WIDTH_LEFT_BOX_STANDARD = 120
+WIDTH_LEFT_BOX_EXTENDED = 120
+WIDTH_SETTING_BAR = 250
 WIDTH_LOGO = 60
 KEYS_LEFT_BOX_MENU = ['src_webcam', 'src_folder', 'src_camera']
 
@@ -78,11 +78,8 @@ class BASEWINDOW:
         if not thread:
             raise ValueError(f"No thread found for '{yoloname}'")
         thread.new_model_name = f'{self.current_workpath}/ptfiles/' + self.ui.model_box.currentText()
-        thread.progress_value = self.ui.progress_bar.maximum()
         thread.send_output.connect(lambda x: self.showImg(x, self.ui.main_rightbox, 'img'))
         thread.send_msg.connect(lambda x: self.showStatus(x))
-        thread.send_progress.connect(lambda x: self.ui.progress_bar.setValue(x))
-        thread.send_fps.connect(lambda x: self.ui.fps_label.setText(str(x)))
 
     # 阴影效果
     def shadowStyle(self, widget, Color, top_bottom=None):
@@ -313,13 +310,10 @@ class BASEWINDOW:
         if msg == 'Finish Detection':
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
-            self.ui.progress_bar.setValue(0)
         elif msg == 'Stop Detection':
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
-            self.ui.progress_bar.setValue(0)
             self.ui.main_rightbox.clear()
-            self.ui.fps_label.setText('--')
 
     # 导出检测结果 --- 过程代码
     def saveResultProcess(self, outdir, current_model_name, folder):
@@ -376,10 +370,6 @@ class BASEWINDOW:
         self.ui.iou_slider.setValue(int(params['iou'] * 100))
         self.ui.conf_spinbox.setValue(params['conf'])
         self.ui.conf_slider.setValue(int(params['conf'] * 100))
-        self.ui.speed_spinbox.setValue(params['delay'])
-        self.ui.speed_slider.setValue(params['delay'])
-        self.ui.line_spinbox.setValue(params['line_thickness'])
-        self.ui.line_slider.setValue(params['line_thickness'])
 
     # 重载模型
     def reloadModel(self):
@@ -395,8 +385,8 @@ class BASEWINDOW:
         if not self.is_controling:
             self.controller = subprocess.Popen(
                 [sys.executable, 'backend/gesture_controller.py'],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                # stdout=subprocess.PIPE,
+                # stderr=subprocess.PIPE
             )
             self.is_controling = True
             self.showStatus('Gesture Controller Started')

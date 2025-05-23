@@ -12,7 +12,7 @@ from gui.ui.UI import Ui_MainWindow
 from frontend.utils import glo
 
 GLOBAL_WINDOW_STATE = True
-WIDTH_LEFT_BOX_STANDARD = 240
+WIDTH_LEFT_BOX_STANDARD = 120
 WIDTH_LEFT_BOX_EXTENDED = 0
 WIDTH_LOGO = 60
 UI_FILE_PATH = "gui/ui/UI.ui"
@@ -60,31 +60,12 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.model_box.currentTextChanged.connect(self.changeModel)
         # --- 自动加载/动态改变 PT 模型 --- #
 
-        # --- 导入 图片/视频、调用摄像头、导入文件夹（批量处理）、调用网络摄像头、结果统计图片、结果统计表格 --- #
-        self.ui.src_img.clicked.connect(self.selectFile)
         self.ui.src_webcam.clicked.connect(self.selectWebcam)
-        self.ui.src_folder.clicked.connect(self.selectFolder)
-        self.ui.src_table.clicked.connect(self.showTableResult)
-        # --- 导入 图片/视频、调用摄像头、导入文件夹（批量处理）、调用网络摄像头 --- #
-
-        # --- 导入模型、 导出结果 --- #
-        self.ui.save_button.clicked.connect(self.saveResult)
-        self.ui.save_button.setEnabled(True)
-        # --- 导入模型、 导出结果 --- #
-
-        # --- 视频、图片 预览 --- #
-        self.ui.main_rightbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
-        # --- 视频、图片 预览 --- #
+        self.ui.src_database.clicked.connect(self.showTableResult)
 
         # --- 状态栏 初始化 --- #
         self.shadowStyle(self.ui.mainBody, QColor(0, 0, 0, 38), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.Fps_QF, QColor(170, 128, 213), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.fpsLabel, QColor(170, 128, 213), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.Model_QF, QColor(162, 129, 247), top_bottom=['top', 'bottom'])
-        self.shadowStyle(self.ui.modelLabel, QColor(162, 129, 247), top_bottom=['top', 'bottom'])
         self.model_name = self.ui.model_box.currentText()  # 获取默认 model
-        self.ui.fps_label.setText('--')
-        self.ui.Model_label.setText(str(self.model_name).replace(".pt", ""))
         # --- 状态栏 初始化 --- #
 
         self.initThreads()
@@ -94,10 +75,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.ui.iou_slider.valueChanged.connect(lambda x: self.changeValue(x, 'iou_slider'))
         self.ui.conf_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'conf_spinbox'))
         self.ui.conf_slider.valueChanged.connect(lambda x: self.changeValue(x, 'conf_slider'))
-        self.ui.speed_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'speed_spinbox'))
-        self.ui.speed_slider.valueChanged.connect(lambda x: self.changeValue(x, 'speed_slider'))
-        self.ui.line_spinbox.valueChanged.connect(lambda x: self.changeValue(x, 'line_spinbox'))
-        self.ui.line_slider.valueChanged.connect(lambda x: self.changeValue(x, 'line_slider'))
         # --- 超参数调整 --- #
 
         # --- 开始 / 停止 --- #
@@ -113,11 +90,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.showStatus("Welcome to SGMS")
         # --- MessageBar Init --- #
 
-        # mediapipe
-        self.ui.mp_button.setCheckable(True)
-        self.ui.mp_button.clicked.connect(self.use_mp)
-
-        # Control Function
+        # Control Function (TEST)
         self.ui.control_button.setCheckable(True)
         self.ui.control_button.clicked.connect(self.start_control)
 
@@ -200,7 +173,6 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
     # Model 变化
     def changeModel(self):
         self.model_name = self.ui.model_box.currentText()
-        self.ui.Model_label.setText(str(self.model_name).replace(".pt", ""))  # 修改状态栏显示
         model_name = self.checkCurrentModel()
         if not model_name:
             return
@@ -256,6 +228,4 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.is_playing = False
         self.ui.run_button.setChecked(False)
         self.ui.run_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/newsize/play.png"))
-        self.ui.progress_bar.setValue(0)
         self.ui.main_rightbox.clear()
-        self.ui.fps_label.setText('--')

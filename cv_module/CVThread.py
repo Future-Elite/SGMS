@@ -36,13 +36,19 @@ class LatestResultUploader:
             self.latest_result = result
 
     def _upload_loop(self):
+        last_upload_time = 0
         while True:
             if self.latest_result:
+                now = time.time()
+                if now - last_upload_time < 1:  # 最小上传间隔 1 秒
+                    time.sleep(0.1)
+                    continue
                 with self.lock:
                     result_to_send = self.latest_result
-                    self.latest_result = None  # 清空
+                    self.latest_result = None
                 try:
-                    requests.post(self.url, json=result_to_send, timeout=1)  # 设置超时为1秒
+                    requests.post(self.url, json=result_to_send, timeout=3)
+                    last_upload_time = now
                 except Exception as e:
                     print("Update Error:", e)
             time.sleep(0.1)
@@ -237,7 +243,6 @@ class YOLOThread(QThread):
                     preds = self.inference(im)
                 with self.dt[2]:
                     self.results = self.postprocess(preds, im, im0s)
-
 
                 n = len(im0s)
                 for i in range(n):

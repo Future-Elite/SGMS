@@ -1,3 +1,9 @@
+import threading
+from collections import deque
+import mediapipe as mp
+import cv2
+import numpy as np
+import pyautogui
 import requests
 import time
 import subprocess
@@ -58,26 +64,32 @@ gesture_labels = {
         'left_click': 4,
         'low': 5,
         'mouse': 6,
-        'pause': 7,
+        'activate': 7,
         'right_click': 8,
-        'start': 9
+        'start_or_pause': 9
     }
 
 
 # ================== 手势控制器类 ==================
 class GestureController:
     def __init__(self):
+        self.mouse_control_active = False
         self.last_gesture = None
         self.media_control_lock = False
         self.interval_activated = False  # 间隔手势激活状态
         self.interval_timeout = 2  # 间隔手势有效时间延长至2秒
         self.interval_activate_time = None  # 间隔激活时间戳
         self.actions = {
-            0: self._action_wrapper(self.play_music),
-            2: self._action_wrapper(self.handle_forward),
-            3: self._action_wrapper(self.handle_backward),
-            4: self._action_wrapper(self.volume_up),
-            5: self._action_wrapper(self.volume_down)
+            0: self._action_wrapper(self.left_double_click),
+            1: self._action_wrapper(self.backward),
+            2: self._action_wrapper(self.forward),
+            3: self._action_wrapper(self.high),
+            4: self._action_wrapper(self.left_click),
+            5: self._action_wrapper(self.low),
+            6: self._action_wrapper(self.mouse_control_loop),
+            # 7: self._action_wrapper(self.activate),
+            8: self._action_wrapper(self.right_click),
+            9: self._action_wrapper(self.start_or_pause)
         }
 
     def _action_wrapper(self, func):
@@ -102,86 +114,141 @@ class GestureController:
             print(f"检查音乐进程失败: {e}")
             return False
 
-    def play_music(self):
-        try:
-            if not self._check_music_process():
-                subprocess.Popen(MUSIC_PATH)
-                time.sleep(3)
-            keyboard.press_and_release('play/pause media')
-            print("音乐播放已启动")
-        except Exception as e:
-            print(f"播放失败：{str(e)}")
+    def left_double_click(self):
+        pass
 
-    def handle_forward(self):
-        if self._check_music_process():
-            self.next_track()
-        else:
-            self.ppt_next_slide()
+    # def activate(self):
+    #     pass
 
-    def handle_backward(self):
-        if self._check_music_process():
-            self.previous_track()
-        else:
-            self.ppt_prev_slide()
+    def start_or_pause(self):
+        pass
 
-    def next_track(self):
-        try:
-            keyboard.press_and_release('next track')
-            print("切换到下一曲目")
-        except Exception as e:
-            print(f"切歌失败：{str(e)}")
+    def backward(self):
+        pass
 
-    def previous_track(self):
-        try:
-            keyboard.press_and_release('previous track')
-            print("切换到上一曲目")
-        except Exception as e:
-            print(f"切歌失败：{str(e)}")
+    def forward(self):
+        pass
 
-    def ppt_next_slide(self):
-        if not ppt_app:
-            print("警告: PowerPoint未正确初始化")
-            return
-        try:
-            if ppt_app.Presentations.Count > 0:
-                current_slide = ppt_app.ActiveWindow.View.Slide.SlideIndex
-                if current_slide < ppt_app.ActivePresentation.Slides.Count:
-                    ppt_app.ActiveWindow.View.GotoSlide(current_slide + 1)
-                    print(f"切换到第 {current_slide + 1} 页")
-        except Exception as e:
-            print(f"PPT翻页失败：{str(e)}")
+    def right_click(self):
+        keyboard.press_and_release('right')
+        print("模拟右键点击")
 
-    def ppt_prev_slide(self):
-        if not ppt_app:
-            print("警告: PowerPoint未正确初始化")
-            return
-        try:
-            if ppt_app.Presentations.Count > 0:
-                current_slide = ppt_app.ActiveWindow.View.Slide.SlideIndex
-                if current_slide > 1:
-                    ppt_app.ActiveWindow.View.GotoSlide(current_slide - 1)
-                    print(f"切换到第 {current_slide - 1} 页")
-        except Exception as e:
-            print(f"PPT翻页失败：{str(e)}")
+    def left_click(self):
+        keyboard.press_and_release('left')
+        print("左键点击")
 
-    def volume_up(self):
+    def high(self):
         current_vol = volume_ctl.GetMasterVolumeLevelScalar()
         new_vol = min(round(current_vol + 0.1, 1), 1.0)
         volume_ctl.SetMasterVolumeLevelScalar(new_vol, None)
         print(f"音量已升至：{new_vol * 100}%")
 
-    def volume_down(self):
+    def low(self):
         current_vol = volume_ctl.GetMasterVolumeLevelScalar()
         new_vol = max(round(current_vol - 0.1, 1), 0.0)
         volume_ctl.SetMasterVolumeLevelScalar(new_vol, None)
         print(f"音量已降至：{new_vol * 100}%")
 
+    def mouse_control_loop(self):
+        if self.mouse_control_active:
+            print("鼠标控制已在运行中")
+            return
+
+        self.mouse_control_active = True
+        print("启动鼠标控制模式...")
+
+        mp_hands = mp.solutions.hands
+        hands = mp_hands.Hands(static_image_mode=True,
+                               max_num_hands=1,
+                               model_complexity=1,
+                               min_detection_confidence=0.5,
+                               min_tracking_confidence=0.4)
+
+        screen_w, screen_h = pyautogui.size()
+        cap = cv2.VideoCapture(0)
+        frame_margin = 30
+        smooth_window = 3
+        velocity_queue = deque(maxlen=5)
+        coord_history = deque(maxlen=smooth_window)
+
+        def adaptive_smooth(new_x, new_y):
+            if coord_history:
+                prev_x, prev_y = coord_history[-1]
+                velocity = np.hypot(new_x - prev_x, new_y - prev_y)
+                velocity_queue.append(velocity)
+            else:
+                velocity = 0
+            avg_velocity = np.mean(velocity_queue) if velocity_queue else 0
+            alpha = max(0.3, 1 - avg_velocity / 200)
+            if coord_history:
+                last_x, last_y = coord_history[-1]
+                smoothed_x = new_x * (1 - alpha) + last_x * alpha
+                smoothed_y = new_y * (1 - alpha) + last_y * alpha
+            else:
+                smoothed_x, smoothed_y = new_x, new_y
+            coord_history.append((smoothed_x, smoothed_y))
+            return np.mean([x for x, y in coord_history]), np.mean([y for x, y in coord_history])
+
+        while cap.isOpened() and self.mouse_control_active:
+            success, frame = cap.read()
+            if not success:
+                continue
+            frame = cv2.flip(frame, 1)
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = hands.process(rgb_frame)
+            h, w = frame.shape[:2]
+            if results.multi_hand_landmarks:
+                hand = results.multi_hand_landmarks[0]
+                index_tip = hand.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
+                cx = int(index_tip.x * w)
+                cy = int(index_tip.y * h)
+                if frame_margin < cx < w - frame_margin and frame_margin < cy < h - frame_margin:
+                    x_ratio = (cx - frame_margin) / (w - 2 * frame_margin)
+                    y_ratio = (cy - frame_margin) / (h - 2 * frame_margin)
+                    mapped_x = screen_w * (x_ratio ** 1.3)
+                    mapped_y = screen_h * (y_ratio ** 1.3)
+                    final_x, final_y = adaptive_smooth(mapped_x, mapped_y)
+                    pyautogui.moveTo(int(screen_w - final_x), int(final_y), duration=0.001, _pause=False)
+                    cv2.circle(frame, (cx, cy), 8, (0, 0, 255), -1)
+            cv2.imshow('Precision Tracker', frame)
+            if cv2.waitKey(1) & 0xFF == 27:
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
+        self.mouse_control_active = False
+        print("鼠标控制模式结束")
+
     def handle_gesture(self, gesture):
         if gesture is not None:
-            if True:
+
+
+            if gesture == gesture_labels["activate"]:
                 self.interval_activated = True
                 self.interval_activate_time = time.time()
                 print("间隔手势已激活，2秒内等待下一个操作...")
+            elif self.interval_activated:
+                # 检查间隔激活是否超时
+                if time.time() - self.interval_activate_time > self.interval_timeout:
+                    print("操作超时，间隔手势已重置")
+                    self.interval_activated = False
+                    self.interval_activate_time = None
+                    return
+
+                self.current_gesture = gesture
+                if gesture in self.actions:
+                    if gesture == 'mouse':
+                        threading.Thread(target=self.mouse_control_loop).start()
+                    else:
+                        self.actions[gesture]()
+                    self.interval_activated = False
+                    self.interval_activate_time = None
+            else:
+                print("无效手势")
+                self.last_gesture = None
+        else:
+            print("请先使用间隔手势激活操作")
+
 
 
     def start_listening(self):

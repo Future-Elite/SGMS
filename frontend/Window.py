@@ -100,8 +100,6 @@ class MainWindow(SHOWWINDOW):
             config = dict()
             config['iou'] = self.ui.iou_spinbox.value()
             config['conf'] = self.ui.conf_spinbox.value()
-            config['delay'] = self.ui.speed_spinbox.value()
-            config['line_thickness'] = self.ui.line_spinbox.value()
             config_json = json.dumps(config, ensure_ascii=False, indent=2)
             with open(config_file, 'w', encoding='utf-8') as f:
                 f.write(config_json)
