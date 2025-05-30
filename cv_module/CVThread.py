@@ -1,6 +1,8 @@
+import json
 import os.path
 import threading
 import time
+from queue import Full, Queue, Empty
 
 import cv2
 import numpy as np
@@ -8,7 +10,6 @@ import requests
 import torch
 from PySide6.QtCore import QThread, Signal
 from pathlib import Path
-
 from ultralytics.data import load_inference_source
 from ultralytics.data.augment import classify_transforms, LetterBox
 from ultralytics.data.utils import IMG_FORMATS, VID_FORMATS
@@ -24,37 +25,52 @@ import mediapipe as mp
 
 
 class LatestResultUploader:
-    def __init__(self, url):
+    def __init__(self, url, max_queue_size=10, min_interval=1):
         self.url = url
-        self.latest_result = None
-        self.lock = threading.Lock()
-        self.uploading = False
+        self.result_queue = Queue(maxsize=max_queue_size)
+        self.min_interval = min_interval
+        self.last_upload_time = 0
         threading.Thread(target=self._upload_loop, daemon=True).start()
 
     def submit(self, result):
-        with self.lock:
-            self.latest_result = result
+        try:
+            # 如果队列满了，丢弃最旧的，保持最新结果在队尾
+            if self.result_queue.full():
+                try:
+                    self.result_queue.get_nowait()
+                except Empty:
+                    pass
+            self.result_queue.put_nowait(result)
+        except Full:
+            print("Queue is full. Dropping result.")
 
     def _upload_loop(self):
-        last_upload_time = 0
         while True:
-            if self.latest_result:
-                now = time.time()
-                if now - last_upload_time < 1:  # 最小上传间隔 1 秒
-                    time.sleep(0.1)
-                    continue
-                with self.lock:
-                    result_to_send = self.latest_result
-                    self.latest_result = None
+            try:
+                # 阻塞等待一个待上传结果
+                result = self.result_queue.get(timeout=1)
+            except Empty:
+                continue
+
+            # 计算距离上次上传是否超过间隔，不够则等待
+            now = time.time()
+            interval = now - self.last_upload_time
+            if interval < self.min_interval:
+                time.sleep(self.min_interval - interval)
+
+            # 上传结果
+            if result:
                 try:
-                    requests.post(self.url, json=result_to_send, timeout=3)
-                    last_upload_time = now
+                    response = requests.post(self.url, json=result, timeout=3)
+                    if response.status_code == 200:
+                        self.last_upload_time = time.time()
+                    else:
+                        print(f"Server error: {response.status_code} | {result}")
                 except Exception as e:
-                    print("Update Error:", e)
-            time.sleep(0.1)
+                    print(f"Upload failed: {e}")
 
-
-uploader = LatestResultUploader('http://localhost:5000/result')
+                # 标记任务完成，队列get解锁
+                self.result_queue.task_done()
 
 
 class YOLOThread(QThread):
@@ -67,6 +83,7 @@ class YOLOThread(QThread):
 
     def __init__(self):
         super(YOLOThread, self).__init__()
+        self.uploader = LatestResultUploader('http://localhost:5000/result')
         self.save_path = None
         self.webcam = None
         self.is_file = None
@@ -92,12 +109,12 @@ class YOLOThread(QThread):
 
         # mediapipe 参数设置
         self.use_mp = False  # 是否使用mediapipe显示骨骼和手部
-        self.mp_pose = None  # mediapipe pose
-        self.mp_pose_results = None  # mediapipe pose results
+        self.mp_pose = None
+        self.mp_pose_results = None
 
         # YOLO 参数设置
         self.model = None
-        self.data = 'ultralytics/cfg/datasets/coco.yaml'  # data_dict
+        self.data = 'ultralytics/cfg/datasets/coco.yaml'
         self.imgsz = 640
         self.device = ''
         self.dataset = None
@@ -294,7 +311,13 @@ class YOLOThread(QThread):
                     else:
                         self.send_output.emit(self.ori_img[0])
 
-                    uploader.submit(self.labels_dict)  # 提交最新结果
+                    self.uploader.submit(self.labels_dict)  # 提交最新结果
+                    try:
+                        with open('data/config/tmp.json', "w") as f:
+                            json.dump(self.labels_dict, f)
+                        os.replace('data/config/tmp.json', 'data/config/res.json')
+                    except Exception as e:
+                        print("写入失败:", e)
 
                     self.send_class_num.emit(class_nums)
                     self.send_target_num.emit(target_nums)
@@ -343,12 +366,7 @@ class YOLOThread(QThread):
 
         # 加入mediapipe
         self.mp_pose = mp.solutions.hands
-        mode = False
-        maxHands = 1
-        complexity = 1
-        detectionCon = 0.5
-        trackCon = 0.5
-        self.hands = self.mp_pose.Hands(mode, maxHands, complexity, detectionCon, trackCon)
+        self.hands = self.mp_pose.Hands(True, 1, 1, 0.5, 0.5)
 
     def setup_source(self, source):
         """Sets up source and inference mode."""

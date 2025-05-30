@@ -1,19 +1,68 @@
-from flask import Flask, request, jsonify, Response
-import jwt
-from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
-import cv2
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
+import atexit
 
+from flask import Flask, request, jsonify, Response
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
+from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
+import jwt
+import threading
+import cv2
+
+# 创建 Flask 应用
 flask_app = Flask(__name__)
 SECRET_KEY = 'SGMS_Secret_Key'
-gesture_name = None
+
 # 创建数据库引擎和会话
 engine = create_engine('sqlite:///data/database.db', echo=False)
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = scoped_session(sessionmaker(bind=engine))
+gesture_name = None
+gesture_labels = {
+    'Left_Double_Click': 0,
+    'backward': 1,
+    'forward': 2,
+    'high': 3,
+    'left_click': 4,
+    'low': 5,
+    'mouse': 6,
+    'activate': 7,
+    'right_click': 8,
+    'start_or_pause': 9
+}
 
 camera = cv2.VideoCapture(0)
+
+
+@atexit.register
+def cleanup_camera():
+    if camera.isOpened():
+        camera.release()
+
+
+def load_gesture_map_dict():
+    session = SessionLocal()
+    try:
+        gestures = session.query(GestureMap).all()
+        return {g.gesture_name: {"id": gesture_labels[g.gesture_name],
+                                 "operation_type": g.operation_type.value} for g in gestures}
+    finally:
+        session.close()
+
+
+gesture_map_dict = load_gesture_map_dict()
+
+
+# 后台异步写日志
+def async_commit(log_entry):
+    s = SessionLocal()
+    try:
+        s.add(log_entry)
+        s.commit()
+    except Exception as e:
+        print("DB Commit Error:", e)
+        s.rollback()
+    finally:
+        s.close()
 
 
 # Token 验证接口
@@ -38,17 +87,13 @@ def auth():
 # 视频流接口
 def generate_frames():
     while True:
-        # 读取视频帧
         success, frame = camera.read()
         if not success:
             break
-        else:
-            # 编码为 JPEG
-            _, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            # 生成多部分响应
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+        _, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
 
 @flask_app.route('/stream')
@@ -56,50 +101,37 @@ def stream():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-# 上传检测结果接口（JSON 方式）
+# 上传检测结果接口（JSON）
 @flask_app.route('/result', methods=['POST'])
 def upload_result():
     global gesture_name
-    data = request.get_json()
-
-    gesture_labels = {
-        'Left_Double_Click': 0,
-        'backward': 1,
-        'forward': 2,
-        'high': 3,
-        'left_click': 4,
-        'low': 5,
-        'mouse': 6,
-        'activate': 7,
-        'right_click': 8,
-        'start_or_pause': 9
-    }
-
     session = SessionLocal()
     try:
-        gesture_name = list(data.keys())[0] if data else None
-        gesture_name = gesture_name.strip() if gesture_name else None
+        data = request.get_json()
+        gesture_name = list(data.keys())[0].strip() if data else None
 
         if not gesture_name:
             return jsonify({"error": "未知手势"}), 400
 
-        # 查找 gesture_id 和操作类型
-        gesture = session.query(GestureMap).filter_by(gesture_name=gesture_name).first()
-        if not gesture:
+        # 查找手势映射
+        gesture_info = gesture_map_dict[gesture_name]
+
+        if not gesture_name or gesture_name not in gesture_map_dict:
             return jsonify({"error": "手势未注册"}), 404
 
-        # 写入 operation_log
         log = OperationLog(
-            gesture_id=gesture_labels[gesture_name],
-            operation_type=gesture.operation_type,
+            gesture_id=gesture_info['id'],
+            operation_type=gesture_info['operation_type'],
             device_type=DeviceTypeEnum.tv,
             result=ResultEnum.success,
             detail=f"检测到手势：{gesture_name}"
         )
-        session.add(log)
-        session.commit()
+
+        # 异步写入日志
+        threading.Thread(target=async_commit, args=(log,), daemon=True).start()
 
         return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
+
     except Exception as e:
         session.rollback()
         print(f"Server error: {e}")
@@ -119,4 +151,4 @@ def index():
 
 
 if __name__ == '__main__':
-    flask_app.run(host='0.0.0.0', port=5000)
+    flask_app.run(host='0.0.0.0', port=5000, debug=False)

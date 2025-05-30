@@ -1,10 +1,8 @@
-import json
 import os
 
-from PySide6 import QtCore
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QIcon
-from PySide6.QtWidgets import QFileDialog, QMainWindow
+from PySide6.QtWidgets import QMainWindow
 
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
 from frontend.utils.ThreadPool import ThreadPool
@@ -191,6 +189,10 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
 
     # 停止识别
     def stopDetect(self):
+        self.controller.terminate()
+        self.controller.wait()
+        self.is_controling = False
+        self.showStatus('Gesture Controller Stopped')
         self.quitRunningModel(stop_status=True)
         self.is_playing = False
         self.ui.run_button.setChecked(False)

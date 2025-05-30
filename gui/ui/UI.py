@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(758, 446)
+        MainWindow.resize(768, 458)
         MainWindow.setStyleSheet(u"")
         self.mainWindow = QWidget(MainWindow)
         self.mainWindow.setObjectName(u"mainWindow")

@@ -1,10 +1,11 @@
+import json
+import os
 import threading
 from collections import deque
 import mediapipe as mp
 import cv2
 import numpy as np
 import pyautogui
-import requests
 import time
 import subprocess
 import win32com.client
@@ -73,6 +74,7 @@ gesture_labels = {
 # ================== 手势控制器类 ==================
 class GestureController:
     def __init__(self):
+        self.current_gesture = None
         self.mouse_control_active = False
         self.last_gesture = None
         self.media_control_lock = False
@@ -87,7 +89,7 @@ class GestureController:
             4: self._action_wrapper(self.left_click),
             5: self._action_wrapper(self.low),
             6: self._action_wrapper(self.mouse_control_loop),
-            # 7: self._action_wrapper(self.activate),
+            7: self._action_wrapper(self.activate),
             8: self._action_wrapper(self.right_click),
             9: self._action_wrapper(self.start_or_pause)
         }
@@ -118,8 +120,8 @@ class GestureController:
         pyautogui.doubleClick()
         print("左键双击")
 
-    # def activate(self):
-    #     pass
+    def activate(self):
+        self.mouse_control_active = False
 
     def start_or_pause(self):
         """智能播放/暂停控制（系统级媒体控制+应用专属控制）"""
@@ -212,11 +214,11 @@ class GestureController:
                 print("发送方向右键")
 
     def right_click(self):
-        keyboard.press_and_release('right')
+        pyautogui.rightClick()
         print("模拟右键点击")
 
     def left_click(self):
-        keyboard.press_and_release('left')
+        pyautogui.click()
         print("左键点击")
 
     def high(self):
@@ -242,14 +244,13 @@ class GestureController:
 
         mp_hands = mp.solutions.hands
         hands = mp_hands.Hands(static_image_mode=True,
-                               max_num_hands=1,
+                               max_num_hands=2,  # 修改：最多检测2只手
                                model_complexity=1,
                                min_detection_confidence=0.5,
                                min_tracking_confidence=0.4)
 
         screen_w, screen_h = pyautogui.size()
-        # 改为从Flask视频流获取帧
-        cap = cv2.VideoCapture('http://localhost:5000/stream')  # 修改点：使用Flask的视频流地址
+        cap = cv2.VideoCapture('http://localhost:5000/stream')
         frame_margin = 30
         smooth_window = 3
         velocity_queue = deque(maxlen=5)
@@ -282,12 +283,19 @@ class GestureController:
                 cap = cv2.VideoCapture('http://localhost:5000/stream')
                 continue
 
-            # 移除原有的flip操作（Flask端已处理）
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = hands.process(rgb_frame)
             h, w = frame.shape[:2]
 
+            # 检测到手部
             if results.multi_hand_landmarks:
+                # 修改点：检测到两只手时退出
+                if len(results.multi_hand_landmarks) >= 2:
+                    print("检测到两只手，退出鼠标控制模式")
+                    self.mouse_control_active = False
+                    break  # 立即退出循环
+
+                # 只有一只手时继续控制
                 hand = results.multi_hand_landmarks[0]
                 index_tip = hand.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
                 cx = int(index_tip.x * w)
@@ -309,8 +317,6 @@ class GestureController:
 
     def handle_gesture(self, gesture):
         if gesture is not None:
-
-
             if gesture == gesture_labels["activate"]:
                 self.interval_activated = True
                 self.interval_activate_time = time.time()
@@ -325,7 +331,7 @@ class GestureController:
 
                 self.current_gesture = gesture
                 if gesture in self.actions:
-                    if gesture == 'mouse':
+                    if gesture == gesture_labels['mouse']:
                         threading.Thread(target=self.mouse_control_loop).start()
                     else:
                         self.actions[gesture]()
@@ -336,33 +342,31 @@ class GestureController:
                 self.last_gesture = None
         else:
             print("请先使用间隔手势激活操作")
-
+        print()
 
 
     def start_listening(self):
         while True:
-            current_gesture = get_gesture_from_flask()
-            self.handle_gesture(current_gesture)
-            # time.sleep(0.2)
+            current_gesture = get_gesture()
+            print('[gesture]:', list(current_gesture)[0].split(' ')[0] if current_gesture else None)
+            gesture = gesture_labels[list(current_gesture)[0].split(' ')[0]] if current_gesture else None
+            self.handle_gesture(gesture)
+            time.sleep(1)
 
 
-# ================== Flask通信模块 ==================
-def get_gesture_from_flask():
+def get_gesture():
+    if not os.path.exists('data/config/res.json'):
+        return None
     try:
-        response = requests.get('http://localhost:5000/result')
-        print(response.json())
-        if response.status_code == 200:
-            return gesture_labels.get(response.json(), None)
-        return None
+        with open('data/config/res.json', "r") as f:
+            return json.load(f)
     except Exception as e:
-        print(f"请求异常：{e}")
+        print("读取失败:", e)
         return None
 
 
-# ================== 主程序入口 ==================
 if __name__ == "__main__":
     volume_ctl.SetMute(0, None)
-
     if ppt_app:
         try:
             # 清理可能的幻灯片放映

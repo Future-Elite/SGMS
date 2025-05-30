@@ -3,7 +3,6 @@ import json
 import os
 import random
 import re
-import shutil
 import subprocess
 import sys
 
@@ -11,7 +10,7 @@ import cv2
 import numpy as np
 
 from PySide6.QtGui import QPixmap, QImage
-from PySide6.QtWidgets import QFileDialog, QGraphicsDropShadowEffect
+from PySide6.QtWidgets import QGraphicsDropShadowEffect
 from cv_module.models import common, experimental, yolo
 from cv_module.CVThread import YOLOThread
 from frontend.ResultWindow import ResultWindow
@@ -69,7 +68,7 @@ class BASEWINDOW:
         self.ui.user_info.setStyleSheet(u"""
             font: 10pt "Cascadia Mono";
             color: rgb(238, 237, 240);  
-            background-color: rgb(60, 60, 60); 
+            background-color: rgb(20, 20, 20); 
             border: 1px solid rgb(100, 100, 100);
             border-radius: 4px; 
         """)
@@ -228,17 +227,17 @@ class BASEWINDOW:
 
     # 在MessageBar显示消息
     def showStatus(self, msg):
+        msg = 'SGMS_User:{0} > {1}'.format(USER, msg)
         last_msg = self.ui.user_info.toPlainText().split('\n')[-1]
         if msg != last_msg:
-            self.ui.user_info.append('SGMS_User:{0} > {1}'.format(USER, msg))
-        if msg == 'Finish Detection':
+            self.ui.user_info.append(msg)
+        if 'Finish Detection' in msg:
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
-        elif msg == 'Stop Detection':
+        elif 'Stop Detection' in msg:
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
             self.ui.main_rightbox.clear()
-
 
     def loadAndSetParams(self, config_file, params):
         if not os.path.exists(config_file):
@@ -273,17 +272,15 @@ class BASEWINDOW:
         importlib.reload(yolo)
         importlib.reload(experimental)
 
-
     def start_control(self):
         if not self.is_controling:
             self.controller = subprocess.Popen(
                 [sys.executable, 'backend/gesture_controller.py'],
                 # stdout=subprocess.PIPE,
-                # stderr=subprocess.PIPE
+                # stderr=subprocess.STDOUT,
             )
             self.is_controling = True
             self.showStatus('Gesture Controller Started')
-
         else:
             self.controller.terminate()
             self.controller.wait()
