@@ -41,7 +41,6 @@ if __name__ == '__main__':
     login_window = LoginWindow()
 
     if login_window.exec() == QDialog.Accepted:
-
         main_window = MainWindow()
         glo.init()
         glo.set_value('main_window', main_window)

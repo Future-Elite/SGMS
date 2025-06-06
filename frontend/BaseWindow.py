@@ -1,8 +1,6 @@
-import importlib
 import json
 import os
 import random
-import re
 import subprocess
 import sys
 
@@ -11,29 +9,20 @@ import numpy as np
 
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QGraphicsDropShadowEffect
-from cv_module.models import common, experimental, yolo
-from cv_module.CVThread import YOLOThread
+from cv_module.CVThread import CVThread
 from frontend.FloatingWindow import FloatingWindow
 from frontend.ResultWindow import ResultWindow
-from gui.ui.utils.webCamera import Camera
 from frontend.utils import glo, pipe
 from frontend.utils.logger import LoggerUtils
 from PySide6.QtWidgets import QMainWindow
 
 glo.init()
-glo.set_value('yoloname', "yolov8 yolov11")
+glo.set_value('yoloname', "yolov11")
 
-GLOBAL_WINDOW_STATE = True
-WIDTH_LEFT_BOX_STANDARD = 100
-WIDTH_LEFT_BOX_EXTENDED = 100
-WIDTH_SETTING_BAR = 200
-WIDTH_LOGO = 60
-KEYS_LEFT_BOX_MENU = ['src_cam', 'src_database']
 
 # 模型名称和线程类映射
 MODEL_THREAD_CLASSES = {
-    "yolov8": YOLOThread,
-    "yolov11": YOLOThread,
+    "yolov11": CVThread,
 }
 
 # 扩展MODEL_THREAD_CLASSES字典
@@ -57,45 +46,18 @@ class BASEWINDOW(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.model_name = 'cv_module/ptfiles/yolo11s-cls.pt'
         self.floating_window = None
         self.is_controling = None
         self.controller = None
         self.current_workpath = None
         self.ui = None
         self.result_window = None
-        self.inputPath = None
         self.yolo_threads = None
         self.result_statistic = None
         self.detect_result = None
-        self.allModelNames = ["yolov8", "yolov11"]
+        self.allModelNames = ["yolov11"]
 
-    # 初始化左侧菜单栏
-    def initSiderWidget(self):
-        global USER
-        # --- 侧边栏 --- #
-        self.ui.leftBox.setFixedWidth(WIDTH_LEFT_BOX_STANDARD)
-
-        # 显示用户信息
-        self.ui.user_info.setStyleSheet(u"""
-            font: 10pt "Cascadia Mono";
-            color: rgb(238, 237, 240);  
-            background-color: rgb(20, 20, 20); 
-            border: 1px solid rgb(100, 100, 100);
-            border-radius: 4px; 
-        """)
-        self.ui.user_info.setReadOnly(True)
-        USER = glo.get_value('user')
-
-    # 加载模型
-    def initModel(self, yoloname=None):
-        thread = self.yolo_threads.get(yoloname)
-        if not thread:
-            raise ValueError(f"No thread found for '{yoloname}'")
-        thread.new_model_name = f'{self.current_workpath}/ptfiles/' + self.ui.model_box.currentText()
-        thread.send_output.connect(lambda x: self.showImg(x, self.ui.main_rightbox, 'img'))
-        thread.send_msg.connect(lambda x: self.showStatus(x))
-
-    # 阴影效果
     def shadowStyle(self, widget, Color, top_bottom=None):
         shadow = QGraphicsDropShadowEffect()
         if 'top' in top_bottom and 'bottom' not in top_bottom:
@@ -108,23 +70,31 @@ class BASEWINDOW(QMainWindow):
         shadow.setColor(Color)  # 阴影颜色
         widget.setGraphicsEffect(shadow)
 
-    def float_window(self):
-        self.floating_window = FloatingWindow(get_send_out)
-        self.floating_window.show()
-        self.showMinimized()
+    # 初始化左侧菜单栏
+    def initSiderWidget(self):
+        global USER
+        # 显示用户信息
+        self.ui.user_info.setStyleSheet(u"""
+            font: 10pt "Cascadia Mono";
+            color: #CCCCCC;  
+            background-color: #0C0C0C; 
+            border: 1px solid rgb(100, 100, 100);
+            border-radius: 4px; 
+        """)
+        USER = glo.get_value('user')
 
-    # 选择摄像头
-    def selectWebcam(self):
-        try:
-            cam_num, cams = Camera().get_cam_num()
-            if cam_num > 0:
-                cam = cams[0]
-                self.showStatus(f'Loaded camera：Camera_{cam}')
-                self.inputPath = int(cam)
-            else:
-                self.showStatus('No camera found')
-        except Exception as e:
-            self.showStatus('%s' % e)
+    # 加载模型
+    def initModel(self, yoloname=None):
+        thread = self.yolo_threads.get(yoloname)
+        thread.model_name = f'{self.current_workpath}/cv_module/ptfiles/yolo11s-cls.pt'
+        thread.send_output.connect(lambda x: self.showImg(x, self.ui.main_rightbox, 'img'))
+        thread.send_msg.connect(lambda x: self.showStatus(x))
+
+    def float_window(self):
+        if self.is_controling:
+            self.floating_window = FloatingWindow(get_send_out)
+            self.floating_window.show()
+            self.showMinimized()
 
     # 显示Label图片
     def showImg(self, img, label, flag):
@@ -162,51 +132,6 @@ class BASEWINDOW(QMainWindow):
         self.top_grip.setGeometry(0, 0, self.width(), 10)
         self.bottom_grip.setGeometry(0, self.height() - 10, self.width(), 10)
 
-    # 查看当前模型
-    def checkCurrentModel(self, mode=None):
-        # 定义模型和对应条件的映射
-        model_conditions = {
-            "yolov8": lambda name: "yolov8" in name and not any(
-                func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
-            "yolov11": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and not any(
-                func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
-        }
-
-        if mode:
-            # VS mode
-            model_name = self.model_name1 if mode == "left" else self.model_name2
-            model_name = model_name.lower()
-            for yoloname, condition in model_conditions.items():
-                if condition(model_name):
-                    return f"{yoloname}_{mode}"
-        else:
-            # Single mode
-            model_name = self.model_name.lower()
-            for yoloname, condition in model_conditions.items():
-                if condition(model_name):
-                    return yoloname
-        return None
-
-    def checkTaskName(self, modelname, taskname):
-
-        if "yolov8" in modelname:
-            return bool(re.match(f'yolo.?8.?-{taskname}.*\.pt$', modelname))
-
-        elif "yolo11" in modelname:
-            return bool(re.match(f'yolo.?11.?-{taskname}.*\.pt$', modelname))
-
-    # 解决 Modelname 当中的 seg命名问题
-    def checkSegName(self, modelname):
-        return self.checkTaskName(modelname, "seg")
-
-    # 解决  Modelname 当中的 pose命名问题
-    def checkPoseName(self, modelname):
-        return self.checkTaskName(modelname, "pose")
-
-    # 解决  Modelname 当中的 pose命名问题
-    def checkObbName(self, modelname):
-        return self.checkTaskName(modelname, "obb")
-
     # 停止运行中的模型
     def quitRunningModel(self, stop_status=False):
         for yolo_name in self.yolo_threads.threads_pool.keys():
@@ -219,7 +144,7 @@ class BASEWINDOW(QMainWindow):
 
     # 在MessageBar显示消息
     def showStatus(self, msg):
-        msg = 'SGMS_User:{0} > {1}'.format(USER, msg)
+        msg = 'User:{0} > {1}'.format(USER, msg)
         last_msg = self.ui.user_info.toPlainText().split('\n')[-1]
         if msg != last_msg:
             self.ui.user_info.append(msg)
@@ -257,12 +182,6 @@ class BASEWINDOW(QMainWindow):
         self.ui.iou_slider.setValue(int(params['iou'] * 100))
         self.ui.conf_spinbox.setValue(params['conf'])
         self.ui.conf_slider.setValue(int(params['conf'] * 100))
-
-    # 重载模型
-    def reloadModel(self):
-        importlib.reload(common)
-        importlib.reload(yolo)
-        importlib.reload(experimental)
 
     def start_control(self):
         self.controller = subprocess.Popen(

@@ -6,15 +6,15 @@ from PySide6.QtGui import QColor, QIcon
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
 from frontend.utils.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
-from frontend.utils import glo
 from PySide6.QtWidgets import QGraphicsDropShadowEffect
 
-GLOBAL_WINDOW_STATE = True
-WIDTH_LEFT_BOX_STANDARD = 120
-WIDTH_LEFT_BOX_EXTENDED = 0
-WIDTH_LOGO = 60
-UI_FILE_PATH = "gui/ui/UI.ui"
-KEYS_LEFT_BOX_MENU = ['src_webcam']
+
+def applyShadow(widget, color=QColor(0, 0, 0, 80), blur=16):
+    shadow = QGraphicsDropShadowEffect()
+    shadow.setBlurRadius(blur)
+    shadow.setColor(color)
+    shadow.setOffset(0, 0)
+    widget.setGraphicsEffect(shadow)
 
 
 class SHOWWINDOW(BASEWINDOW):
@@ -23,7 +23,7 @@ class SHOWWINDOW(BASEWINDOW):
         self.is_playing = False
         self.current_model = None
         self.current_workpath = os.getcwd()
-        self.inputPath = None
+        self.inputPath = 0
         self.result_statistic = None
         self.detect_result = None
 
@@ -43,27 +43,23 @@ class SHOWWINDOW(BASEWINDOW):
         # --- 最大化 最小化 关闭 --- #
 
         # --- 播放 暂停 停止 --- #
-        self.ui.run_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/newsize/play.png"))
+        self.ui.run_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/play.png"))
         # --- 播放 暂停 停止 --- #
 
-        # --- 自动加载/动态改变 PT 模型 --- #
-        self.pt_Path = f"{self.current_workpath}/cv_module/ptfiles/"
-        os.makedirs(self.pt_Path, exist_ok=True)
-        self.pt_list = os.listdir(f'{self.current_workpath}/cv_module/ptfiles/')
-        self.pt_list = [file for file in self.pt_list if file.endswith('.pt')]
-        self.pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/cv_module/ptfiles/' + x))
-        self.ui.model_box.clear()
-        self.ui.model_box.addItems(self.pt_list)
-        self.loadModels()
-        self.ui.model_box.currentTextChanged.connect(self.changeModel)
-        # --- 自动加载/动态改变 PT 模型 --- #
-
-        self.ui.src_cam.clicked.connect(self.selectWebcam)
         self.ui.src_database.clicked.connect(self.showTableResult)
+        self.ui.src_database.setIcon(QIcon(f"{self.current_workpath}/gui/images/table.png"))
+        self.ui.src_database.setIconSize(self.ui.src_database.size())
+        self.ui.src_database.setStyleSheet("""
+            QPushButton {
+                text-align: center;
+                qproperty-iconSize: 30px 30px;
+                border: none;
+                background-color: transparent;
+            }
+        """)
 
         # --- 状态栏 初始化 --- #
         self.shadowStyle(self.ui.mainBody, QColor(0, 0, 0, 38), top_bottom=['top', 'bottom'])
-        self.model_name = self.ui.model_box.currentText()  # 获取默认 model
         # --- 状态栏 初始化 --- #
 
         self.initThreads()
@@ -84,70 +80,45 @@ class SHOWWINDOW(BASEWINDOW):
         self.loadConfig()
         # --- Setting栏 初始化 --- #
 
-        # --- MessageBar Init --- #
-        self.showStatus("Welcome to SGMS")
-        # --- MessageBar Init --- #
-
+        self.showStatus("多场景手势智能交互控制系统已启动")
         self.setUIStyle()
+
+    def setUIStyle(self):
+        self.ui.run_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #27ae60;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 6px 12px;
+                }
+                QPushButton:hover {
+                    background-color: #2ecc71;
+                }
+            """)
+        self.ui.stop_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #c0392b;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 6px 12px;
+                }
+                QPushButton:hover {
+                    background-color: #e74c3c;
+                }
+            """)
+
+        self.ui.stop_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/stop.png"))
+
+        # 添加阴影
+        applyShadow(self.ui.run_button)
+        applyShadow(self.ui.stop_button)
 
     def initThreads(self):
         self.yolo_threads = ThreadPool()
-        # 获取当前Model
-        model_name = self.checkCurrentModel()
-        if model_name:
-            self.yolo_threads.set(model_name, MODEL_THREAD_CLASSES[model_name]())
-            self.initModel(yoloname=model_name)
-
-    # 加载 pt 模型到 model_box
-    def loadModels(self):
-        pt_list = os.listdir(f'{self.current_workpath}/cv_module/ptfiles/')
-        pt_list = [file for file in pt_list if file.endswith('.pt')]
-        pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/cv_module/ptfiles/' + x))
-
-        if pt_list != self.pt_list:
-            self.pt_list = pt_list
-            self.ui.model_box.clear()
-            self.ui.model_box.addItems(self.pt_list)
-
-    def stopOtherModelProcess(self, model_name, current_yoloname):
-        yolo_thread = self.yolo_threads.get(model_name)
-        yolo_thread.finished.connect(lambda: self.resignModel(current_yoloname))
-        yolo_thread.stop_dtc = True
-        self.yolo_threads.stop_thread(model_name)
-
-    # 停止其他模型
-    def stopOtherModel(self, current_yoloname=None):
-        for model_name in self.yolo_threads.threads_pool.keys():
-            if not current_yoloname or model_name == current_yoloname:
-                continue
-            if self.yolo_threads.get(model_name).isRunning():
-                self.stopOtherModelProcess(model_name, current_yoloname)
-
-    # 重新加载模型
-    def resignModel(self, model_name):
-        # 重载 common 和 yolo 模块
-        glo.set_value('yoloname', model_name)
-        self.reloadModel()
-        self.yolo_threads.set(model_name, MODEL_THREAD_CLASSES[model_name]())
-        self.initModel(yoloname=model_name)
-        self.runModel(True)
-
-    # Model 变化
-    def changeModel(self):
-        self.model_name = self.ui.model_box.currentText()
-        model_name = self.checkCurrentModel()
-        if not model_name:
-            return
-        # 停止其他模型
-        self.stopOtherModel(model_name)
-        yolo_thread = self.yolo_threads.get(model_name)
-        if yolo_thread is not None:
-            yolo_thread.new_model_name = f'{self.current_workpath}/cv_module/ptfiles/' + self.ui.model_box.currentText()
-        else:
-            self.yolo_threads.set(model_name, MODEL_THREAD_CLASSES[model_name]())
-            self.initModel(yoloname=model_name)
-            self.loadConfig()
-            self.showStatus(f"Change Model to {model_name} Successfully")
+        self.yolo_threads.set('yolov11', MODEL_THREAD_CLASSES['yolov11']())
+        self.initModel(yoloname='yolov11')
 
     def runModelProcess(self, yolo_name):
         yolo_thread = self.yolo_threads.get(yolo_name)
@@ -163,13 +134,7 @@ class SHOWWINDOW(BASEWINDOW):
     def runModel(self, runbuttonStatus=None):
         if runbuttonStatus:
             self.ui.run_button.setChecked(True)
-        current_model_name = self.checkCurrentModel()
-        if current_model_name is not None:
-            self.runModelProcess(current_model_name)
-        else:
-            self.showStatus('The current model is not supported')
-            if self.ui.run_button.isChecked():
-                self.ui.run_button.setChecked(False)
+        self.runModelProcess('yolov11')
 
     # 开始/暂停 预测
     def runorContinue(self):
@@ -178,7 +143,7 @@ class SHOWWINDOW(BASEWINDOW):
 
         if self.inputPath is not None:
             self.is_playing = not self.is_playing
-            icon_path = "gui/images/newsize/pause.png" if self.is_playing else "gui/images/newsize/play.png"
+            icon_path = "gui/images/pause.png" if self.is_playing else "gui/images/play.png"
             self.ui.run_button.setIcon(QIcon())
             self.ui.run_button.setIcon(QIcon(icon_path))
             if self.is_playing:
@@ -207,7 +172,6 @@ class SHOWWINDOW(BASEWINDOW):
                                     background-color: #2ecc71;
                                 }
                             """)
-            self.changeModel()
             self.runModel()
         else:
             self.showStatus("Please select Camera before starting detection")
@@ -215,53 +179,23 @@ class SHOWWINDOW(BASEWINDOW):
 
     # 停止识别
     def stopDetect(self):
+        self.ui.run_button.setStyleSheet("""
+                                        QPushButton {
+                                            background-color: #27ae60;
+                                            color: white;
+                                            border: none;
+                                            border-radius: 8px;
+                                            padding: 6px 12px;
+                                        }
+                                        QPushButton:hover {
+                                            background-color: #2ecc71;
+                                        }
+                                    """)
         if self.is_controling:
             self.stop_control()
         self.quitRunningModel(stop_status=True)
         self.is_playing = False
         self.ui.run_button.setChecked(False)
         self.ui.run_button.setIcon(QIcon(
-            f"{self.current_workpath}/gui/images/newsize/play.png"))
+            f"{self.current_workpath}/gui/images/play.png"))
         self.ui.main_rightbox.clear()
-
-    def setUIStyle(self):
-
-        # 主按钮样式（运行、停止）
-        self.ui.run_button.setStyleSheet("""
-                QPushButton {
-                    background-color: #27ae60;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    padding: 6px 12px;
-                }
-                QPushButton:hover {
-                    background-color: #2ecc71;
-                }
-            """)
-        self.ui.stop_button.setStyleSheet("""
-                QPushButton {
-                    background-color: #c0392b;
-                    color: white;
-                    border: none;
-                    border-radius: 8px;
-                    padding: 6px 12px;
-                }
-                QPushButton:hover {
-                    background-color: #e74c3c;
-                }
-            """)
-
-        self.ui.stop_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/newsize/stop.png"))
-
-        # 添加阴影
-        self.applyShadow(self.ui.run_button)
-        self.applyShadow(self.ui.stop_button)
-        self.applyShadow(self.ui.model_box)
-
-    def applyShadow(self, widget, color=QColor(0, 0, 0, 80), blur=16):
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(blur)
-        shadow.setColor(color)
-        shadow.setOffset(0, 0)
-        widget.setGraphicsEffect(shadow)

@@ -6,7 +6,6 @@ import re
 import types
 from copy import deepcopy
 from pathlib import Path
-from ..nn.attention.MSCA import MSCAAttention
 import torch
 import torch.nn as nn
 
@@ -1032,11 +1031,6 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                     args[3] = True
         elif m is AIFI:
             args = [ch[f], *args]
-        ###### attention     ######
-        elif m is MSCAAttention:
-            c2 = ch[f]
-            args = [c2, *args]
-        ###### attention     ######
         elif m in {HGStem, HGBlock}:
             c1, cm, c2 = ch[f], args[0], args[1]
             args = [c1, cm, c2, *args[2:]]

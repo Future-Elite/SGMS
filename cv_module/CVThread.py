@@ -1,24 +1,18 @@
 import json
 import os.path
-import threading
-import time
-from queue import Full, Queue, Empty
-
 import cv2
 import numpy as np
-import requests
 import torch
 from PySide6.QtCore import QThread, Signal
 from pathlib import Path
-
 from frontend.utils import pipe
+from backend.result_updater import ResultUpdater
 from ultralytics.data import load_inference_source
 from ultralytics.data.augment import classify_transforms, LetterBox
-from ultralytics.data.utils import IMG_FORMATS, VID_FORMATS
 from ultralytics.engine.predictor import STREAM_WARNING
 from ultralytics.engine.results import Results
-from cv_module.models.common import AutoBackend
-from ultralytics.utils import callbacks, ops, LOGGER, MACOS, WINDOWS
+from ultralytics.nn.autobackend import AutoBackend
+from ultralytics.utils import callbacks, ops, LOGGER
 from collections import defaultdict
 from ultralytics.utils.checks import check_imgsz
 from ultralytics.utils.torch_utils import select_device
@@ -26,75 +20,24 @@ from concurrent.futures import ThreadPoolExecutor
 import mediapipe as mp
 
 
-class LatestResultUploader:
-    def __init__(self, url, max_queue_size=10, min_interval=1):
-        self.url = url
-        self.result_queue = Queue(maxsize=max_queue_size)
-        self.min_interval = min_interval
-        self.last_upload_time = 0
-        threading.Thread(target=self._upload_loop, daemon=True).start()
-
-    def submit(self, result):
-        try:
-            # 如果队列满了，丢弃最旧的，保持最新结果在队尾
-            if self.result_queue.full():
-                try:
-                    self.result_queue.get_nowait()
-                except Empty:
-                    pass
-            self.result_queue.put_nowait(result)
-        except Full:
-            print("Queue is full. Dropping result.")
-
-    def _upload_loop(self):
-        while True:
-            try:
-                # 阻塞等待一个待上传结果
-                result = self.result_queue.get(timeout=1)
-            except Empty:
-                continue
-
-            # 计算距离上次上传是否超过间隔，不够则等待
-            now = time.time()
-            interval = now - self.last_upload_time
-            if interval < self.min_interval:
-                time.sleep(self.min_interval - interval)
-
-            # 上传结果
-            if result:
-                try:
-                    response = requests.post(self.url, json=result, timeout=3)
-                    if response.status_code == 200:
-                        self.last_upload_time = time.time()
-                except Exception as e:
-                    pass
-
-                # 标记任务完成，队列get解锁
-                self.result_queue.task_done()
-
-
-class YOLOThread(QThread):
+class CVThread(QThread):
     send_output = Signal(np.ndarray)
     send_msg = Signal(str)
 
     def __init__(self):
-        super(YOLOThread, self).__init__()
-        self.uploader = LatestResultUploader('http://localhost:5000/result')
-        self.webcam = None
-        self.is_file = None
+        super(CVThread, self).__init__()
+
+        self.uploader = ResultUpdater('http://localhost:5000/result')
+        self.model_name = 'cv_module/ptfiles/yolo11s-cls.pt'
         self.hands = None
         self.ori_img = None
         self.results = None
-        self.current_model_name = None
-        self.new_model_name = None
         self.source = None
         self.stop_dtc = True
         self.is_continue = True
         self.iou_thres = 0.45
         self.conf_thres = 0.25
         self.labels_dict = {}
-        self.all_labels_dict = {}
-        self.progress_value = 0
         self.parent_workpath = None
         self.executor = ThreadPoolExecutor(max_workers=1)
 
@@ -104,53 +47,28 @@ class YOLOThread(QThread):
 
         # YOLO 参数设置
         self.model = None
-        self.data = 'ultralytics/cfg/datasets/coco.yaml'
         self.imgsz = 640
         self.device = ''
         self.dataset = None
+        self.source_type = None
         self.task = 'classify'
         self.dnn = False
         self.half = False
-        self.agnostic_nms = False
-        self.stream_buffer = False
         self.crop_fraction = 1.0
         self.done_warmup = False
-        self.vid_path, self.vid_writerm, self.vid_cap = None, None, None
         self.batch = None
-        self.batchsize = 1
-        self.project = 'runs/detect'
-        self.name = 'exp'
-        self.exist_ok = False
-        self.vid_stride = 1  # 视频帧率
-        self.max_det = 1000  # 最大检测数
         self.classes = None  # 指定检测类别
-        self.line_thickness = 5
-        self.results_picture = dict()  # 结果图片
-        self.results_table = list()  # 结果表格
-        self.file_path = None  # 文件路径
-        self.used_model_name = None
+        self.line_thickness = 4
         self.plotted_img = None
         self.callbacks = defaultdict(list, callbacks.default_callbacks)  # add callbacks
         callbacks.add_integration_callbacks(self)
 
     def run(self):
         if not self.model:
-            self.send_msg.emit("Loading model: {}".format(os.path.basename(self.new_model_name)))
-            self.setup_model(self.new_model_name)
-            self.used_model_name = self.new_model_name
-        source = str(self.source)
-
-        # 判断输入源类型
-        if isinstance(IMG_FORMATS, str) or isinstance(IMG_FORMATS, tuple):
-            self.is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
-        else:
-            self.is_file = Path(source).suffix[1:] in (IMG_FORMATS | VID_FORMATS)
-        self.webcam = source.isnumeric() or source.endswith(".streams")
-        if self.webcam:
-            source = 'http://localhost:5000/stream'
-        self.setup_source(source)
+            self.send_msg.emit("Loading model: {}".format(os.path.basename(self.model_name)))
+            self.setup_model(self.model_name)
+        self.setup_source('http://localhost:5000/stream')
         self.detect()
-
 
     @torch.no_grad()
     def detect(self):
@@ -165,13 +83,6 @@ class YOLOThread(QThread):
         while True:
             if self.stop_dtc:
                 self.send_msg.emit('Stop Detection')
-                # --- 发送图片和表格结果 --- #
-                for key, value in self.results_picture.items():
-                    self.results_table.append([key, str(value)])
-                self.results_picture = dict()
-                self.results_table = list()
-                # --- 发送图片和表格结果 --- #
-                self.all_labels_dict = {}
                 self.dataset.running = False
                 # 判断self.dataset里面是否有threads
                 if hasattr(self.dataset, 'threads'):
@@ -185,29 +96,12 @@ class YOLOThread(QThread):
                         except Exception as e:
                             LOGGER.warning(f"WARNING Could not release VideoCapture object: {e}")
                 cv2.destroyAllWindows()
-                if isinstance(self.vid_writer[-1], cv2.VideoWriter):
-                    self.vid_writer[-1].release()
                 break
-
-            if self.current_model_name != self.new_model_name:
-                self.send_msg.emit('Loading Model: {}'.format(os.path.basename(self.new_model_name)))
-                self.setup_model(self.new_model_name)
-                self.current_model_name = self.new_model_name
             if self.is_continue:
-                if self.is_file:
-                    self.send_msg.emit("Detecting File: {}".format(os.path.basename(self.source)))
-                elif self.webcam:
-                    self.send_msg.emit("Detecting Webcam: Camera_{}".format(self.source))
-                else:
-                    self.send_msg.emit("Detecting: {}".format(self.source))
                 self.batch = next(datasets)
                 path, im0s, s = self.batch
                 self.ori_img = im0s.copy()
-                self.vid_cap = self.dataset.cap if self.dataset.mode == "video" else None
-
                 has_hand = False
-
-                # 使用mediapipe处理
                 for i, image in enumerate(im0s):
                     black_img = np.zeros(im0s[i].shape, dtype=np.uint8)
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -243,7 +137,7 @@ class YOLOThread(QThread):
                     }
 
                     p, im0 = path[i], None if self.source_type.tensor else im0s[i].copy()
-                    self.file_path = p = Path(p)
+                    p = Path(p)
 
                     label_str = self.write_results(i, self.results, (p, im, im0))  # labels   /// original :s +=
                     if not has_hand:
@@ -271,13 +165,6 @@ class YOLOThread(QThread):
                             else:  # 第一次出现的类别
                                 self.labels_dict[label_name] = int(nums)
 
-                    if self.webcam:
-                        for key, value in self.labels_dict.items():
-                            if key in self.all_labels_dict:
-                                self.all_labels_dict[key] += value
-                            else:
-                                self.all_labels_dict[key] = value
-
                     if has_hand:
                         self.send_output.emit(self.plotted_img)
                         pipe.frame = self.plotted_img
@@ -294,22 +181,14 @@ class YOLOThread(QThread):
                     except Exception as e:
                         pass
 
-                    if self.webcam:
-                        self.results_picture = self.all_labels_dict
-                    else:
-                        self.results_picture = self.labels_dict
-
-
     def setup_model(self, model, verbose=True):
-        """Initialize YOLO model with given parameters and set it to evaluation mode."""
         self.model = AutoBackend(
             weights=model or self.model,
             device=select_device(self.device, verbose=verbose),
             dnn=self.dnn,
-            data=self.data,
             fp16=self.half,
             fuse=True,
-            verbose=verbose,
+            verbose=verbose
         )
 
         self.device = self.model.device
@@ -333,9 +212,9 @@ class YOLOThread(QThread):
         )
         self.dataset = load_inference_source(
             source=source,
-            batch=self.batchsize,
-            vid_stride=self.vid_stride,
-            buffer=self.stream_buffer,
+            batch=1,
+            vid_stride=1,
+            buffer=False
         )
 
         self.source_type = self.dataset.source_type
@@ -346,31 +225,18 @@ class YOLOThread(QThread):
                 or any(getattr(self.dataset, "video_flag", [False]))
         ):  # videos
             LOGGER.warning(STREAM_WARNING)
-        self.vid_path = [None] * self.dataset.bs
-        self.vid_writer = [None] * self.dataset.bs
-        self.vid_frame = [None] * self.dataset.bs
 
     def postprocess(self, preds, img, orig_imgs):
-        if not 'cls' in self.current_model_name:
-            preds = ops.non_max_suppression(
-                preds,
-                self.conf_thres,
-                self.iou_thres,
-                agnostic=self.agnostic_nms,
-                max_det=self.max_det,
-                classes=self.classes,
-            )
-
         if not isinstance(orig_imgs, list):
             orig_imgs = ops.convert_torch2numpy_batch(orig_imgs)
 
         results = []
 
-        if 'cls' in self.current_model_name:
-            a = preds[0].cpu().numpy().tolist()[0]
-            class_index = a.index(max(a))
-            conf = a[class_index]
-            preds = [torch.Tensor([[0, 0, 1, 1, conf, class_index]])]
+
+        a = preds[0].cpu().numpy().tolist()[0]
+        class_index = a.index(max(a))
+        conf = a[class_index]
+        preds = [torch.Tensor([[0, 0, 1, 1, conf, class_index]])]
 
         for i, pred in enumerate(preds):
             orig_img = orig_imgs[i]
