@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(768, 458)
+        MainWindow.resize(795, 504)
         MainWindow.setStyleSheet(u"")
         self.mainWindow = QWidget(MainWindow)
         self.mainWindow.setObjectName(u"mainWindow")
@@ -45,7 +45,7 @@ class Ui_MainWindow(object):
 "	border-bottom:none;\n"
 "	border-bottom-left-radius: 0;\n"
 "	border-bottom-right-radius: 0;\n"
-"	border-radius:30%;\n"
+"	border-radius:15%;\n"
 "	background-color: white;\n"
 "	/*	\n"
 "	background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #B5FFFC, stop:0.2 #e0c3fc, stop:1 #FFDEE9);\n"
@@ -84,10 +84,17 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.title = QLabel(self.right_top)
         self.title.setObjectName(u"title")
+        self.title.setMinimumSize(QSize(0, 25))
+        font = QFont()
+        font.setFamilies([u"Shojumaru"])
+        font.setBold(True)
+        self.title.setFont(font)
+        self.title.setMouseTracking(True)
+        self.title.setTabletTracking(True)
         self.title.setStyleSheet(u"")
         self.title.setIndent(-1)
 
-        self.horizontalLayout.addWidget(self.title)
+        self.horizontalLayout.addWidget(self.title, 0, Qt.AlignmentFlag.AlignVCenter)
 
 
         self.topBox.addWidget(self.right_top, 0, Qt.AlignmentFlag.AlignHCenter)
@@ -179,7 +186,7 @@ class Ui_MainWindow(object):
 
         self.topBox.setStretch(0, 9)
 
-        self.verticalLayout.addWidget(self.topbox)
+        self.verticalLayout.addWidget(self.topbox, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self.mainbox = QFrame(self.mainBody)
         self.mainbox.setObjectName(u"mainbox")
@@ -195,7 +202,7 @@ class Ui_MainWindow(object):
 "	 */\n"
 "	border-bottom-left-radius: 0;\n"
 "	border-bottom-right-radius: 0;\n"
-"	border-radius:30%;\n"
+"	border-radius:15%;\n"
 "}\n"
 "")
         self.mainBox = QHBoxLayout(self.mainbox)
@@ -319,6 +326,14 @@ class Ui_MainWindow(object):
         self.src_cam.setObjectName(u"src_cam")
         self.src_cam.setMinimumSize(QSize(0, 60))
         self.src_cam.setMaximumSize(QSize(120, 16777215))
+        font1 = QFont()
+        font1.setFamilies([u"Times New Roman"])
+        font1.setPointSize(12)
+        font1.setBold(True)
+        font1.setItalic(False)
+        self.src_cam.setFont(font1)
+        self.src_cam.setMouseTracking(True)
+        self.src_cam.setTabletTracking(True)
         self.src_cam.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
         self.src_cam.setStyleSheet(u"image: url(:/leftbox/images/newsize/photo-camera.png);")
 
@@ -365,7 +380,7 @@ class Ui_MainWindow(object):
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.run_button.sizePolicy().hasHeightForWidth())
         self.run_button.setSizePolicy(sizePolicy3)
-        self.run_button.setMinimumSize(QSize(40, 40))
+        self.run_button.setMinimumSize(QSize(60, 60))
         self.run_button.setMaximumSize(QSize(60, 60))
         self.run_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.run_button.setMouseTracking(True)
@@ -385,15 +400,23 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_7.addWidget(self.run_button, 0, Qt.AlignmentFlag.AlignHCenter)
 
+        self.label = QLabel(self.leftbox_top)
+        self.label.setObjectName(u"label")
+        self.label.setMaximumSize(QSize(16777215, 12))
+        font2 = QFont()
+        font2.setFamilies([u"YouYuan"])
+        self.label.setFont(font2)
+
+        self.verticalLayout_7.addWidget(self.label, 0, Qt.AlignmentFlag.AlignHCenter)
+
         self.stop_button = QPushButton(self.leftbox_top)
         self.stop_button.setObjectName(u"stop_button")
         sizePolicy3.setHeightForWidth(self.stop_button.sizePolicy().hasHeightForWidth())
         self.stop_button.setSizePolicy(sizePolicy3)
-        self.stop_button.setMinimumSize(QSize(40, 40))
+        self.stop_button.setMinimumSize(QSize(60, 60))
         self.stop_button.setMaximumSize(QSize(60, 60))
         self.stop_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.stop_button.setStyleSheet(u"QPushButton{\n"
-"background-image: url(:/rightbox/images/newsize/stop.png);\n"
 "background-repeat: no-repeat;\n"
 "background-position: center;\n"
 "background-size: 100% 100%;\n"
@@ -408,17 +431,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_7.addWidget(self.stop_button, 0, Qt.AlignmentFlag.AlignHCenter)
 
-        self.control_button = QPushButton(self.leftbox_top)
-        self.control_button.setObjectName(u"control_button")
-        sizePolicy3.setHeightForWidth(self.control_button.sizePolicy().hasHeightForWidth())
-        self.control_button.setSizePolicy(sizePolicy3)
-        self.control_button.setMinimumSize(QSize(40, 40))
-        self.control_button.setMaximumSize(QSize(60, 60))
-        self.control_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.control_button.setMouseTracking(True)
-        self.control_button.setStyleSheet(u"border-image: url(../images/icon.png);")
+        self.label_3 = QLabel(self.leftbox_top)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setMaximumSize(QSize(16777215, 12))
+        self.label_3.setFont(font2)
 
-        self.verticalLayout_7.addWidget(self.control_button, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.verticalLayout_7.addWidget(self.label_3, 0, Qt.AlignmentFlag.AlignHCenter)
 
 
         self.horizontalLayout_8.addLayout(self.verticalLayout_7)
@@ -494,7 +512,7 @@ class Ui_MainWindow(object):
         self.splitter.setOrientation(Qt.Orientation.Horizontal)
         self.main_rightbox = QLabel(self.splitter)
         self.main_rightbox.setObjectName(u"main_rightbox")
-        self.main_rightbox.setMinimumSize(QSize(200, 100))
+        self.main_rightbox.setMinimumSize(QSize(200, 80))
         self.splitter.addWidget(self.main_rightbox)
 
         self.horizontalLayout_9.addWidget(self.splitter)
@@ -505,7 +523,7 @@ class Ui_MainWindow(object):
         self.user_info = QTextEdit(self.rightBox)
         self.user_info.setObjectName(u"user_info")
         self.user_info.setMinimumSize(QSize(110, 110))
-        self.user_info.setMaximumSize(QSize(16777215, 100))
+        self.user_info.setMaximumSize(QSize(16777215, 120))
         self.user_info.setMouseTracking(False)
         self.user_info.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.user_info.setAcceptDrops(False)
@@ -558,17 +576,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_22.setSpacing(15)
         self.verticalLayout_22.setObjectName(u"verticalLayout_22")
         self.verticalLayout_22.setContentsMargins(15, 15, 15, 15)
-        self.label_2 = QLabel(self.setting_page)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setMaximumSize(QSize(16777215, 30))
-        self.label_2.setStyleSheet(u"padding-left: 0px;\n"
-"padding-bottom: 2px;\n"
-"color: white;\n"
-"font: 700 italic 16pt \"Segoe UI\";")
-        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.verticalLayout_22.addWidget(self.label_2)
-
         self.Model_QF_2 = QWidget(self.setting_page)
         self.Model_QF_2.setObjectName(u"Model_QF_2")
         self.Model_QF_2.setMinimumSize(QSize(200, 90))
@@ -589,12 +596,12 @@ class Ui_MainWindow(object):
         self.ToggleBotton_6.setSizePolicy(sizePolicy4)
         self.ToggleBotton_6.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_6.setMaximumSize(QSize(16777215, 30))
-        font = QFont()
-        font.setFamilies([u"Nirmala UI"])
-        font.setPointSize(13)
-        font.setBold(True)
-        font.setItalic(False)
-        self.ToggleBotton_6.setFont(font)
+        font3 = QFont()
+        font3.setFamilies([u"Nirmala UI"])
+        font3.setPointSize(13)
+        font3.setBold(True)
+        font3.setItalic(False)
+        self.ToggleBotton_6.setFont(font3)
         self.ToggleBotton_6.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         self.ToggleBotton_6.setMouseTracking(True)
         self.ToggleBotton_6.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -680,7 +687,7 @@ class Ui_MainWindow(object):
         self.ToggleBotton_2.setSizePolicy(sizePolicy4)
         self.ToggleBotton_2.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_2.setMaximumSize(QSize(16777215, 30))
-        self.ToggleBotton_2.setFont(font)
+        self.ToggleBotton_2.setFont(font3)
         self.ToggleBotton_2.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         self.ToggleBotton_2.setMouseTracking(True)
         self.ToggleBotton_2.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -803,7 +810,7 @@ class Ui_MainWindow(object):
         self.ToggleBotton_3.setSizePolicy(sizePolicy4)
         self.ToggleBotton_3.setMinimumSize(QSize(0, 30))
         self.ToggleBotton_3.setMaximumSize(QSize(16777215, 30))
-        self.ToggleBotton_3.setFont(font)
+        self.ToggleBotton_3.setFont(font3)
         self.ToggleBotton_3.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
         self.ToggleBotton_3.setMouseTracking(True)
         self.ToggleBotton_3.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -938,20 +945,20 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-        self.title.setText(QCoreApplication.translate("MainWindow", u"SGMS", None))
+        self.title.setText(QCoreApplication.translate("MainWindow", u"\u591a\u573a\u666f\u624b\u52bf\u667a\u80fd\u4ea4\u4e92\u63a7\u5236\u7cfb\u7edf", None))
         self.minimizeButton.setText("")
         self.maximizeButton.setText("")
         self.closeButton.setText("")
-        self.src_cam.setText(QCoreApplication.translate("MainWindow", u"Cam", None))
-        self.src_database.setText(QCoreApplication.translate("MainWindow", u"Data", None))
+        self.src_cam.setText(QCoreApplication.translate("MainWindow", u"\u6444\u50cf\u5934", None))
+        self.src_database.setText(QCoreApplication.translate("MainWindow", u"\u6570\u636e", None))
         self.run_button.setText("")
+        self.label.setText(QCoreApplication.translate("MainWindow", u"\u5f00\u59cb/\u6682\u505c", None))
         self.stop_button.setText("")
-        self.control_button.setText("")
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"\u7ec8\u6b62", None))
         self.main_rightbox.setText("")
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Settings", None))
-        self.ToggleBotton_6.setText(QCoreApplication.translate("MainWindow", u"Model", None))
+        self.ToggleBotton_6.setText(QCoreApplication.translate("MainWindow", u"\u6a21\u578b", None))
         self.model_box.setProperty(u"placeholderText", "")
         self.ToggleBotton_2.setText(QCoreApplication.translate("MainWindow", u"IOU", None))
-        self.ToggleBotton_3.setText(QCoreApplication.translate("MainWindow", u"Confidence", None))
+        self.ToggleBotton_3.setText(QCoreApplication.translate("MainWindow", u"\u7f6e\u4fe1\u5ea6", None))
     # retranslateUi
 

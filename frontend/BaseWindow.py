@@ -13,18 +13,20 @@ from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QGraphicsDropShadowEffect
 from cv_module.models import common, experimental, yolo
 from cv_module.CVThread import YOLOThread
+from frontend.FloatingWindow import FloatingWindow
 from frontend.ResultWindow import ResultWindow
 from gui.ui.utils.webCamera import Camera
-from frontend.utils import glo
+from frontend.utils import glo, pipe
 from frontend.utils.logger import LoggerUtils
+from PySide6.QtWidgets import QMainWindow
 
 glo.init()
 glo.set_value('yoloname', "yolov8 yolov11")
 
 GLOBAL_WINDOW_STATE = True
-WIDTH_LEFT_BOX_STANDARD = 120
-WIDTH_LEFT_BOX_EXTENDED = 120
-WIDTH_SETTING_BAR = 250
+WIDTH_LEFT_BOX_STANDARD = 100
+WIDTH_LEFT_BOX_EXTENDED = 100
+WIDTH_SETTING_BAR = 200
 WIDTH_LOGO = 60
 KEYS_LEFT_BOX_MENU = ['src_cam', 'src_database']
 
@@ -43,10 +45,19 @@ for key, value in MODEL_NAME_DICT:
 loggertool = LoggerUtils()
 
 
-class BASEWINDOW:
+def get_send_out():
+    with pipe.frame_lock:
+        if pipe.frame is not None:
+            return pipe.frame.copy()
+        else:
+            return cv2.imread("gui/ui/icon.png")
+
+
+class BASEWINDOW(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.floating_window = None
         self.is_controling = None
         self.controller = None
         self.current_workpath = None
@@ -97,29 +108,10 @@ class BASEWINDOW:
         shadow.setColor(Color)  # 阴影颜色
         widget.setGraphicsEffect(shadow)
 
-    # 最大化最小化窗口
-    def maxorRestore(self):
-        global GLOBAL_WINDOW_STATE
-        status = GLOBAL_WINDOW_STATE
-        if status:
-            # 获取当前屏幕的宽度和高度
-            self.showMaximized()
-            self.ui.maximizeButton.setStyleSheet("""
-                          QPushButton:hover{
-                               background-color:rgb(139, 29, 31);
-                               border-image: url(:/leftbox/images/newsize/scalling.png);
-                           }
-                      """)
-            GLOBAL_WINDOW_STATE = False
-        else:
-            self.showNormal()
-            self.ui.maximizeButton.setStyleSheet("""
-                                      QPushButton:hover{
-                                           background-color:rgb(139, 29, 31);
-                                           border-image: url(:/leftbox/images/newsize/max.png);
-                                       }
-                                  """)
-            GLOBAL_WINDOW_STATE = True
+    def float_window(self):
+        self.floating_window = FloatingWindow(get_send_out)
+        self.floating_window.show()
+        self.showMinimized()
 
     # 选择摄像头
     def selectWebcam(self):
@@ -273,19 +265,19 @@ class BASEWINDOW:
         importlib.reload(experimental)
 
     def start_control(self):
-        if not self.is_controling:
-            self.controller = subprocess.Popen(
-                [sys.executable, 'backend/gesture_controller.py'],
-                # stdout=subprocess.PIPE,
-                # stderr=subprocess.STDOUT,
-            )
-            self.is_controling = True
-            self.showStatus('Gesture Controller Started')
-        else:
-            self.controller.terminate()
-            self.controller.wait()
-            self.is_controling = False
-            self.showStatus('Gesture Controller Stopped')
+        self.controller = subprocess.Popen(
+            [sys.executable, 'backend/gesture_controller.py'],
+            # stdout=subprocess.PIPE,
+            # stderr=subprocess.STDOUT,
+        )
+        self.is_controling = True
+        self.showStatus('Gesture Controller Started')
+
+    def stop_control(self):
+        self.controller.terminate()
+        self.controller.wait()
+        self.is_controling = False
+        self.showStatus('Gesture Controller Stopped')
 
     # 调整超参数
     def changeValue(self, x, flag):

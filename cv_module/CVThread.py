@@ -10,6 +10,8 @@ import requests
 import torch
 from PySide6.QtCore import QThread, Signal
 from pathlib import Path
+
+from frontend.utils import pipe
 from ultralytics.data import load_inference_source
 from ultralytics.data.augment import classify_transforms, LetterBox
 from ultralytics.data.utils import IMG_FORMATS, VID_FORMATS
@@ -64,10 +66,8 @@ class LatestResultUploader:
                     response = requests.post(self.url, json=result, timeout=3)
                     if response.status_code == 200:
                         self.last_upload_time = time.time()
-                    else:
-                        print(f"Server error: {response.status_code} | {result}")
                 except Exception as e:
-                    print(f"Upload failed: {e}")
+                    pass
 
                 # 标记任务完成，队列get解锁
                 self.result_queue.task_done()
@@ -76,15 +76,10 @@ class LatestResultUploader:
 class YOLOThread(QThread):
     send_output = Signal(np.ndarray)
     send_msg = Signal(str)
-    send_fps = Signal(str)  # fps
-    send_progress = Signal(int)  # Completeness
-    send_class_num = Signal(int)  # Number of categories detected
-    send_target_num = Signal(int)  # Targets detected
 
     def __init__(self):
         super(YOLOThread, self).__init__()
         self.uploader = LatestResultUploader('http://localhost:5000/result')
-        self.save_path = None
         self.webcam = None
         self.is_file = None
         self.hands = None
@@ -95,20 +90,15 @@ class YOLOThread(QThread):
         self.source = None
         self.stop_dtc = True
         self.is_continue = True
-        self.save_res = False
         self.iou_thres = 0.45
         self.conf_thres = 0.25
-        self.speed_thres = 10
         self.labels_dict = {}
         self.all_labels_dict = {}
         self.progress_value = 0
-        self.res_status = False
         self.parent_workpath = None
         self.executor = ThreadPoolExecutor(max_workers=1)
-        self.use_backend = False  # 是否使用后端
 
         # mediapipe 参数设置
-        self.use_mp = False  # 是否使用mediapipe显示骨骼和手部
         self.mp_pose = None
         self.mp_pose_results = None
 
@@ -134,7 +124,7 @@ class YOLOThread(QThread):
         self.vid_stride = 1  # 视频帧率
         self.max_det = 1000  # 最大检测数
         self.classes = None  # 指定检测类别
-        self.line_thickness = 3
+        self.line_thickness = 5
         self.results_picture = dict()  # 结果图片
         self.results_table = list()  # 结果表格
         self.file_path = None  # 文件路径
@@ -159,12 +149,8 @@ class YOLOThread(QThread):
         if self.webcam:
             source = 'http://localhost:5000/stream'
         self.setup_source(source)
-        self.go_process()
         self.detect()
 
-    def go_process(self):
-        for i in range(0, 101, 10):
-            self.send_progress.emit(i)
 
     @torch.no_grad()
     def detect(self):
@@ -175,7 +161,6 @@ class YOLOThread(QThread):
         self.seen, self.windows, self.dt, self.batch = 0, [], (ops.Profile(), ops.Profile(), ops.Profile()), None
         datasets = iter(self.dataset)
         count = 0
-        start_time = time.time()
 
         while True:
             if self.stop_dtc:
@@ -241,19 +226,6 @@ class YOLOThread(QThread):
 
                 count += 1
 
-                if self.vid_cap:
-                    if self.vid_cap.get(cv2.CAP_PROP_FRAME_COUNT) > 0:
-                        percent = int(count / self.vid_cap.get(cv2.CAP_PROP_FRAME_COUNT) * self.progress_value)
-                        self.send_progress.emit(percent)
-                    else:
-                        percent = 100
-                        self.send_progress.emit(percent)
-                else:
-                    percent = self.progress_value
-                if count % 5 == 0 and count >= 5:
-                    self.send_fps.emit(str(int(5 / (time.time() - start_time))))
-                    start_time = time.time()
-
                 with self.dt[0]:
                     im = self.preprocess(im0s)
                 with self.dt[1]:
@@ -308,45 +280,25 @@ class YOLOThread(QThread):
 
                     if has_hand:
                         self.send_output.emit(self.plotted_img)
+                        pipe.frame = self.plotted_img
                     else:
                         self.send_output.emit(self.ori_img[0])
+                        pipe.frame = self.ori_img[0]
 
                     self.uploader.submit(self.labels_dict)  # 提交最新结果
+
                     try:
                         with open('data/config/tmp.json', "w") as f:
                             json.dump(self.labels_dict, f)
                         os.replace('data/config/tmp.json', 'data/config/res.json')
                     except Exception as e:
-                        print("写入失败:", e)
-
-                    self.send_class_num.emit(class_nums)
-                    self.send_target_num.emit(target_nums)
+                        pass
 
                     if self.webcam:
                         self.results_picture = self.all_labels_dict
                     else:
                         self.results_picture = self.labels_dict
 
-                    if self.save_res:
-                        save_path = str(self.save_path / p.name)  # im.jpg
-                        self.res_path = self.save_preds(self.vid_cap, i, save_path)
-
-                    if self.speed_thres != 0:
-                        time.sleep(self.speed_thres / 1000)
-
-                if percent == self.progress_value and not self.webcam:
-                    self.go_process()
-                    self.send_msg.emit('Finish Detection')
-                    for key, value in self.results_picture.items():
-                        self.results_table.append([key, str(value)])
-                    self.results_picture = dict()
-                    self.results_table = list()
-                    self.res_status = True
-                    if self.vid_cap is not None:
-                        self.vid_cap.release()
-                    if isinstance(self.vid_writer[-1], cv2.VideoWriter):
-                        self.vid_writer[-1].release()  # release final video writer
-                    break
 
     def setup_model(self, model, verbose=True):
         """Initialize YOLO model with given parameters and set it to evaluation mode."""
@@ -360,8 +312,8 @@ class YOLOThread(QThread):
             verbose=verbose,
         )
 
-        self.device = self.model.device  # update device
-        self.half = self.model.fp16  # update half
+        self.device = self.model.device
+        self.half = self.model.fp16
         self.model.eval()
 
         # 加入mediapipe
@@ -369,7 +321,6 @@ class YOLOThread(QThread):
         self.hands = self.mp_pose.Hands(True, 1, 1, 0.5, 0.5)
 
     def setup_source(self, source):
-        """Sets up source and inference mode."""
         self.imgsz = check_imgsz(self.imgsz, stride=self.model.stride, min_dim=2)  # check image size
         self.transforms = (
             getattr(
@@ -400,7 +351,6 @@ class YOLOThread(QThread):
         self.vid_frame = [None] * self.dataset.bs
 
     def postprocess(self, preds, img, orig_imgs):
-        """Post-processes predictions and returns a list of Results objects."""
         if not 'cls' in self.current_model_name:
             preds = ops.non_max_suppression(
                 preds,
@@ -411,7 +361,7 @@ class YOLOThread(QThread):
                 classes=self.classes,
             )
 
-        if not isinstance(orig_imgs, list):  # input images are a torch.Tensor, not a list
+        if not isinstance(orig_imgs, list):
             orig_imgs = ops.convert_torch2numpy_batch(orig_imgs)
 
         results = []
@@ -431,77 +381,32 @@ class YOLOThread(QThread):
         return results
 
     def preprocess(self, im):
-        """
-        Prepares input image before inference.
-
-        Args:
-            im (torch.Tensor | List(np.ndarray)): BCHW for tensor, [(HWC) x B] for list.
-        """
         not_tensor = not isinstance(im, torch.Tensor)
         if not_tensor:
             im = np.stack(self.pre_transform(im))
-            im = im[..., ::-1].transpose((0, 3, 1, 2))  # BGR to RGB, BHWC to BCHW, (n, 3, h, w)
-            im = np.ascontiguousarray(im)  # contiguous
+            im = im[..., ::-1].transpose((0, 3, 1, 2))
+            im = np.ascontiguousarray(im)
             im = torch.from_numpy(im)
 
         im = im.to(self.device)
-        im = im.half() if self.model.fp16 else im.float()  # uint8 to fp16/32
+        im = im.half() if self.model.fp16 else im.float()
         if not_tensor:
-            im /= 255  # 0 - 255 to 0.0 - 1.0
+            im /= 255
         return im
 
     def inference(self, im, *args, **kwargs):
-        """Runs inference on a given image using the specified model and arguments."""
         return self.model(im, augment=False, visualize=False, embed=False, *args, **kwargs)
 
     def pre_transform(self, im):
-        """
-        Pre-transform input image before inference.
-
-        Args:
-            im (List(np.ndarray)): (N, 3, h, w) for tensor, [(h, w, 3) x N] for list.
-
-        Returns:
-            (list): A list of transformed images.
-        """
         same_shapes = all(x.shape == im[0].shape for x in im)
         letterbox = LetterBox(self.imgsz, auto=same_shapes and self.model.pt, stride=self.model.stride)
         return [letterbox(image=x) for x in im]
 
-    def save_preds(self, vid_cap, idx, save_path):
-        """Save video predictions as mp4 at specified path."""
-        im0 = self.plotted_img
-        suffix, fourcc = (".mp4", "avc1") if MACOS else (".avi", "WMV2") if WINDOWS else (".avi", "MJPG")
-        # Save imgs
-        if self.dataset.mode == "image":
-            cv2.imwrite(save_path, im0)
-            return save_path
-
-        else:
-            if self.vid_path[idx] != save_path:  # new video
-                self.vid_path[idx] = save_path
-                if isinstance(self.vid_writer[idx], cv2.VideoWriter):
-                    self.vid_writer[idx].release()  # release previous video writer
-                if vid_cap:  # video
-                    fps = int(vid_cap.get(cv2.CAP_PROP_FPS))  # integer required, floats produce error in MP4 codec
-                    w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                    h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                else:  # stream
-                    fps, w, h = 30, im0.shape[1], im0.shape[0]
-                # suffix, fourcc = (".mp4", "avc1") if MACOS else (".avi", "WMV2") if WINDOWS else (".avi", "MJPG")
-                self.vid_writer[idx] = cv2.VideoWriter(
-                    str(Path(save_path).with_suffix(suffix)), cv2.VideoWriter_fourcc(*fourcc), fps, (w, h)
-                )
-
-            self.vid_writer[idx].write(im0)
-            return str(Path(save_path).with_suffix(suffix))
-
     def write_results(self, idx, results, batch):
-        """Write inference results to a file or directory."""
         p, im, _ = batch
         log_string = ""
         if len(im.shape) == 3:
-            im = im[None]  # expand for batch dim
+            im = im[None]
 
         result = results[idx]
         log_string += result.verbose()
@@ -509,7 +414,6 @@ class YOLOThread(QThread):
 
         result.orig_img = self.ori_img[idx]
 
-        # Add bbox to image
         plot_args = {
             "line_width": self.line_thickness,
             "boxes": True,

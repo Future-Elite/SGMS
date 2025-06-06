@@ -2,12 +2,12 @@ import os
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QIcon
-from PySide6.QtWidgets import QMainWindow
 
 from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
 from frontend.utils.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
 from frontend.utils import glo
+from PySide6.QtWidgets import QGraphicsDropShadowEffect
 
 GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 120
@@ -17,7 +17,7 @@ UI_FILE_PATH = "gui/ui/UI.ui"
 KEYS_LEFT_BOX_MENU = ['src_webcam']
 
 
-class SHOWWINDOW(QMainWindow, BASEWINDOW):
+class SHOWWINDOW(BASEWINDOW):
     def __init__(self):
         super().__init__()
         self.is_playing = False
@@ -36,10 +36,10 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         # --- 加载UI --- #
 
         # --- 最大化 最小化 关闭 --- #
-        self.ui.maximizeButton.clicked.connect(self.maxorRestore)
+        self.ui.maximizeButton.clicked.connect(self.float_window)
         self.ui.minimizeButton.clicked.connect(self.showMinimized)
         self.ui.closeButton.clicked.connect(self.close)
-        self.ui.topbox.doubleClickFrame.connect(self.maxorRestore)
+        self.ui.topbox.doubleClickFrame.connect(self.float_window)
         # --- 最大化 最小化 关闭 --- #
 
         # --- 播放 暂停 停止 --- #
@@ -88,10 +88,7 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
         self.showStatus("Welcome to SGMS")
         # --- MessageBar Init --- #
 
-        # Control Function (TEST)
-        self.ui.control_button.setCheckable(True)
-        self.ui.control_button.setIcon(QIcon('gui/images/icon.png'))
-        self.ui.control_button.clicked.connect(self.start_control)
+        self.setUIStyle()
 
     def initThreads(self):
         self.yolo_threads = ThreadPool()
@@ -176,25 +173,95 @@ class SHOWWINDOW(QMainWindow, BASEWINDOW):
 
     # 开始/暂停 预测
     def runorContinue(self):
+        if not self.is_controling:
+            self.start_control()
+
         if self.inputPath is not None:
             self.is_playing = not self.is_playing
             icon_path = "gui/images/newsize/pause.png" if self.is_playing else "gui/images/newsize/play.png"
             self.ui.run_button.setIcon(QIcon())
             self.ui.run_button.setIcon(QIcon(icon_path))
+            if self.is_playing:
+                self.ui.run_button.setStyleSheet("""
+                    QPushButton {
+                        background-color: #f1c40f;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        padding: 6px 12px;
+                    }
+                    QPushButton:hover {
+                        background-color: #f39c12;
+                    }
+                """)
+            else:
+                self.ui.run_button.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #27ae60;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 8px;
+                                    padding: 6px 12px;
+                                }
+                                QPushButton:hover {
+                                    background-color: #2ecc71;
+                                }
+                            """)
             self.changeModel()
             self.runModel()
         else:
-            self.showStatus("Please select the Image/Video before starting detection...")
+            self.showStatus("Please select Camera before starting detection")
             self.ui.run_button.setChecked(False)
 
     # 停止识别
     def stopDetect(self):
-        self.controller.terminate()
-        self.controller.wait()
-        self.is_controling = False
-        self.showStatus('Gesture Controller Stopped')
+        if self.is_controling:
+            self.stop_control()
         self.quitRunningModel(stop_status=True)
         self.is_playing = False
         self.ui.run_button.setChecked(False)
-        self.ui.run_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/newsize/play.png"))
+        self.ui.run_button.setIcon(QIcon(
+            f"{self.current_workpath}/gui/images/newsize/play.png"))
         self.ui.main_rightbox.clear()
+
+    def setUIStyle(self):
+
+        # 主按钮样式（运行、停止）
+        self.ui.run_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #27ae60;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 6px 12px;
+                }
+                QPushButton:hover {
+                    background-color: #2ecc71;
+                }
+            """)
+        self.ui.stop_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #c0392b;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 6px 12px;
+                }
+                QPushButton:hover {
+                    background-color: #e74c3c;
+                }
+            """)
+
+        self.ui.stop_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/newsize/stop.png"))
+
+        # 添加阴影
+        self.applyShadow(self.ui.run_button)
+        self.applyShadow(self.ui.stop_button)
+        self.applyShadow(self.ui.model_box)
+
+    def applyShadow(self, widget, color=QColor(0, 0, 0, 80), blur=16):
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(blur)
+        shadow.setColor(color)
+        shadow.setOffset(0, 0)
+        widget.setGraphicsEffect(shadow)

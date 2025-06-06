@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>768</width>
-    <height>458</height>
+    <width>795</width>
+    <height>504</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,7 +34,7 @@
 	border-bottom:none;
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;
-	border-radius:30%;
+	border-radius:15%;
 	background-color: white;
 	/*	
 	background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #B5FFFC, stop:0.2 #e0c3fc, stop:1 #FFDEE9);
@@ -63,7 +63,7 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item>
+       <item alignment="Qt::AlignmentFlag::AlignVCenter">
         <widget class="DoubleClickQFrame" name="topbox">
          <property name="maximumSize">
           <size>
@@ -125,13 +125,32 @@ Spacer{
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item>
+             <item alignment="Qt::AlignmentFlag::AlignVCenter">
               <widget class="QLabel" name="title">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>25</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Shojumaru</family>
+                 <pointsize>-1</pointsize>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="mouseTracking">
+                <bool>true</bool>
+               </property>
+               <property name="tabletTracking">
+                <bool>true</bool>
+               </property>
                <property name="styleSheet">
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>SGMS</string>
+                <string>多场景手势智能交互控制系统</string>
                </property>
                <property name="indent">
                 <number>-1</number>
@@ -287,7 +306,7 @@ QPushButton:pressed {
 	 */
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;
-	border-radius:30%;
+	border-radius:15%;
 }
 </string>
          </property>
@@ -522,6 +541,20 @@ QFrame#tableBox:hover{
                        <height>16777215</height>
                       </size>
                      </property>
+                     <property name="font">
+                      <font>
+                       <family>Times New Roman</family>
+                       <pointsize>12</pointsize>
+                       <italic>false</italic>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="mouseTracking">
+                      <bool>true</bool>
+                     </property>
+                     <property name="tabletTracking">
+                      <bool>true</bool>
+                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::LayoutDirection::RightToLeft</enum>
                      </property>
@@ -529,7 +562,7 @@ QFrame#tableBox:hover{
                       <string notr="true">image: url(:/leftbox/images/newsize/photo-camera.png);</string>
                      </property>
                      <property name="text">
-                      <string>Cam</string>
+                      <string>摄像头</string>
                      </property>
                     </widget>
                    </item>
@@ -560,7 +593,7 @@ QFrame#tableBox:hover{
                       <string notr="true">image: url(:/leftbox/images/newsize/table.png);</string>
                      </property>
                      <property name="text">
-                      <string>Data</string>
+                      <string>数据</string>
                      </property>
                     </widget>
                    </item>
@@ -630,8 +663,8 @@ QFrame#tableBox:hover{
                        </property>
                        <property name="minimumSize">
                         <size>
-                         <width>40</width>
-                         <height>40</height>
+                         <width>60</width>
+                         <height>60</height>
                         </size>
                        </property>
                        <property name="maximumSize">
@@ -676,6 +709,24 @@ QPushButton:hover{
                       </widget>
                      </item>
                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
+                      <widget class="QLabel" name="label">
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>12</height>
+                        </size>
+                       </property>
+                       <property name="font">
+                        <font>
+                         <family>YouYuan</family>
+                        </font>
+                       </property>
+                       <property name="text">
+                        <string>开始/暂停</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item alignment="Qt::AlignmentFlag::AlignHCenter">
                       <widget class="QPushButton" name="stop_button">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -685,8 +736,8 @@ QPushButton:hover{
                        </property>
                        <property name="minimumSize">
                         <size>
-                         <width>40</width>
-                         <height>40</height>
+                         <width>60</width>
+                         <height>60</height>
                         </size>
                        </property>
                        <property name="maximumSize">
@@ -700,7 +751,6 @@ QPushButton:hover{
                        </property>
                        <property name="styleSheet">
                         <string notr="true">QPushButton{
-background-image: url(:/rightbox/images/newsize/stop.png);
 background-repeat: no-repeat;
 background-position: center;
 background-size: 100% 100%;
@@ -724,36 +774,20 @@ QPushButton:hover{
                       </widget>
                      </item>
                      <item alignment="Qt::AlignmentFlag::AlignHCenter">
-                      <widget class="QPushButton" name="control_button">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                       <property name="minimumSize">
-                        <size>
-                         <width>40</width>
-                         <height>40</height>
-                        </size>
-                       </property>
+                      <widget class="QLabel" name="label_3">
                        <property name="maximumSize">
                         <size>
-                         <width>60</width>
-                         <height>60</height>
+                         <width>16777215</width>
+                         <height>12</height>
                         </size>
                        </property>
-                       <property name="cursor">
-                        <cursorShape>PointingHandCursor</cursorShape>
-                       </property>
-                       <property name="mouseTracking">
-                        <bool>true</bool>
-                       </property>
-                       <property name="styleSheet">
-                        <string notr="true">border-image: url(../images/icon.png);</string>
+                       <property name="font">
+                        <font>
+                         <family>YouYuan</family>
+                        </font>
                        </property>
                        <property name="text">
-                        <string/>
+                        <string>终止</string>
                        </property>
                       </widget>
                      </item>
@@ -893,7 +927,7 @@ QFrame#main_rightbox{
                    <property name="minimumSize">
                     <size>
                      <width>200</width>
-                     <height>100</height>
+                     <height>80</height>
                     </size>
                    </property>
                    <property name="text">
@@ -916,7 +950,7 @@ QFrame#main_rightbox{
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>100</height>
+                 <height>120</height>
                 </size>
                </property>
                <property name="mouseTracking">
@@ -1052,28 +1086,6 @@ QFrame#main_rightbox{
                  <number>15</number>
                 </property>
                 <item>
-                 <widget class="QLabel" name="label_2">
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777215</width>
-                    <height>30</height>
-                   </size>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">padding-left: 0px;
-padding-bottom: 2px;
-color: white;
-font: 700 italic 16pt &quot;Segoe UI&quot;;</string>
-                  </property>
-                  <property name="text">
-                   <string>Settings</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignmentFlag::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QWidget" name="Model_QF_2" native="true">
                   <property name="minimumSize">
                    <size>
@@ -1168,7 +1180,7 @@ font: 700 13pt &quot;Nirmala UI&quot;;
 }</string>
                      </property>
                      <property name="text">
-                      <string>Model</string>
+                      <string>模型</string>
                      </property>
                      <property name="autoDefault">
                       <bool>false</bool>
@@ -1549,7 +1561,7 @@ font: 700 13pt &quot;Nirmala UI&quot;;
 }</string>
                      </property>
                      <property name="text">
-                      <string>Confidence</string>
+                      <string>置信度</string>
                      </property>
                      <property name="autoDefault">
                       <bool>false</bool>
