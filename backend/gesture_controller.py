@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import threading
@@ -14,6 +15,9 @@ from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import pythoncom
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from data.models import DeviceState, DeviceTypeEnum
 
 # ================== 全局初始化 ==================
 # 初始化音量控制
@@ -23,7 +27,6 @@ volume_ctl = cast(interface, POINTER(IAudioEndpointVolume))
 
 # 用户自定义软件路径配置
 PPT_PATH = None
-
 
 # ================== PowerPoint初始化 ==================
 def initialize_powerpoint():
@@ -72,9 +75,15 @@ gesture_labels = {
 }
 
 
+engine = create_engine("sqlite:///data/database.db")
+Session = sessionmaker(bind=engine)
+session = Session()
+
 # ================== 手势控制器类 ==================
 class GestureController:
     def __init__(self):
+        self.awaiting_mouse = None
+        self.awaiting_mouse_deadline = None
         self.current_gesture = None
         self.mouse_control_active = False
         self.last_gesture = None
@@ -99,11 +108,43 @@ class GestureController:
     def _action_wrapper(self, func):
         def wrapped():
             if not self.media_control_lock:
+                before = self.get_device_state_snapshot()
                 func()
+                after = self.get_device_state_snapshot()
+                self.verify_command_effect(before, after)
+                self.save_device_state(after)
                 self.last_gesture = self.current_gesture
                 self._set_cooldown()
 
         return wrapped
+
+    def get_device_state_snapshot(self):
+        """获取当前设备状态（模拟或实际）"""
+        return {
+            'volume': volume_ctl.GetMasterVolumeLevelScalar(),
+            'mouse_control_active': self.mouse_control_active,
+            'ppt_slide_show_active': self._check_ppt_slideshow()
+        }
+
+    def save_device_state(self, state, device_type="tv", device_id="system"):
+        record = DeviceState(
+            device_type=DeviceTypeEnum[device_type],
+            device_id=device_id,
+            current_state=state,
+            last_updated=datetime.datetime.now()
+        )
+        session.merge(record)
+        session.commit()
+
+    def verify_command_effect(self, before_state, after_state, expected_keys=None):
+        """验证命令执行是否生效"""
+        if expected_keys is None:
+            expected_keys = before_state.keys()
+        changes = {k: (before_state[k], after_state[k]) for k in expected_keys if before_state[k] != after_state[k]}
+        if not changes:
+            print("⚠️ 命令执行后状态无变化，可能未生效。")
+        else:
+            print("✅ 状态已更新：", changes)
 
     def _set_cooldown(self):
         self.media_control_lock = True
@@ -331,37 +372,27 @@ class GestureController:
 
     def handle_gesture(self, gesture):
         if gesture is not None:
-            # 激活手势处理
             if gesture == gesture_labels["activate"]:
                 self.interval_activated = True
                 self.interval_activate_time = time.time()
-                print("间隔手势已激活，10秒内等待下一个操作...")
+                self.awaiting_mouse = True
+                self.awaiting_mouse_deadline = time.time() + 1.5
                 return
-
-            # 检查激活状态
             if not self.interval_activated:
-                print("请先使用激活手势")
                 return
-
-            # 检查激活超时
             if time.time() - self.interval_activate_time > self.interval_timeout:
-                print("操作超时，请重新激活")
                 self.interval_activated = False
+                self.awaiting_mouse = False
                 return
-
-            # 执行手势操作
-            self.current_gesture = gesture
-            if gesture in self.actions:
-                if gesture == gesture_labels['mouse']:
-                    threading.Thread(target=self.mouse_control_loop, daemon=True).start()
-                else:
+            if self.awaiting_mouse and gesture == gesture_labels['mouse'] and time.time() < self.awaiting_mouse_deadline:
+                threading.Thread(target=self.mouse_control_loop, daemon=True).start()
+            else:
+                self.current_gesture = gesture
+                if gesture in self.actions:
                     self.actions[gesture]()
-
-            # 重置激活状态
             self.interval_activated = False
+            self.awaiting_mouse = False
             self.interval_activate_time = None
-        else:
-            print("未识别到有效手势")
 
 
 def get_gesture():

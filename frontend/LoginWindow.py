@@ -21,7 +21,7 @@ SECRET_KEY = 'SGMS_Secret_Key'
 def generate_jwt(username):
     payload = {
         "username": username,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        "exp": datetime.datetime.now() + datetime.timedelta(hours=1)
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
     return token
@@ -33,6 +33,57 @@ def send_jwt_to_server(jwt_token: str):
         return response.status_code, response.json()
     except Exception as e:
         return 500, {"error": str(e)}
+
+
+def refresh_token(token):
+    try:
+        response = requests.post("http://127.0.0.1:5000/api/refresh", json={"token": token})
+        return response.status_code, response.json()
+    except Exception as e:
+        return 500, {"error": str(e)}
+
+
+def input_style():
+    return """
+        QLineEdit {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        QLineEdit:focus {
+            border-color: #4CAF50;
+        }
+    """
+
+
+def button_style(color, hover_color):
+    return f"""
+        QPushButton {{
+            background-color: {color};
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }}
+        QPushButton:hover {{
+            background-color: {hover_color};
+        }}
+    """
+
+
+def title_button_style():
+    return """
+        QPushButton {
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #666;
+        }
+    """
 
 
 class LoginWindow(QDialog):
@@ -115,7 +166,7 @@ class LoginWindow(QDialog):
         # 用户名输入框
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("用户名")
-        self.username_input.setStyleSheet(self.input_style())
+        self.username_input.setStyleSheet(input_style())
         self.username_input.setFixedHeight(40)
         self.card_layout.addWidget(self.username_input)
 
@@ -123,7 +174,7 @@ class LoginWindow(QDialog):
         self.password_input = QLineEdit()
         self.password_input.setPlaceholderText("密码")
         self.password_input.setEchoMode(QLineEdit.Password)
-        self.password_input.setStyleSheet(self.input_style())
+        self.password_input.setStyleSheet(input_style())
         self.password_input.setFixedHeight(40)
         self.card_layout.addWidget(self.password_input)
 
@@ -131,7 +182,7 @@ class LoginWindow(QDialog):
         self.confirm_input = QLineEdit()
         self.confirm_input.setPlaceholderText("确认密码（注册）")
         self.confirm_input.setEchoMode(QLineEdit.Password)
-        self.confirm_input.setStyleSheet(self.input_style())
+        self.confirm_input.setStyleSheet(input_style())
         self.confirm_input.setFixedHeight(40)
         self.confirm_input.hide()
         self.card_layout.addWidget(self.confirm_input)
@@ -139,7 +190,7 @@ class LoginWindow(QDialog):
         # 登录或注册按钮
         self.action_button = QPushButton("登录")
         self.action_button.setFixedHeight(40)
-        self.action_button.setStyleSheet(self.button_style("#4CAF50", "#45a049"))
+        self.action_button.setStyleSheet(button_style("#4CAF50", "#45a049"))
         self.action_button.clicked.connect(self.handle_action)
         self.card_layout.addWidget(self.action_button)
         self.action_button.setShortcut("Return")
@@ -147,7 +198,7 @@ class LoginWindow(QDialog):
         # 切换按钮
         self.switch_button = QPushButton("没有账号？点击注册")
         self.switch_button.setFixedHeight(35)
-        self.switch_button.setStyleSheet(self.button_style("#2196F3", "#1976D2"))
+        self.switch_button.setStyleSheet(button_style("#2196F3", "#1976D2"))
         self.switch_button.clicked.connect(self.switch_mode)
         self.card_layout.addWidget(self.switch_button)
 
@@ -170,46 +221,36 @@ class LoginWindow(QDialog):
         # 初始提示
         self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Flask Running on http://127.0.0.1:5000")
 
+        self.token_timer = QTimer(self)
+        self.token_timer.timeout.connect(self.check_and_refresh_token)
+        self.token_timer.start(5 * 60 * 1000)  # 每5分钟检查一次
 
-    def input_style(self):
-        return """
-            QLineEdit {
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                padding: 8px;
-                font-size: 14px;
-            }
-            QLineEdit:focus {
-                border-color: #4CAF50;
-            }
-        """
+    def check_and_refresh_token(self):
+        token = glo.get_value('token')
+        if not token:
+            return False
 
-    def button_style(self, color, hover_color):
-        return f"""
-            QPushButton {{
-                background-color: {color};
-                color: white;
-                border: none;
-                border-radius: 5px;
-                font-size: 14px;
-            }}
-            QPushButton:hover {{
-                background-color: {hover_color};
-            }}
-        """
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+            exp_timestamp = payload['exp']
+            remaining_time = exp_timestamp - datetime.datetime.now().timestamp()
 
-    def title_button_style(self):
-        return """
-            QPushButton {
-                background-color: #444;
-                color: white;
-                border: none;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #666;
-            }
-        """
+            # 如果剩余小于5分钟则尝试刷新
+            if remaining_time < 300:
+                status, new_token = refresh_token(token)
+                if status == 200:
+                    glo.set_value('token', new_token['token'])
+                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | JWT 已刷新")
+                else:
+                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | JWT 刷新失败")
+                    return False
+            return True
+        except jwt.ExpiredSignatureError:
+            self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Token 已过期，请重新登录")
+            return False
+        except jwt.InvalidTokenError:
+            self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Token 无效")
+            return False
 
     def switch_mode(self):
         self.is_login_mode = not self.is_login_mode

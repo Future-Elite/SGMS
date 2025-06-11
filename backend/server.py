@@ -1,12 +1,12 @@
 import atexit
-
+import datetime
 from flask import Flask, request, jsonify, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from data.models import GestureMap, DeviceTypeEnum, ResultEnum
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
-import jwt
 from celery_worker import async_commit_log
+import jwt
 import cv2
 
 # 创建 Flask 应用
@@ -65,6 +65,18 @@ def async_commit(log_entry):
         s.close()
 
 
+# 视频流接口
+def generate_frames():
+    while True:
+        success, frame = camera.read()
+        if not success:
+            break
+        _, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+
 # Token 验证接口
 @flask_app.route('/api/auth', methods=['POST'])
 def auth():
@@ -84,16 +96,33 @@ def auth():
         return jsonify({"error": "无效的 Token"}), 403
 
 
-# 视频流接口
-def generate_frames():
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        _, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+# Token 刷新接口
+@flask_app.route('/api/refresh', methods=['POST'])
+def refresh_token():
+    data = request.get_json()
+    token = data.get("token")
+
+    if not token:
+        return jsonify({"error": "Missing token"}), 400
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"], options={"verify_exp": False})
+        exp = payload.get("exp")
+        now = datetime.datetime.now().timestamp()
+
+        if now > exp:
+            return jsonify({"error": "Token 已过期，无法刷新"}), 401
+
+        # 生成新 token
+        new_payload = {
+            "username": payload["username"],
+            "exp": datetime.datetime.now() + datetime.timedelta(hours=1)
+        }
+        new_token = jwt.encode(new_payload, SECRET_KEY, algorithm="HS256")
+        return jsonify({"token": new_token}), 200
+
+    except InvalidTokenError:
+        return jsonify({"error": "无效的 Token"}), 403
 
 
 @flask_app.route('/stream')
