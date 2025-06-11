@@ -187,7 +187,7 @@ class BASEWINDOW(QMainWindow):
         self.controller = subprocess.Popen(
             [sys.executable, 'backend/gesture_controller.py'],
             # stdout=subprocess.PIPE,
-            # stderr=subprocess.STDOUT,
+            # stderr=subprocess.STDOUT
         )
         self.is_controling = True
         self.showStatus('Gesture Controller Started')

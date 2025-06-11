@@ -731,6 +731,14 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_22.addLayout(self.formLayout)
 
+        self.status = QLabel(self.setting_page)
+        self.status.setObjectName(u"status")
+        self.status.setMinimumSize(QSize(250, 40))
+        self.status.setMouseTracking(True)
+        self.status.setTabletTracking(True)
+
+        self.verticalLayout_22.addWidget(self.status)
+
 
         self.verticalLayout_6.addWidget(self.setting_page)
 
@@ -767,5 +775,6 @@ class Ui_MainWindow(object):
         self.main_rightbox.setText("")
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"   IOU", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"\u7f6e\u4fe1\u5ea6", None))
+        self.status.setText("")
     # retranslateUi
 

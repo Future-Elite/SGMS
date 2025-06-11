@@ -27,7 +27,7 @@ class ResultWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("数据表查看器")
-        self.resize(1000, 600)
+        self.resize(750, 500)
 
         self.session = Session()
         self.current_data = []

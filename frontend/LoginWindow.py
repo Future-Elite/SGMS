@@ -41,7 +41,8 @@ class LoginWindow(QDialog):
 
         self.timer = None
         self.setAttribute(Qt.WA_TranslucentBackground)  # 圆角支持
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+
         self.setFixedSize(500, 480)
 
         self._try_times = 0

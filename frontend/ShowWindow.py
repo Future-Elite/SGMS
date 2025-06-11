@@ -1,4 +1,5 @@
 import os
+import time
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QIcon
@@ -7,6 +8,8 @@ from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
 from frontend.utils.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
 from PySide6.QtWidgets import QGraphicsDropShadowEffect
+import psutil
+from PySide6.QtCore import QTimer
 
 
 def applyShadow(widget, color=QColor(0, 0, 0, 80), blur=16):
@@ -17,9 +20,17 @@ def applyShadow(widget, color=QColor(0, 0, 0, 80), blur=16):
     widget.setGraphicsEffect(shadow)
 
 
+def getSystemLatency():
+    start = time.perf_counter()
+    time.sleep(0.001)  # 模拟 I/O 等待
+    end = time.perf_counter()
+    return (end - start) * 1000  # 转换为毫秒
+
+
 class SHOWWINDOW(BASEWINDOW):
     def __init__(self):
         super().__init__()
+        self.perf_timer = None
         self.is_playing = False
         self.current_model = None
         self.current_workpath = os.getcwd()
@@ -80,6 +91,16 @@ class SHOWWINDOW(BASEWINDOW):
         self.loadConfig()
         # --- Setting栏 初始化 --- #
 
+        self.ui.status.setStyleSheet("""
+            QLabel {
+                color: #2c3e50;
+                font-weight: bold;
+                font-size: 13px;
+            }
+        """)
+
+        self.initPerformanceMonitor()
+
         self.showStatus("多场景手势智能交互控制系统已启动")
         self.setUIStyle()
 
@@ -119,6 +140,20 @@ class SHOWWINDOW(BASEWINDOW):
         self.yolo_threads = ThreadPool()
         self.yolo_threads.set('yolov11', MODEL_THREAD_CLASSES['yolov11']())
         self.initModel(yoloname='yolov11')
+
+    def initPerformanceMonitor(self):
+        self.perf_timer = QTimer(self)
+        self.perf_timer.timeout.connect(self.updateSystemStatus)
+        self.perf_timer.start(1000)  # 每 1 秒更新一次
+
+    def updateSystemStatus(self):
+        cpu = psutil.cpu_percent()
+        mem = psutil.virtual_memory()
+        mem_percent = mem.percent
+        delay = getSystemLatency()
+
+        status_msg = f"CPU: {cpu:.1f}%\n内存: {mem_percent:.1f}%\n系统延迟: {delay:.1f} ms"
+        self.ui.status.setText(status_msg)
 
     def runModelProcess(self, yolo_name):
         yolo_thread = self.yolo_threads.get(yolo_name)
