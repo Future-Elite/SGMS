@@ -14,16 +14,25 @@ from frontend.utils import glo
 
 if __name__ == '__main__':
 
-    # 启动 Flask 后端
     flask_process = subprocess.Popen(
         [sys.executable, 'backend/server.py'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
 
+    celery_process = subprocess.Popen(
+        [sys.executable, '-m', 'celery', '-A', 'backend.celery_worker',
+         'worker', '--loglevel=info', '--pool=solo'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    # 注册退出钩子
     def cleanup():
         flask_process.terminate()
+        celery_process.terminate()
         flask_process.wait()
+        celery_process.wait()
 
     atexit.register(cleanup)
 

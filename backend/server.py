@@ -3,10 +3,10 @@ import atexit
 from flask import Flask, request, jsonify, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from data.models import GestureMap, OperationLog, DeviceTypeEnum, ResultEnum
+from data.models import GestureMap, DeviceTypeEnum, ResultEnum
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 import jwt
-import threading
+from celery_worker import async_commit_log
 import cv2
 
 # 创建 Flask 应用
@@ -101,7 +101,6 @@ def stream():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-# 上传检测结果接口（JSON）
 @flask_app.route('/result', methods=['POST'])
 def upload_result():
     global gesture_name
@@ -110,25 +109,21 @@ def upload_result():
         data = request.get_json()
         gesture_name = list(data.keys())[0].strip() if data else None
 
-        if not gesture_name:
-            return jsonify({"error": "未知手势"}), 400
+        if not gesture_name or gesture_name not in gesture_map_dict:
+            return jsonify({"error": "未知或未注册的手势"}), 400
 
-        # 查找手势映射
         gesture_info = gesture_map_dict[gesture_name]
 
-        if not gesture_name or gesture_name not in gesture_map_dict:
-            return jsonify({"error": "手势未注册"}), 404
+        log_data = {
+            "gesture_id": gesture_info['id'],
+            "operation_type": gesture_info['operation_type'],
+            "device_type": DeviceTypeEnum.tv.name,
+            "result": ResultEnum.success.name,
+            "detail": f"检测到手势：{gesture_name}"
+        }
 
-        log = OperationLog(
-            gesture_id=gesture_info['id'],
-            operation_type=gesture_info['operation_type'],
-            device_type=DeviceTypeEnum.tv,
-            result=ResultEnum.success,
-            detail=f"检测到手势：{gesture_name}"
-        )
-
-        # 异步写入日志
-        threading.Thread(target=async_commit, args=(log,), daemon=True).start()
+        # 异步提交日志
+        async_commit_log.delay(log_data)
 
         return jsonify({"message": f"手势“{gesture_name}”记录成功"}), 200
 
@@ -138,6 +133,7 @@ def upload_result():
         return jsonify({"error": "服务端异常"}), 500
     finally:
         session.close()
+
 
 
 @flask_app.route('/result', methods=['GET'])

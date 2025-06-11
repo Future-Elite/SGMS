@@ -3,7 +3,7 @@ import datetime
 import jwt
 import requests
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QIcon
+from frontend.utils.hash import generate_salt, hash_password, verify_password
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QTextEdit, QLabel, QFrame
 )
@@ -237,36 +237,42 @@ class LoginWindow(QDialog):
 
         session = Session()
 
-        if self.is_login_mode:
-            user = session.query(User).filter_by(username=username).first()
-            if user and user.password == password:
-                token = generate_jwt(username)
-                status, resp = send_jwt_to_server(token)
-                glo.set_value('resp', resp)
-                glo.set_value('token', token)
-                if not status:
-                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | JWT 发送失败")
-                    return
-                if status != 200:
-                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Flask 返回错误:" + str(resp))
-                    return
-                glo.set_value('user', username)
-                self.accept()
+        try:
+            if self.is_login_mode:
+                user = session.query(User).filter_by(username=username).first()
+                if user and verify_password(user.password_hash, user.password_salt, password):
+                    token = generate_jwt(username)
+                    status, resp = send_jwt_to_server(token)
+                    glo.set_value('resp', resp)
+                    glo.set_value('token', token)
+                    if not status:
+                        self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | JWT 发送失败")
+                        return
+                    if status != 200:
+                        self.update_info(
+                            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Flask 返回错误:" + str(resp))
+                        return
+                    glo.set_value('user', username)
+                    self.accept()
+                else:
+                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码错误")
+                    self.password_input.clear()
+                    self._try_times += 1
             else:
-                self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码错误")
-                self.password_input.clear()
-                self._try_times += 1
-        else:
-            if session.query(User).filter_by(username=username).first():
-                self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名已存在")
-            else:
-                new_user = User(username=username, password=password)
-                session.add(new_user)
-                session.commit()
-                self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 注册成功")
-                self.switch_mode()
-
-        session.close()
+                if session.query(User).filter_by(username=username).first():
+                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名已存在")
+                else:
+                    salt = generate_salt()
+                    password_hash_val = hash_password(password, salt)
+                    new_user = User(username=username, password_salt=salt, password_hash=password_hash_val)
+                    session.add(new_user)
+                    session.commit()
+                    self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 注册成功")
+                    self.switch_mode()
+        except Exception as e:
+            self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + f" | 服务器错误: {str(e)}")
+        finally:
+            session.close()
 
         if self._try_times >= 3:
             self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 尝试次数过多，请稍后再试")
@@ -276,7 +282,6 @@ class LoginWindow(QDialog):
             self.timer.start(5000)
             self.timer.timeout.connect(self.enable_button)
             self._try_times = 0
-
 
     def enable_button(self):
         self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 请重新登录")

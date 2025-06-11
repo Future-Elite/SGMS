@@ -22,8 +22,7 @@ interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume_ctl = cast(interface, POINTER(IAudioEndpointVolume))
 
 # 用户自定义软件路径配置
-PPT_PATH = r"C:\Users\29740\Desktop\需求分析和可行性分析.pptx"
-MUSIC_PATH = r"E:\网易云音乐\CloudMusic\cloudmusic.exe"
+PPT_PATH = None
 
 
 # ================== PowerPoint初始化 ==================
@@ -407,4 +406,4 @@ if __name__ == "__main__":
             print(f'[手势]: {gesture_name}')
             gesture_value = gesture_labels.get(gesture_name.split(' ')[0])
             controller.handle_gesture(gesture_value)
-        time.sleep(0.5)  # 降低CPU使用率
+        time.sleep(1)
