@@ -187,6 +187,14 @@ class LoginWindow(QDialog):
         self.confirm_input.hide()
         self.card_layout.addWidget(self.confirm_input)
 
+        # 内推码输入框（注册时显示）
+        self.referral_input = QLineEdit()
+        self.referral_input.setPlaceholderText("内推码（选填）")
+        self.referral_input.setStyleSheet(input_style())
+        self.referral_input.setFixedHeight(40)
+        self.referral_input.hide()
+        self.card_layout.addWidget(self.referral_input)
+
         # 登录或注册按钮
         self.action_button = QPushButton("登录")
         self.action_button.setFixedHeight(40)
@@ -257,11 +265,13 @@ class LoginWindow(QDialog):
         if self.is_login_mode:
             self.setWindowTitle("用户登录")
             self.confirm_input.hide()
+            self.referral_input.hide()  # 隐藏内推码
             self.action_button.setText("登录")
             self.switch_button.setText("没有账号？点击注册")
         else:
             self.setWindowTitle("用户注册")
             self.confirm_input.show()
+            self.referral_input.show()  # 显示内推码
             self.action_button.setText("注册")
             self.switch_button.setText("已有账号？点击登录")
 
@@ -293,7 +303,10 @@ class LoginWindow(QDialog):
                         self.update_info(
                             datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | Flask 返回错误:" + str(resp))
                         return
-                    glo.set_value('user', username)
+                    if user.is_admin:
+                        glo.set_value('user', '[Admin]' + username)
+                    else:
+                        glo.set_value('user', username)
                     self.accept()
                 else:
                     self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码错误")
@@ -305,7 +318,21 @@ class LoginWindow(QDialog):
                 else:
                     salt = generate_salt()
                     password_hash_val = hash_password(password, salt)
-                    new_user = User(username=username, password_salt=salt, password_hash=password_hash_val)
+                    referral_code = self.referral_input.text().strip()
+                    EXPECTED_CODE = "ADMIN"  # 指定内推码
+
+                    is_admin = referral_code == EXPECTED_CODE
+
+                    if is_admin:
+                        self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 您已被授予管理员权限")
+
+                    new_user = User(
+                        username=username,
+                        password_salt=salt,
+                        password_hash=password_hash_val,
+                        is_admin=is_admin
+                    )
+
                     session.add(new_user)
                     session.commit()
                     self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 注册成功")

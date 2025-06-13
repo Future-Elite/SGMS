@@ -59,5 +59,6 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     username = Column(String(50), unique=True)
+    is_admin = Column(Boolean, default=False, nullable=False)
     password_salt = Column(String(32))
     password_hash = Column(String(64))

@@ -24,12 +24,13 @@ TABLE_MAP = {
 
 
 class ResultWindow(QWidget):
-    def __init__(self):
+    def __init__(self, allowed_tables=None):
         super().__init__()
         self.setWindowTitle("数据表查看器")
         self.resize(750, 500)
 
         self.session = Session()
+        self.allowed_tables = allowed_tables
         self.current_data = []
         self.current_columns = []
         self.current_table_name = None
@@ -40,6 +41,8 @@ class ResultWindow(QWidget):
         # 按钮区域
         self.button_layout = QHBoxLayout()
         for table_name in TABLE_MAP.keys():
+            if self.allowed_tables is not None and table_name not in self.allowed_tables:
+                continue  # 如果指定了允许的表名且当前表名不在其中，则跳过
             btn = QPushButton(table_name)
             btn.clicked.connect(self.make_table_loader(table_name))
             self.button_layout.addWidget(btn)

@@ -28,6 +28,7 @@ volume_ctl = cast(interface, POINTER(IAudioEndpointVolume))
 # 用户自定义软件路径配置
 PPT_PATH = None
 
+
 # ================== PowerPoint初始化 ==================
 def initialize_powerpoint():
     """根据指定路径初始化PPT应用"""
@@ -82,8 +83,6 @@ session = Session()
 # ================== 手势控制器类 ==================
 class GestureController:
     def __init__(self):
-        self.awaiting_mouse = None
-        self.awaiting_mouse_deadline = None
         self.current_gesture = None
         self.mouse_control_active = False
         self.last_gesture = None
@@ -372,27 +371,37 @@ class GestureController:
 
     def handle_gesture(self, gesture):
         if gesture is not None:
+            # 激活手势处理
             if gesture == gesture_labels["activate"]:
                 self.interval_activated = True
                 self.interval_activate_time = time.time()
-                self.awaiting_mouse = True
-                self.awaiting_mouse_deadline = time.time() + 1.5
+                print("间隔手势已激活，10秒内等待下一个操作...")
                 return
+
+            # 检查激活状态
             if not self.interval_activated:
+                print("请先使用激活手势")
                 return
+
+            # 检查激活超时
             if time.time() - self.interval_activate_time > self.interval_timeout:
+                print("操作超时，请重新激活")
                 self.interval_activated = False
-                self.awaiting_mouse = False
                 return
-            if self.awaiting_mouse and gesture == gesture_labels['mouse'] and time.time() < self.awaiting_mouse_deadline:
-                threading.Thread(target=self.mouse_control_loop, daemon=True).start()
-            else:
-                self.current_gesture = gesture
-                if gesture in self.actions:
+
+            # 执行手势操作
+            self.current_gesture = gesture
+            if gesture in self.actions:
+                if gesture == gesture_labels['mouse']:
+                    threading.Thread(target=self.mouse_control_loop, daemon=True).start()
+                else:
                     self.actions[gesture]()
+
+            # 重置激活状态
             self.interval_activated = False
-            self.awaiting_mouse = False
             self.interval_activate_time = None
+        else:
+            print("未识别到有效手势")
 
 
 def get_gesture():
@@ -437,4 +446,4 @@ if __name__ == "__main__":
             print(f'[手势]: {gesture_name}')
             gesture_value = gesture_labels.get(gesture_name.split(' ')[0])
             controller.handle_gesture(gesture_value)
-        time.sleep(1)
+        time.sleep(0.5)

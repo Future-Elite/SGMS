@@ -9,6 +9,9 @@ import numpy as np
 
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtWidgets import QGraphicsDropShadowEffect
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from data.models import User
 from cv_module.CVThread import CVThread
 from frontend.FloatingWindow import FloatingWindow
 from frontend.ResultWindow import ResultWindow
@@ -213,7 +216,23 @@ class BASEWINDOW(QMainWindow):
             for yolo_thread in self.yolo_threads.threads_pool.values():
                 yolo_thread.conf_thres = x / 100
 
-    # 展示表格结果
+
+
     def showTableResult(self):
-        self.result_window = ResultWindow()
+        # 创建会话
+        engine = create_engine('sqlite:///data/database.db', echo=False)
+        session = scoped_session(sessionmaker(bind=engine))
+
+        # 查询当前用户是否是管理员
+        user = session.query(User).filter_by(username=USER).first()
+        session.close()
+
+        if user and not user.is_admin:
+            # 不是管理员，只允许查看 OperationLog
+            self.result_window = ResultWindow(allowed_tables=["device_state", "operation_log"])
+        else:
+            # 是管理员，允许查看所有内容
+            self.result_window = ResultWindow()
+
         self.result_window.show()
+
