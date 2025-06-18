@@ -147,7 +147,7 @@ class BASEWINDOW(QMainWindow):
 
     # 在MessageBar显示消息
     def showStatus(self, msg):
-        msg = 'User:{0} > {1}'.format(USER, msg)
+        msg = '{0} >> {1}'.format(USER, msg)
         last_msg = self.ui.user_info.toPlainText().split('\n')[-1]
         if msg != last_msg:
             self.ui.user_info.append(msg)

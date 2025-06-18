@@ -25,9 +25,7 @@ devices = AudioUtilities.GetSpeakers()
 interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume_ctl = cast(interface, POINTER(IAudioEndpointVolume))
 
-# 用户自定义软件路径配置
 PPT_PATH = None
-
 
 # ================== PowerPoint初始化 ==================
 def initialize_powerpoint():

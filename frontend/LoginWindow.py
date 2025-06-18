@@ -306,7 +306,7 @@ class LoginWindow(QDialog):
                     if user.is_admin:
                         glo.set_value('user', '[Admin]' + username)
                     else:
-                        glo.set_value('user', username)
+                        glo.set_value('user', '[User]' + username)
                     self.accept()
                 else:
                     self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 用户名或密码错误")
