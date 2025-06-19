@@ -1,7 +1,9 @@
 import atexit
+import base64
 import datetime
 import json
 
+import numpy as np
 from flask import Flask, request, jsonify, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -10,7 +12,6 @@ from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from celery_worker import async_commit_log
 import jwt
 import cv2
-
 
 # 创建 Flask 应用
 flask_app = Flask(__name__)
@@ -21,6 +22,7 @@ engine = create_engine('sqlite:///data/database.db', echo=False)
 SessionLocal = scoped_session(sessionmaker(bind=engine))
 gesture_name = None
 username = None
+token = None
 gesture_labels = {
     'Left_Double_Click': 0,
     'backward': 1,
@@ -84,7 +86,7 @@ def generate_frames():
 # Token 验证接口
 @flask_app.route('/api/auth', methods=['POST'])
 def auth():
-    global username
+    global username, token
     data = request.get_json()
     token = data.get("token")
 
@@ -104,6 +106,7 @@ def auth():
 # Token 刷新接口
 @flask_app.route('/api/refresh', methods=['POST'])
 def refresh_token():
+    global token
     data = request.get_json()
     token = data.get("token")
 
@@ -171,6 +174,83 @@ def upload_result():
     finally:
         session.close()
 
+
+def recognize_gesture_from_frame(frame):
+    import mediapipe as mp
+    from ultralytics import YOLO
+    labels = {
+        0: 'Left_Double_Click',
+        1: 'backward',
+        2: 'forward',
+        3: 'high',
+        4: 'left_click',
+        5: 'low',
+        6: 'mouse',
+        7: 'activate',
+        8: 'right_click',
+        9: 'start_or_pause'
+    }
+    black_img = np.zeros(frame.shape, dtype=np.uint8)
+    mp_pose = mp.solutions.hands
+    hands = mp_pose.Hands(True, 1, 1, 0.5, 0.5)
+    results = hands.process(frame)
+    if results.multi_hand_landmarks:
+        for oneHand in results.multi_hand_landmarks:
+            mp.solutions.drawing_utils.draw_landmarks(
+                black_img, oneHand, mp.solutions.hands.HAND_CONNECTIONS,
+            )
+    model = YOLO('cv_module/ptfiles/yolo11s-cls.pt')
+    res = model.predict(black_img)
+    gesture_id = res[0].probs.top1
+    confidence = res[0].probs.top1conf.item()
+    return labels[gesture_id], confidence
+
+
+@flask_app.route('/api/recognize', methods=['POST'])
+def recognize_gesture():
+    global username, token
+    data = request.get_json()
+
+    if not token:
+        return jsonify({"error": "缺少 token"}), 401
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        username = payload.get("username")
+        if not username:
+            return jsonify({"error": "无效用户"}), 403
+    except ExpiredSignatureError:
+        return jsonify({"error": "Token 已过期"}), 401
+    except InvalidTokenError:
+        return jsonify({"error": "无效 Token"}), 403
+
+    frame_data = data.get("frame_data")
+    session_id = data.get("session_id")
+
+    if not frame_data or not session_id:
+        return jsonify({"status": "error", "message": "缺少必要字段"}), 400
+
+    try:
+        # 解码 base64 图像
+        img_bytes = base64.b64decode(frame_data)
+        nparr = np.frombuffer(img_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if frame is None:
+            return jsonify({"status": "error", "message": "图像解码失败"}), 400
+
+        # 手势识别
+        gesture, confidence = recognize_gesture_from_frame(frame)
+
+        return jsonify({
+            "status": "success",
+            "gesture": gesture,
+            "confidence": round(confidence, 2)
+        }), 200
+
+    except Exception as e:
+        print("识别失败:", e)
+        return jsonify({"status": "error", "message": "服务端异常"}), 500
 
 
 @flask_app.route('/result', methods=['GET'])

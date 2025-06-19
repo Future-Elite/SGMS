@@ -16,8 +16,8 @@ if __name__ == '__main__':
 
     flask_process = subprocess.Popen(
         [sys.executable, 'backend/server.py'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        # stdout=subprocess.PIPE,
+        # stderr=subprocess.PIPE
     )
 
     celery_process = subprocess.Popen(
