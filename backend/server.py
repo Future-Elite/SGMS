@@ -1,7 +1,6 @@
 import atexit
 import base64
 import datetime
-import json
 
 import numpy as np
 from flask import Flask, request, jsonify, Response
