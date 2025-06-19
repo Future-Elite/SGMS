@@ -143,8 +143,6 @@ class CVThread(QThread):
                     if not has_hand:
                         label_str = 'no detections'
 
-                    class_nums = 0
-                    target_nums = 0
                     self.labels_dict = {}
                     if 'no detections' in label_str:
                         pass
@@ -158,8 +156,6 @@ class CVThread(QThread):
                                     nums = num_labelname[each]
                                 elif len(num_labelname[each]):
                                     label_name += num_labelname[each] + " "
-                            target_nums += int(nums)
-                            class_nums += 1
                             if label_name in self.labels_dict:
                                 self.labels_dict[label_name] += int(nums)
                             else:  # 第一次出现的类别
