@@ -57,3 +57,6 @@ python>=3.9
 git clone [https://github.com/Future-Elite/SGMS]
 cd [project-name]
 pip install -r requirements.txt
+
+### 演示视频
+见demo/demo.mp4
