@@ -22,7 +22,7 @@ from PySide6.QtWidgets import QMainWindow
 glo.init()
 glo.set_value('yoloname', "yolov11")
 
-
+USER = None
 # 模型名称和线程类映射
 MODEL_THREAD_CLASSES = {
     "yolov11": CVThread,
@@ -189,8 +189,7 @@ class BASEWINDOW(QMainWindow):
     def start_control(self):
         self.controller = subprocess.Popen(
             [sys.executable, 'backend/gesture_controller.py'],
-            # stdout=subprocess.PIPE,
-            # stderr=subprocess.STDOUT
+            stdout=sys.stdout, stderr=sys.stdout
         )
         self.is_controling = True
         self.showStatus('Gesture Controller Started')
@@ -217,22 +216,21 @@ class BASEWINDOW(QMainWindow):
                 yolo_thread.conf_thres = x / 100
 
 
-
     def showTableResult(self):
-        # 创建会话
+        global USER
         engine = create_engine('sqlite:///data/database.db', echo=False)
         session = scoped_session(sessionmaker(bind=engine))
-
-        # 查询当前用户是否是管理员
-        user = session.query(User).filter_by(username=USER).first()
+        u = None
+        if 'Admin' in USER:
+            u = USER[7:]
+        elif 'User' in USER:
+            u = USER[6:]
+        user = session.query(User).filter_by(username=u).first()
         session.close()
-
         if user and not user.is_admin:
             # 不是管理员，只允许查看 OperationLog
-            self.result_window = ResultWindow(allowed_tables=["device_state", "operation_log"])
+            self.result_window = ResultWindow(allowed_tables=["device_state", "operation_log"], current_user=user)
         else:
             # 是管理员，允许查看所有内容
             self.result_window = ResultWindow()
-
         self.result_window.show()
-

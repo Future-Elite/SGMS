@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from PySide6.QtCore import QThread, Signal
 from pathlib import Path
-from frontend.utils import pipe
+from frontend.utils import pipe, glo
 from backend.result_updater import ResultUpdater
 from ultralytics.data import load_inference_source
 from ultralytics.data.augment import classify_transforms, LetterBox

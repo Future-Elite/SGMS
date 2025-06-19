@@ -144,15 +144,17 @@ class SHOWWINDOW(BASEWINDOW):
     def initPerformanceMonitor(self):
         self.perf_timer = QTimer(self)
         self.perf_timer.timeout.connect(self.updateSystemStatus)
-        self.perf_timer.start(1000)  # 每 1 秒更新一次
+        self.perf_timer.start(2000)  # 每 2 秒更新一次
 
     def updateSystemStatus(self):
         cpu = psutil.cpu_percent()
-        mem = psutil.virtual_memory()
-        mem_percent = mem.percent
+        process = psutil.Process(os.getpid())
+        mem_info = process.memory_info()
+        mem_rss_mb = mem_info.rss / 1024 / 1024  # 以 MB 显示常驻内存（RSS）
+
         delay = getSystemLatency()
 
-        status_msg = f"CPU: {cpu:.1f}%\n内存: {mem_percent:.1f}%\n系统延迟: {delay:.1f} ms"
+        status_msg = f"CPU: {cpu:.1f}%\n内存: {mem_rss_mb:.1f} MB\n系统延迟: {delay:.1f} ms"
         self.ui.status.setText(status_msg)
 
     def runModelProcess(self, yolo_name):

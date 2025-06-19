@@ -24,7 +24,7 @@ TABLE_MAP = {
 
 
 class ResultWindow(QWidget):
-    def __init__(self, allowed_tables=None):
+    def __init__(self, allowed_tables=None, current_user=None):
         super().__init__()
         self.setWindowTitle("数据表查看器")
         self.resize(750, 500)
@@ -34,6 +34,7 @@ class ResultWindow(QWidget):
         self.current_data = []
         self.current_columns = []
         self.current_table_name = None
+        self.current_user = current_user
 
         # 总布局
         self.layout = QVBoxLayout()
@@ -86,7 +87,15 @@ class ResultWindow(QWidget):
             self.current_table_name = table_name
 
             model = TABLE_MAP[table_name]
-            records = self.session.query(model).all()
+
+            if table_name == "operation_log" and self.current_user is not None and not self.current_user.is_admin:
+                records = (
+                    self.session.query(model)
+                    .filter_by(user_id=self.current_user.id)
+                    .all()
+                )
+            else:
+                records = self.session.query(model).all()
 
             self.current_columns = model.__table__.columns.keys()
             self.current_data = []
@@ -95,7 +104,6 @@ class ResultWindow(QWidget):
                 row = []
                 for col in self.current_columns:
                     val = getattr(record, col)
-                    # 格式化 JSON 字段
                     if isinstance(val, dict):
                         val = json.dumps(val, indent=2, ensure_ascii=False)
                     row.append(str(val))

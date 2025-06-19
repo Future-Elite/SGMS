@@ -40,7 +40,8 @@ if __name__ == '__main__':
 
     # 禁用日志
     logging.disable(logging.CRITICAL)
-    sys.stdout = open(os.devnull, 'w')
+    logging.disable(logging.NOTSET)
+    logging.disable(logging.ERROR)
 
     app = QApplication([])
     app.setWindowIcon(QIcon('gui/images/icon.ico'))

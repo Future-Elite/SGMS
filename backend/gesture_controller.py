@@ -19,6 +19,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from data.models import DeviceState, DeviceTypeEnum
 
+
 # ================== 全局初始化 ==================
 # 初始化音量控制
 devices = AudioUtilities.GetSpeakers()
@@ -73,10 +74,10 @@ gesture_labels = {
     'start_or_pause': 9
 }
 
-
 engine = create_engine("sqlite:///data/database.db")
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 # ================== 手势控制器类 ==================
 class GestureController:
@@ -441,7 +442,7 @@ if __name__ == "__main__":
     while True:
         gesture_name = get_gesture()
         if gesture_name:
-            print(f'[手势]: {gesture_name}')
+            print('[手势]:', gesture_name)
             gesture_value = gesture_labels.get(gesture_name.split(' ')[0])
             controller.handle_gesture(gesture_value)
         time.sleep(0.5)

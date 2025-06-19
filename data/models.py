@@ -3,6 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Enum, Boolean, DateTime, JSON, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -47,12 +48,14 @@ class DeviceState(Base):
 class OperationLog(Base):
     __tablename__ = 'operation_log'
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     gesture_id = Column(Integer, ForeignKey('gesture_map.id'))
     operation_type = Column(Enum(OperationTypeEnum), nullable=False)
     device_type = Column(Enum(DeviceTypeEnum), nullable=False)
     operation_time = Column(DateTime, default=datetime.now)
     result = Column(Enum(ResultEnum), nullable=False)
     detail = Column(String, default='')
+    user = relationship("User", back_populates="operation_logs")
 
 
 class User(Base):
@@ -62,3 +65,4 @@ class User(Base):
     is_admin = Column(Boolean, default=False, nullable=False)
     password_salt = Column(String(32))
     password_hash = Column(String(64))
+    operation_logs = relationship("OperationLog", back_populates="user", cascade="all, delete-orphan")

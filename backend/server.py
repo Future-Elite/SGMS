@@ -1,13 +1,16 @@
 import atexit
 import datetime
+import json
+
 from flask import Flask, request, jsonify, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from data.models import GestureMap, DeviceTypeEnum, ResultEnum
+from data.models import GestureMap, DeviceTypeEnum, ResultEnum, User
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from celery_worker import async_commit_log
 import jwt
 import cv2
+
 
 # 创建 Flask 应用
 flask_app = Flask(__name__)
@@ -17,6 +20,7 @@ SECRET_KEY = 'SGMS_Secret_Key'
 engine = create_engine('sqlite:///data/database.db', echo=False)
 SessionLocal = scoped_session(sessionmaker(bind=engine))
 gesture_name = None
+username = None
 gesture_labels = {
     'Left_Double_Click': 0,
     'backward': 1,
@@ -80,6 +84,7 @@ def generate_frames():
 # Token 验证接口
 @flask_app.route('/api/auth', methods=['POST'])
 def auth():
+    global username
     data = request.get_json()
     token = data.get("token")
 
@@ -137,6 +142,7 @@ def upload_result():
     try:
         data = request.get_json()
         gesture_name = list(data.keys())[0].strip() if data else None
+        user = session.query(User).filter_by(username=username).first()
 
         if not gesture_name or gesture_name not in gesture_map_dict:
             return jsonify({"error": "未知或未注册的手势"}), 400
@@ -144,13 +150,14 @@ def upload_result():
         gesture_info = gesture_map_dict[gesture_name]
 
         log_data = {
+            "user_id": user.id,
             "gesture_id": gesture_info['id'],
             "operation_type": gesture_info['operation_type'],
             "device_type": DeviceTypeEnum.tv.name,
             "result": ResultEnum.success.name,
             "detail": f"检测到手势：{gesture_name}"
         }
-
+        print(log_data)
         # 异步提交日志
         async_commit_log.delay(log_data)
 
@@ -159,6 +166,7 @@ def upload_result():
     except Exception as e:
         session.rollback()
         print(f"Server error: {e}")
+        print(username)
         return jsonify({"error": "服务端异常"}), 500
     finally:
         session.close()

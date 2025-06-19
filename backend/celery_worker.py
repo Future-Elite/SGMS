@@ -16,6 +16,7 @@ def async_commit_log(log_data):
     session = SessionLocal()
     try:
         log_entry = OperationLog(
+            user_id=log_data['user_id'],
             gesture_id=log_data["gesture_id"],
             operation_type=log_data["operation_type"],
             device_type=DeviceTypeEnum[log_data["device_type"]],

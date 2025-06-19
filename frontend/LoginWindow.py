@@ -1,4 +1,6 @@
 import datetime
+import os
+import sys
 
 import jwt
 import requests
@@ -294,8 +296,6 @@ class LoginWindow(QDialog):
                 if user and verify_password(user.password_hash, user.password_salt, password):
                     token = generate_jwt(username)
                     status, resp = send_jwt_to_server(token)
-                    glo.set_value('resp', resp)
-                    glo.set_value('token', token)
                     if not status:
                         self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | JWT 发送失败")
                         return
@@ -306,6 +306,7 @@ class LoginWindow(QDialog):
                     if user.is_admin:
                         glo.set_value('user', '[Admin]' + username)
                     else:
+                        sys.stdout = open(os.devnull, 'w')
                         glo.set_value('user', '[User]' + username)
                     self.accept()
                 else:
@@ -343,11 +344,10 @@ class LoginWindow(QDialog):
             session.close()
 
         if self._try_times >= 3:
-            self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 尝试次数过多，请稍后再试")
+            self.update_info(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " | 尝试次数过多，请3分钟后再试")
             self.action_button.setEnabled(False)
-            # 设置定时器，5秒后重新启用按钮
             self.timer = QTimer(self)
-            self.timer.start(5000)
+            self.timer.start(1000 * 300)
             self.timer.timeout.connect(self.enable_button)
             self._try_times = 0
 
