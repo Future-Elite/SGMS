@@ -20,6 +20,7 @@ if __name__ == '__main__':
         stderr=subprocess.PIPE
     )
 
+
     celery_process = subprocess.Popen(
         [sys.executable, '-m', 'celery', '-A', 'backend.celery_worker',
          'worker', '--loglevel=info', '--pool=solo'],
