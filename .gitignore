@@ -1,4 +1,4 @@
 *.pyc
 /.idea
-/cv_module/train/runs
-/datasets
+/.gitignore
+/.gitattributes
