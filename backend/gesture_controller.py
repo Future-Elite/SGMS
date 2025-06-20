@@ -19,7 +19,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from data.models import DeviceState, DeviceTypeEnum
 
-
 # ================== 全局初始化 ==================
 # 初始化音量控制
 devices = AudioUtilities.GetSpeakers()
@@ -27,6 +26,7 @@ interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume_ctl = cast(interface, POINTER(IAudioEndpointVolume))
 
 PPT_PATH = None
+
 
 # ================== PowerPoint初始化 ==================
 def initialize_powerpoint():
@@ -79,6 +79,20 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
+def get_gesture():
+    """读取手势识别结果"""
+    if not os.path.exists('data/config/res.json'):
+        return None
+    try:
+        with open('data/config/res.json', "r") as f:
+            data = json.load(f)
+            # 获取置信度最高的手势
+            return max(data, key=data.get) if data else None
+    except Exception as e:
+        print(f"手势读取失败: {e}")
+        return None
+
+
 # ================== 手势控制器类 ==================
 class GestureController:
     def __init__(self):
@@ -89,6 +103,7 @@ class GestureController:
         self.interval_activated = False
         self.interval_timeout = 10
         self.interval_activate_time = None
+        self.slide_show_active = False
         self.actions = {
             0: self._action_wrapper(self.left_double_click),
             1: self._action_wrapper(self.backward),
@@ -101,7 +116,6 @@ class GestureController:
             8: self._action_wrapper(self.right_click),
             9: self._action_wrapper(self.start_or_pause)
         }
-        self.slide_show_active = False
 
     def _action_wrapper(self, func):
         def wrapped():
@@ -117,7 +131,7 @@ class GestureController:
         return wrapped
 
     def get_device_state_snapshot(self):
-        """获取当前设备状态（模拟或实际）"""
+        """获取当前设备状态"""
         return {
             'volume': volume_ctl.GetMasterVolumeLevelScalar(),
             'mouse_control_active': self.mouse_control_active,
@@ -139,10 +153,7 @@ class GestureController:
         if expected_keys is None:
             expected_keys = before_state.keys()
         changes = {k: (before_state[k], after_state[k]) for k in expected_keys if before_state[k] != after_state[k]}
-        if not changes:
-            print("⚠️ 命令执行后状态无变化，可能未生效。")
-        else:
-            print("✅ 状态已更新：", changes)
+        print("✅ 状态已更新：", changes)
 
     def _set_cooldown(self):
         self.media_control_lock = True
@@ -295,7 +306,7 @@ class GestureController:
 
         mp_hands = mp.solutions.hands
         hands = mp_hands.Hands(
-            static_image_mode=False,  # 改为False提高实时性能
+            static_image_mode=False,
             max_num_hands=2,
             model_complexity=1,
             min_detection_confidence=0.5,
@@ -401,20 +412,6 @@ class GestureController:
             self.interval_activate_time = None
         else:
             print("未识别到有效手势")
-
-
-def get_gesture():
-    """读取手势识别结果"""
-    if not os.path.exists('data/config/res.json'):
-        return None
-    try:
-        with open('data/config/res.json', "r") as f:
-            data = json.load(f)
-            # 获取置信度最高的手势
-            return max(data, key=data.get)
-    except Exception as e:
-        print(f"手势读取失败: {e}")
-        return None
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ def async_commit_log(log_data):
         session.add(log_entry)
         session.commit()
     except Exception as e:
-        print("Celery commit error:", e)
+        print("Celery error:", e)
         session.rollback()
     finally:
         session.close()
