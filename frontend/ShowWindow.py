@@ -4,7 +4,8 @@ import time
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QIcon
 
-from frontend.BaseWindow import BASEWINDOW, MODEL_THREAD_CLASSES
+from cv_module.CVThread import CVThread
+from frontend.BaseWindow import BASEWINDOW
 from frontend.utils.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
 from PySide6.QtWidgets import QGraphicsDropShadowEffect
@@ -138,7 +139,7 @@ class SHOWWINDOW(BASEWINDOW):
 
     def initThreads(self):
         self.yolo_threads = ThreadPool()
-        self.yolo_threads.set('yolov11', MODEL_THREAD_CLASSES['yolov11']())
+        self.yolo_threads.set('yolov11', CVThread())
         self.initModel(yoloname='yolov11')
 
     def initPerformanceMonitor(self):
@@ -151,9 +152,7 @@ class SHOWWINDOW(BASEWINDOW):
         process = psutil.Process(os.getpid())
         mem_info = process.memory_info()
         mem_rss_mb = mem_info.rss / 1024 / 1024  # 以 MB 显示常驻内存（RSS）
-
         delay = getSystemLatency()
-
         status_msg = f"CPU: {cpu:.1f}%\n内存: {mem_rss_mb:.1f} MB\n系统延迟: {delay:.1f} ms"
         self.ui.status.setText(status_msg)
 

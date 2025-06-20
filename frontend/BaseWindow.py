@@ -12,29 +12,15 @@ from PySide6.QtWidgets import QGraphicsDropShadowEffect
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from data.models import User
-from cv_module.CVThread import CVThread
 from frontend.FloatingWindow import FloatingWindow
 from frontend.ResultWindow import ResultWindow
 from frontend.utils import glo, pipe
 from frontend.utils.logger import LoggerUtils
 from PySide6.QtWidgets import QMainWindow
 
-glo.init()
-glo.set_value('yoloname', "yolov11")
-
 USER = None
-# 模型名称和线程类映射
-MODEL_THREAD_CLASSES = {
-    "yolov11": CVThread,
-}
-
-# 扩展MODEL_THREAD_CLASSES字典
-MODEL_NAME_DICT = list(MODEL_THREAD_CLASSES.items())
-for key, value in MODEL_NAME_DICT:
-    MODEL_THREAD_CLASSES[f"{key}_left"] = value
-    MODEL_THREAD_CLASSES[f"{key}_right"] = value
-
 loggertool = LoggerUtils()
+glo.init()
 
 
 def get_send_out():
@@ -48,7 +34,6 @@ def get_send_out():
 class BASEWINDOW(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.model_name = 'cv_module/ptfiles/yolo11s-cls.pt'
         self.floating_window = None
         self.is_controling = None
@@ -59,7 +44,7 @@ class BASEWINDOW(QMainWindow):
         self.yolo_threads = None
         self.result_statistic = None
         self.detect_result = None
-        self.allModelNames = ["yolov11"]
+
 
     def shadowStyle(self, widget, Color, top_bottom=None):
         shadow = QGraphicsDropShadowEffect()
@@ -76,7 +61,7 @@ class BASEWINDOW(QMainWindow):
     # 初始化左侧菜单栏
     def initSiderWidget(self):
         global USER
-        # 显示用户信息
+        USER = glo.get_value('user')
         self.ui.user_info.setStyleSheet(u"""
             font: 10pt "Cascadia Mono";
             color: #CCCCCC;  
@@ -84,7 +69,6 @@ class BASEWINDOW(QMainWindow):
             border: 1px solid rgb(100, 100, 100);
             border-radius: 4px; 
         """)
-        USER = glo.get_value('user')
 
     # 加载模型
     def initModel(self, yoloname=None):
@@ -109,7 +93,6 @@ class BASEWINDOW(QMainWindow):
             ih, iw, _ = img_src.shape
             w = label.geometry().width()
             h = label.geometry().height()
-            # keep original aspect ratio
             if iw / w > ih / h:
                 scal = w / iw
                 nw = w
@@ -170,7 +153,7 @@ class BASEWINDOW(QMainWindow):
 
     # 加载 Setting 栏
     def loadConfig(self):
-        # 1、随机初始化超参数，防止切换模型时，超参数不变
+        # 1、随机初始化超参数
         params = {"iou": round(random.uniform(0, 1), 2),
                   "conf": round(random.uniform(0, 1), 2)}
         self.updateParams(params)
