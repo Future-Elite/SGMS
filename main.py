@@ -11,38 +11,38 @@ from frontend.LoginWindow import LoginWindow
 from frontend.Window import MainWindow
 from frontend.utils import glo
 
+flask_process = subprocess.Popen(
+    [sys.executable, 'backend/server.py'],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
+
+celery_process = subprocess.Popen(
+    [sys.executable, '-m', 'celery', '-A', 'backend.celery_worker',
+     'worker', '--loglevel=info', '--pool=solo'],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
+
+
+def cleanup():
+    flask_process.terminate()
+    celery_process.terminate()
+    flask_process.wait()
+    celery_process.wait()
+
+
+atexit.register(cleanup)
+
+sys.path.append(os.path.join(os.getcwd(), "gui/ui"))
+
+# 禁用日志
+logging.disable(logging.CRITICAL)
+logging.disable(logging.NOTSET)
+logging.disable(logging.ERROR)
+sys.stdout = open(os.devnull, 'w')
 
 if __name__ == '__main__':
-
-    flask_process = subprocess.Popen(
-        [sys.executable, 'backend/server.py'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-
-
-    celery_process = subprocess.Popen(
-        [sys.executable, '-m', 'celery', '-A', 'backend.celery_worker',
-         'worker', '--loglevel=info', '--pool=solo'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-
-    # 注册退出钩子
-    def cleanup():
-        flask_process.terminate()
-        celery_process.terminate()
-        flask_process.wait()
-        celery_process.wait()
-
-    atexit.register(cleanup)
-
-    sys.path.append(os.path.join(os.getcwd(), "gui/ui"))
-
-    # 禁用日志
-    logging.disable(logging.CRITICAL)
-    logging.disable(logging.NOTSET)
-    logging.disable(logging.ERROR)
 
     app = QApplication([])
     app.setWindowIcon(QIcon('gui/images/icon.ico'))
