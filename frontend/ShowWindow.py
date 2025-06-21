@@ -1,16 +1,15 @@
 import os
 import time
+import psutil
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor, QIcon
+from PySide6.QtWidgets import QGraphicsDropShadowEffect
 
 from cv_module.CVThread import CVThread
 from frontend.BaseWindow import BASEWINDOW
 from frontend.utils.ThreadPool import ThreadPool
 from gui.ui.UI import Ui_MainWindow
-from PySide6.QtWidgets import QGraphicsDropShadowEffect
-import psutil
-from PySide6.QtCore import QTimer
 
 
 def applyShadow(widget, color=QColor(0, 0, 0, 80), blur=16):
@@ -23,7 +22,7 @@ def applyShadow(widget, color=QColor(0, 0, 0, 80), blur=16):
 
 def getSystemLatency():
     start = time.perf_counter()
-    time.sleep(0.001)  # 模拟 I/O 等待
+    time.sleep(0.001)
     end = time.perf_counter()
     return (end - start) * 1000  # 转换为毫秒
 
@@ -31,6 +30,7 @@ def getSystemLatency():
 class SHOWWINDOW(BASEWINDOW):
     def __init__(self):
         super().__init__()
+        self.gesture_timer = None
         self.perf_timer = None
         self.is_playing = False
         self.current_model = None
@@ -100,8 +100,8 @@ class SHOWWINDOW(BASEWINDOW):
             }
         """)
 
+        self.initGestureMonitor()
         self.initPerformanceMonitor()
-
         self.showStatus("多场景手势智能交互控制系统已启动")
         self.setUIStyle()
 
@@ -130,6 +130,21 @@ class SHOWWINDOW(BASEWINDOW):
                     background-color: #e74c3c;
                 }
             """)
+        self.ui.log_out_button.setStyleSheet("""
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 6px 12px;
+            }
+            QPushButton:hover {
+                background-color: #5dade2;
+            }
+            QPushButton:pressed {
+                background-color: #2e86c1;
+            }
+        """)
 
         self.ui.stop_button.setIcon(QIcon(f"{self.current_workpath}/gui/images/stop.png"))
 
@@ -142,6 +157,27 @@ class SHOWWINDOW(BASEWINDOW):
         self.yolo_threads.set('yolov11', CVThread())
         self.initModel(yoloname='yolov11')
 
+    def initGestureMonitor(self):
+        self.gesture_timer = QTimer(self)
+        self.gesture_timer.timeout.connect(self.updateGesture)
+        self.gesture_timer.start(200)
+
+    def updateGesture(self):
+        file_path = 'data/config/msg.txt'
+
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+
+        if not lines:
+            return
+
+        first_line = lines[0].strip()
+        remaining_lines = lines[1:]
+
+        with open(file_path, 'w') as f:
+            f.writelines(remaining_lines)
+        self.showStatus(first_line)
+
     def initPerformanceMonitor(self):
         self.perf_timer = QTimer(self)
         self.perf_timer.timeout.connect(self.updateSystemStatus)
@@ -151,7 +187,7 @@ class SHOWWINDOW(BASEWINDOW):
         cpu = psutil.cpu_percent()
         process = psutil.Process(os.getpid())
         mem_info = process.memory_info()
-        mem_rss_mb = mem_info.rss / 1024 / 1024  # 以 MB 显示常驻内存（RSS）
+        mem_rss_mb = mem_info.rss / 1024 / 1024  # 以 MB 显示常驻内存
         delay = getSystemLatency()
         status_msg = f"CPU: {cpu:.1f}%\n内存: {mem_rss_mb:.1f} MB\n系统延迟: {delay:.1f} ms"
         self.ui.status.setText(status_msg)
@@ -165,7 +201,7 @@ class SHOWWINDOW(BASEWINDOW):
             self.yolo_threads.start_thread(yolo_name)
         else:
             yolo_thread.is_continue = False
-            self.showStatus('Pause Detection')
+            self.showStatus('AI模块检测暂停')
 
     def runModel(self, runbuttonStatus=None):
         if runbuttonStatus:
@@ -176,42 +212,37 @@ class SHOWWINDOW(BASEWINDOW):
     def runorContinue(self):
         if not self.is_controling:
             self.start_control()
-
-        if self.inputPath is not None:
-            self.is_playing = not self.is_playing
-            icon_path = "gui/images/pause.png" if self.is_playing else "gui/images/play.png"
-            self.ui.run_button.setIcon(QIcon())
-            self.ui.run_button.setIcon(QIcon(icon_path))
-            if self.is_playing:
-                self.ui.run_button.setStyleSheet("""
-                    QPushButton {
-                        background-color: #f1c40f;
-                        color: white;
-                        border: none;
-                        border-radius: 8px;
-                        padding: 6px 12px;
-                    }
-                    QPushButton:hover {
-                        background-color: #f39c12;
-                    }
-                """)
-            else:
-                self.ui.run_button.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #27ae60;
-                                    color: white;
-                                    border: none;
-                                    border-radius: 8px;
-                                    padding: 6px 12px;
-                                }
-                                QPushButton:hover {
-                                    background-color: #2ecc71;
-                                }
-                            """)
-            self.runModel()
+        self.is_playing = not self.is_playing
+        icon_path = "gui/images/pause.png" if self.is_playing else "gui/images/play.png"
+        self.ui.run_button.setIcon(QIcon())
+        self.ui.run_button.setIcon(QIcon(icon_path))
+        if self.is_playing:
+            self.ui.run_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #f1c40f;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 6px 12px;
+                }
+                QPushButton:hover {
+                    background-color: #f39c12;
+                }
+            """)
         else:
-            self.showStatus("Please select Camera before starting detection")
-            self.ui.run_button.setChecked(False)
+            self.ui.run_button.setStyleSheet("""
+                            QPushButton {
+                                background-color: #27ae60;
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                padding: 6px 12px;
+                            }
+                            QPushButton:hover {
+                                background-color: #2ecc71;
+                            }
+                        """)
+        self.runModel()
 
     # 停止识别
     def stopDetect(self):
@@ -235,3 +266,5 @@ class SHOWWINDOW(BASEWINDOW):
         self.ui.run_button.setIcon(QIcon(
             f"{self.current_workpath}/gui/images/play.png"))
         self.ui.main_rightbox.clear()
+        with open('data/config/msg.txt', 'w'):
+            pass

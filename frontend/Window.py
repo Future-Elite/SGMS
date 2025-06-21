@@ -1,6 +1,9 @@
 import json
-from PySide6.QtGui import QMouseEvent, QGuiApplication
+from PySide6.QtGui import QMouseEvent, QGuiApplication, QAction
 from PySide6.QtCore import Qt, QPropertyAnimation, Signal
+from PySide6.QtWidgets import QMessageBox, QDialog
+
+from frontend.LoginWindow import LoginWindow
 from gui.ui.utils.customGrips import CustomGrip
 from frontend.ShowWindow import SHOWWINDOW
 
@@ -19,6 +22,9 @@ class MainWindow(SHOWWINDOW):
         self.setAcceptDrops(True)  # ==> 设置窗口支持拖动（必须设置）
         # --- 拖动窗口 改变窗口大小 --- #
         self.animation_window = None
+
+        # 退出登录
+        self.ui.log_out_button.clicked.connect(self.logout)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.LeftButton:
@@ -75,3 +81,22 @@ class MainWindow(SHOWWINDOW):
         else:
             self.setWindowOpacity(1.0)
             self.closed.emit()
+
+    def logout(self):
+        reply = QMessageBox.question(
+            self, "确认退出", "确定要退出登录吗？",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self.stopDetect()
+            self.close()  # 关闭当前主窗口
+
+            # 再次显示登录窗口
+            login_window = LoginWindow()
+            if login_window.exec() == QDialog.Accepted:
+                new_main_window = MainWindow()
+                new_main_window.show()
+
+                # 更新 glo 中的主窗口引用
+                from frontend.utils import glo
+                glo.set_value('main_window', new_main_window)

@@ -31,6 +31,16 @@ def get_send_out():
             return cv2.imread("gui/ui/icon.png")
 
 
+def loadAndSetParams(config_file, params):
+    if not os.path.exists(config_file):
+        with open(config_file, 'w', encoding='utf-8') as f:
+            json.dump(params, f, ensure_ascii=False, indent=2)
+    else:
+        with open(config_file, 'r', encoding='utf-8') as f:
+            params.update(json.load(f))
+    return params
+
+
 class BASEWINDOW(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -130,28 +140,15 @@ class BASEWINDOW(QMainWindow):
 
     # 在MessageBar显示消息
     def showStatus(self, msg):
-        msg = '{0} >> {1}'.format(USER, msg)
+        msg = '{0} >>{1}'.format(USER, msg)
         last_msg = self.ui.user_info.toPlainText().split('\n')[-1]
         if msg != last_msg:
             self.ui.user_info.append(msg)
-        if 'Finish Detection' in msg:
-            self.quitRunningModel()
-            self.ui.run_button.setChecked(False)
-        elif 'Stop Detection' in msg:
+        if '停止检测' in msg:
             self.quitRunningModel()
             self.ui.run_button.setChecked(False)
             self.ui.main_rightbox.clear()
 
-    def loadAndSetParams(self, config_file, params):
-        if not os.path.exists(config_file):
-            with open(config_file, 'w', encoding='utf-8') as f:
-                json.dump(params, f, ensure_ascii=False, indent=2)
-        else:
-            with open(config_file, 'r', encoding='utf-8') as f:
-                params.update(json.load(f))
-        return params
-
-    # 加载 Setting 栏
     def loadConfig(self):
         # 1、随机初始化超参数
         params = {"iou": round(random.uniform(0, 1), 2),
@@ -159,7 +156,7 @@ class BASEWINDOW(QMainWindow):
         self.updateParams(params)
         # 2、绑定配置项超参数
         params = {"iou": 0.45, "conf": 0.25}
-        params = self.loadAndSetParams('data/config/setting.json', params)
+        params = loadAndSetParams('data/config/setting.json', params)
         self.updateParams(params)
 
     # 更新Config超参数
@@ -172,16 +169,17 @@ class BASEWINDOW(QMainWindow):
     def start_control(self):
         self.controller = subprocess.Popen(
             [sys.executable, 'backend/gesture_controller.py'],
-            stdout=sys.stdout, stderr=sys.stdout
+            stdout=sys.stdout,
+            stderr=sys.stdout
         )
         self.is_controling = True
-        self.showStatus('Gesture Controller Started')
+        self.showStatus('手势控制启动')
 
     def stop_control(self):
         self.controller.terminate()
         self.controller.wait()
         self.is_controling = False
-        self.showStatus('Gesture Controller Stopped')
+        self.showStatus('手势控制结束')
 
     # 调整超参数
     def changeValue(self, x, flag):

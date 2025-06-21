@@ -306,7 +306,6 @@ class LoginWindow(QDialog):
                     if user.is_admin:
                         glo.set_value('user', '[Admin]' + username)
                     else:
-                        sys.stdout = open(os.devnull, 'w')
                         glo.set_value('user', '[User]' + username)
                     self.accept()
                 else:
