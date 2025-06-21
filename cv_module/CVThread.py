@@ -5,7 +5,8 @@ import numpy as np
 import torch
 from PySide6.QtCore import QThread, Signal
 from pathlib import Path
-from frontend.utils import pipe, glo
+from collections import defaultdict
+from frontend.utils import pipe
 from backend.result_updater import ResultUpdater
 from ultralytics.data import load_inference_source
 from ultralytics.data.augment import classify_transforms, LetterBox
@@ -13,7 +14,6 @@ from ultralytics.engine.predictor import STREAM_WARNING
 from ultralytics.engine.results import Results
 from ultralytics.nn.autobackend import AutoBackend
 from ultralytics.utils import callbacks, ops, LOGGER
-from collections import defaultdict
 from ultralytics.utils.checks import check_imgsz
 from ultralytics.utils.torch_utils import select_device
 from concurrent.futures import ThreadPoolExecutor
@@ -41,7 +41,6 @@ class CVThread(QThread):
         self.parent_workpath = None
         self.executor = ThreadPoolExecutor(max_workers=1)
 
-        # mediapipe 参数设置
         self.mp_pose = None
         self.mp_pose_results = None
 
@@ -82,7 +81,7 @@ class CVThread(QThread):
 
         while True:
             if self.stop_dtc:
-                self.send_msg.emit('Stop Detection')
+                self.send_msg.emit('AI模块停止检测')
                 self.dataset.running = False
                 # 判断self.dataset里面是否有threads
                 if hasattr(self.dataset, 'threads'):
@@ -94,7 +93,7 @@ class CVThread(QThread):
                         try:
                             cap.release()
                         except Exception as e:
-                            LOGGER.warning(f"WARNING Could not release VideoCapture object: {e}")
+                            LOGGER.warning(f"无法释放摄像头设备: {e}")
                 cv2.destroyAllWindows()
                 break
             if self.is_continue:
@@ -158,9 +157,8 @@ class CVThread(QThread):
                                     label_name += num_labelname[each] + " "
                             if label_name in self.labels_dict:
                                 self.labels_dict[label_name] += int(nums)
-                            else:  # 第一次出现的类别
+                            else:
                                 self.labels_dict[label_name] = int(nums)
-
                     if has_hand:
                         self.send_output.emit(self.plotted_img)
                         pipe.frame = self.plotted_img
@@ -217,9 +215,9 @@ class CVThread(QThread):
         if not getattr(self, "stream", True) and (
                 self.source_type.stream
                 or self.source_type.screenshot
-                or len(self.dataset) > 1000  # many images
+                or len(self.dataset) > 1000
                 or any(getattr(self.dataset, "video_flag", [False]))
-        ):  # videos
+        ):
             LOGGER.warning(STREAM_WARNING)
 
     def postprocess(self, preds, img, orig_imgs):
@@ -227,7 +225,6 @@ class CVThread(QThread):
             orig_imgs = ops.convert_torch2numpy_batch(orig_imgs)
 
         results = []
-
 
         a = preds[0].cpu().numpy().tolist()[0]
         class_index = a.index(max(a))

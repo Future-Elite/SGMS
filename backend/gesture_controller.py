@@ -18,6 +18,7 @@ import pythoncom
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from data.models import DeviceState, DeviceTypeEnum
+from result_updater import gesture_update
 
 # ================== 全局初始化 ==================
 # 初始化音量控制
@@ -38,7 +39,7 @@ def initialize_powerpoint():
             output = subprocess.check_output('tasklist', shell=True).decode('gbk')
             return 'POWERPNT.EXE' in output
         except Exception as e:
-            print(f"进程检查失败: {str(e)}")
+            gesture_update(f"进程检查失败: {str(e)}")
             return False
 
     try:
@@ -46,15 +47,15 @@ def initialize_powerpoint():
         ppt_app = win32com.client.Dispatch("PowerPoint.Application")
         return ppt_app
     except Exception as e:
-        print(f"连接PowerPoint失败: {str(e)}，尝试启动新实例...")
+        gesture_update(f"连接PowerPoint失败: {str(e)}，尝试启动新实例...")
         try:
             if not check_ppt_process():
-                print("正在启动PowerPoint...")
+                gesture_update("正在启动PowerPoint...")
                 subprocess.Popen(PPT_PATH)
                 time.sleep(5)  # 等待PPT启动
             return win32com.client.Dispatch("PowerPoint.Application")
         except Exception as e:
-            print(f"PowerPoint启动失败: {str(e)}")
+            gesture_update(f"PowerPoint启动失败: {str(e)}")
             return None
 
 
@@ -89,7 +90,7 @@ def get_gesture():
             # 获取置信度最高的手势
             return max(data, key=data.get) if data else None
     except Exception as e:
-        print(f"手势读取失败: {e}")
+        gesture_update(f"手势读取失败: {e}")
         return None
 
 
@@ -153,7 +154,6 @@ class GestureController:
         if expected_keys is None:
             expected_keys = before_state.keys()
         changes = {k: (before_state[k], after_state[k]) for k in expected_keys if before_state[k] != after_state[k]}
-        print("✅ 状态已更新：", changes)
 
     def _set_cooldown(self):
         self.media_control_lock = True
@@ -165,38 +165,38 @@ class GestureController:
             output = subprocess.check_output('tasklist', shell=True).decode('gbk')
             return 'cloudmusic.exe' in output
         except Exception as e:
-            print(f"检查音乐进程失败: {e}")
+            gesture_update(f"检查音乐进程失败: {e}")
             return False
 
     def left_double_click(self):
         pyautogui.doubleClick()
-        print("左键双击")
+        gesture_update("左键双击")
 
     def activate(self):
         self.mouse_control_active = False
-        print("激活手势已确认")
+        gesture_update("激活手势已确认")
 
     def start_or_pause(self):
         """智能播放/暂停控制"""
         try:
             # 优先处理PPT放映模式
             if self._check_ppt_slideshow():
-                print("PPT放映中，发送空格键翻页")
+                gesture_update("PPT放映中，发送空格键翻页")
                 pyautogui.press('space')
                 return
 
             # 系统级媒体控制
             keyboard.press_and_release('play/pause')
-            print("发送全局播放/暂停指令")
+            gesture_update("发送全局播放/暂停指令")
 
             # 异常回退：发送备用空格键
             time.sleep(0.3)
             if not self._check_media_activity():
                 pyautogui.press('space')
-                print("尝试空格键回退")
+                gesture_update("尝试空格键回退")
 
         except Exception as e:
-            print(f"播放控制异常: {e}")
+            gesture_update(f"播放控制异常: {e}")
             pyautogui.hotkey('ctrl', 'alt', 'p')  # 终极回退方案
 
     def _check_media_activity(self):
@@ -210,7 +210,7 @@ class GestureController:
                         return True
             return False
         except Exception as e:
-            print(f"媒体状态检测异常: {e}")
+            gesture_update(f"媒体状态检测异常: {e}")
             return False
 
     def _check_ppt_slideshow(self):
@@ -222,7 +222,7 @@ class GestureController:
             self.slide_show_active = False
             return False
         except Exception as e:
-            print(f"PPT状态检查失败: {e}")
+            gesture_update(f"PPT状态检查失败: {e}")
             self.slide_show_active = False
             return False
 
@@ -234,20 +234,19 @@ class GestureController:
                 if ppt_app.SlideShowWindows.Count > 0:
                     # 使用PPT对象模型控制
                     ppt_app.SlideShowWindows(1).View.Previous()
-                    print("PPT上一页（放映模式）")
+                    gesture_update("PPT上一页（放映模式）")
                 return
 
             # 系统级媒体控制
             if self._check_music_process():
                 keyboard.press_and_release('previous track')
-                print("媒体上一曲")
+                gesture_update("媒体上一曲")
             else:
-                # 备用方案：发送方向键（适配PDF阅读器等）
                 pyautogui.press('left')
-                print("发送方向左键")
+                gesture_update("发送方向左键")
 
         except Exception as e:
-            print(f"上一页控制异常: {e}")
+            gesture_update(f"上一页控制异常: {e}")
             # 终极回退方案
             pyautogui.press('left')
 
@@ -259,50 +258,48 @@ class GestureController:
                 if ppt_app.SlideShowWindows.Count > 0:
                     # 使用PPT对象模型控制
                     ppt_app.SlideShowWindows(1).View.Next()
-                    print("PPT下一页（放映模式）")
+                    gesture_update("PPT下一页（放映模式）")
                 return
 
             # 系统级媒体控制
             if self._check_music_process():
                 keyboard.press_and_release('next track')
-                print("媒体下一曲")
+                gesture_update("媒体下一曲")
             else:
-                # 备用方案：发送方向键（适配PDF阅读器等）
                 pyautogui.press('right')
-                print("发送方向右键")
+                gesture_update("发送方向右键")
 
         except Exception as e:
-            print(f"下一页控制异常: {e}")
-            # 终极回退方案
+            gesture_update(f"下一页控制异常: {e}")
             pyautogui.press('right')
 
     def right_click(self):
         pyautogui.rightClick()
-        print("模拟右键点击")
+        gesture_update("右键点击")
 
     def left_click(self):
         pyautogui.click()
-        print("左键点击")
+        gesture_update("左键点击")
 
     def high(self):
         current_vol = volume_ctl.GetMasterVolumeLevelScalar()
         new_vol = min(round(current_vol + 0.1, 1), 1.0)
         volume_ctl.SetMasterVolumeLevelScalar(new_vol, None)
-        print(f"音量已升至：{new_vol * 100}%")
+        gesture_update(f"音量已升至：{new_vol * 100}%")
 
     def low(self):
         current_vol = volume_ctl.GetMasterVolumeLevelScalar()
         new_vol = max(round(current_vol - 0.1, 1), 0.0)
         volume_ctl.SetMasterVolumeLevelScalar(new_vol, None)
-        print(f"音量已降至：{new_vol * 100}%")
+        gesture_update(f"音量已降至：{new_vol * 100}%")
 
     def mouse_control_loop(self):
         if self.mouse_control_active:
-            print("鼠标控制已在运行中")
+            gesture_update("鼠标控制已在运行中")
             return
 
         self.mouse_control_active = True
-        print("启动鼠标控制模式...")
+        gesture_update("启动鼠标控制模式...")
 
         mp_hands = mp.solutions.hands
         hands = mp_hands.Hands(
@@ -341,7 +338,7 @@ class GestureController:
         while cap.isOpened() and self.mouse_control_active:
             success, frame = cap.read()
             if not success:
-                print("无法从视频流获取帧，尝试重连...")
+                gesture_update("无法从视频流获取帧，尝试重连...")
                 cap.release()
                 time.sleep(1)
                 cap = cv2.VideoCapture('http://localhost:5000/stream')
@@ -355,7 +352,7 @@ class GestureController:
             if results.multi_hand_landmarks:
                 # 检测到两只手时退出
                 if len(results.multi_hand_landmarks) >= 2:
-                    print("检测到两只手，退出鼠标控制模式")
+                    gesture_update("检测到两只手，退出鼠标控制模式")
                     self.mouse_control_active = False
                     break
 
@@ -377,7 +374,7 @@ class GestureController:
         cap.release()
         cv2.destroyAllWindows()
         self.mouse_control_active = False
-        print("鼠标控制模式结束")
+        gesture_update("鼠标控制模式结束")
 
     def handle_gesture(self, gesture):
         if gesture is not None:
@@ -385,17 +382,17 @@ class GestureController:
             if gesture == gesture_labels["activate"]:
                 self.interval_activated = True
                 self.interval_activate_time = time.time()
-                print("间隔手势已激活，10秒内等待下一个操作...")
+                gesture_update("间隔手势已激活，10秒内等待下一个操作...")
                 return
 
             # 检查激活状态
             if not self.interval_activated:
-                print("请先使用激活手势")
+                gesture_update("请先使用激活手势")
                 return
 
             # 检查激活超时
             if time.time() - self.interval_activate_time > self.interval_timeout:
-                print("操作超时，请重新激活")
+                gesture_update("操作超时，请重新激活")
                 self.interval_activated = False
                 return
 
@@ -411,7 +408,7 @@ class GestureController:
             self.interval_activated = False
             self.interval_activate_time = None
         else:
-            print("未识别到有效手势")
+            gesture_update("未识别到有效手势")
 
 
 if __name__ == "__main__":
@@ -424,22 +421,21 @@ if __name__ == "__main__":
             # 清理可能的幻灯片放映
             if ppt_app.SlideShowWindows.Count > 0:
                 ppt_app.SlideShowWindows.Item(1).View.Exit()
-                print("已关闭现有PPT放映")
-            print("PowerPoint控制已初始化")
+                gesture_update("已关闭现有PPT放映")
+            gesture_update("PowerPoint控制已初始化")
         except Exception as e:
-            print(f"PPT初始化警告: {str(e)}")
+            gesture_update(f"PPT初始化警告: {str(e)}")
     else:
-        print("警告: PowerPoint控制功能不可用")
+        gesture_update("警告: PowerPoint控制功能不可用")
 
     # 启动手势控制器
     controller = GestureController()
-    print("手势控制器已启动...")
+    gesture_update("手势控制器已启动")
 
     # 主循环
     while True:
         gesture_name = get_gesture()
         if gesture_name:
-            print('[手势]:', gesture_name)
             gesture_value = gesture_labels.get(gesture_name.split(' ')[0])
             controller.handle_gesture(gesture_value)
         time.sleep(0.5)

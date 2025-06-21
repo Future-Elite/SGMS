@@ -46,6 +46,10 @@ class ResultUpdater:
                         self.last_upload_time = time.time()
                 except Exception as e:
                     pass
-
                 # 标记任务完成，队列get解锁
                 self.result_queue.task_done()
+
+
+def gesture_update(message):
+    with open('data/config/msg.txt', 'a') as f:
+        f.write(message + '\n')
