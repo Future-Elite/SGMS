@@ -316,6 +316,8 @@ class GestureController:
         smooth_window = 3
         velocity_queue = deque(maxlen=5)
         coord_history = deque(maxlen=smooth_window)
+        # 设置距离阈值（单位：米）
+        DISTANCE_THRESHOLD = 0.3  # 30厘米内视为有效触发
 
         def adaptive_smooth(new_x, new_y):
             if coord_history:
@@ -335,6 +337,27 @@ class GestureController:
             coord_history.append((smoothed_x, smoothed_y))
             return np.mean([x for x, y in coord_history]), np.mean([y for x, y in coord_history])
 
+        # 计算手部到摄像头的距离
+        def calculate_distance(hand_landmarks, frame_width, frame_height):
+            """估算手部到摄像头的距离"""
+            # 计算手部关键点的像素距离
+            wrist = hand_landmarks.landmark[mp_hands.HandLandmark.WRIST]
+            middle_mcp = hand_landmarks.landmark[mp_hands.HandLandmark.MIDDLE_FINGER_MCP]
+
+            # 计算手腕到中指根部的像素距离
+            pixel_distance = np.sqrt(
+                (wrist.x - middle_mcp.x) ** 2 * frame_width ** 2 +
+                (wrist.y - middle_mcp.y) ** 2 * frame_height ** 2
+            )
+
+            # 估算实际距离（经验公式，需根据摄像头参数调整）
+            REFERENCE_DISTANCE = 0.15  # 标准手掌参考距离（约15cm）
+            REFERENCE_PIXELS = 120  # 在1米距离时的手掌像素宽度
+
+            # 估算距离：参考距离 * 参考像素数 / 当前像素数
+            estimated_distance = (REFERENCE_DISTANCE * REFERENCE_PIXELS) / max(pixel_distance, 1)
+            return estimated_distance
+
         while cap.isOpened() and self.mouse_control_active:
             success, frame = cap.read()
             if not success:
@@ -347,16 +370,40 @@ class GestureController:
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = hands.process(rgb_frame)
             h, w = frame.shape[:2]
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            cv2.putText(frame, f"{current_time}", (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             # 检测到手部
             if results.multi_hand_landmarks:
-                # 检测到两只手时退出
-                if len(results.multi_hand_landmarks) >= 2:
-                    gesture_update("检测到两只手，退出鼠标控制模式")
-                    self.mouse_control_active = False
-                    break
+                # 绘制所有检测到的手
+                for hand_landmarks in results.multi_hand_landmarks:
+                    # 绘制手部关键点
+                    for landmark in hand_landmarks.landmark:
+                        cx, cy = int(landmark.x * w), int(landmark.y * h)
+                        cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
 
-                # 只有一只手时继续控制
+                # 检测到两只手时检查距离
+                if len(results.multi_hand_landmarks) >= 2:
+                    # 计算第二只手的距离
+                    second_hand = results.multi_hand_landmarks[1]
+                    distance = calculate_distance(second_hand, w, h)
+
+                    # 在图像上显示距离信息
+                    cv2.putText(frame, f"Second Hand Dist: {distance:.2f}m", (10, 70),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+                    # 检查距离是否在阈值范围内
+                    if distance < DISTANCE_THRESHOLD:
+                        gesture_update(f"检测到第二只手（距离：{distance:.2f}m），退出鼠标控制模式")
+                        self.mouse_control_active = False
+                        break
+                    else:
+                        # 距离过远，继续控制
+                        gesture_update(f"检测到第二只手但距离过远（{distance:.2f}m），继续控制")
+                        pass
+
+                # 只有一只手时继续控制（选择最前面的手）
                 hand = results.multi_hand_landmarks[0]
                 index_tip = hand.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
                 cx = int(index_tip.x * w)
@@ -370,6 +417,22 @@ class GestureController:
                     pyautogui.moveTo(int(screen_w - final_x), int(final_y), duration=0.001, _pause=False)
                     # 可视化标记
                     cv2.circle(frame, (cx, cy), 8, (0, 0, 255), -1)
+
+                    # 显示鼠标位置信息
+                    cv2.putText(frame, f"Mouse: ({int(final_x)}, {int(final_y)})",
+                                (w - 400, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+
+            # 显示状态信息
+            cv2.putText(frame, "Mouse Control: ACTIVE", (10, 110),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+            cv2.putText(frame, f"Mode: {'Mouse' if self.mouse_control_active else 'Inactive'}", (10, 150),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+
+            # 显示视频流（用于调试）
+            # cv2.imshow("Gesture Mouse Control", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                self.mouse_control_active = False
+                break
 
         cap.release()
         cv2.destroyAllWindows()
